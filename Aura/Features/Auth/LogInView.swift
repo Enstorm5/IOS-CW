@@ -13,11 +13,11 @@ struct LogInView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: AuraSpacing.medium) {
                 Text("Welcome back")
-                    .font(.largeTitle.weight(.heavy))
+                    .font(.auraScreenTitle)
                     .foregroundStyle(Color.auraText)
-                    .padding(.bottom, 8)
+                    .padding(.bottom, AuraSpacing.small)
 
                 AuraTextField(title: "Email", text: $email, error: fieldError(emailValidationError(email)))
                     .textContentType(.username)
@@ -29,9 +29,9 @@ struct LogInView: View {
                     .textContentType(.password)
 
                 Button("Forgot password?", action: onForgotPassword)
-                    .font(.subheadline.weight(.bold))
+                    .font(.auraLink)
                     .foregroundStyle(Color.auraText)
-                    .frame(minHeight: 44)
+                    .frame(minHeight: AuraSize.minTap)
 
                 if let errorMessage {
                     ErrorMessage(text: errorMessage)
@@ -50,11 +50,11 @@ struct LogInView: View {
                 .disabled(isWorking)
 
                 Button("Create an account", action: onSignUpInstead)
-                    .font(.subheadline.weight(.bold))
+                    .font(.auraLink)
                     .foregroundStyle(Color.auraText)
-                    .frame(maxWidth: .infinity, minHeight: 44)
+                    .frame(maxWidth: .infinity, minHeight: AuraSize.minTap)
             }
-            .padding(20)
+            .padding(AuraSpacing.screen)
         }
         .scrollDismissesKeyboard(.interactively)
         .background(Color.auraBackground)

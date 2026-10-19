@@ -20,13 +20,13 @@ struct InterestsView: View {
         needsNameField = displayNameValidationError(suggestedName) != nil
     }
 
-    private let columns = [GridItem(.adaptive(minimum: 130), spacing: 8)]
+    private let columns = [GridItem(.adaptive(minimum: 130), spacing: AuraSpacing.small)]
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: AuraSpacing.medium) {
                 Text("What do you like?")
-                    .font(.largeTitle.weight(.heavy))
+                    .font(.auraScreenTitle)
                     .foregroundStyle(Color.auraText)
                 Text("Pick at least one.")
                     .foregroundStyle(Color.auraMuted)
@@ -36,7 +36,7 @@ struct InterestsView: View {
                         .textContentType(.nickname)
                 }
 
-                LazyVGrid(columns: columns, spacing: 8) {
+                LazyVGrid(columns: columns, spacing: AuraSpacing.small) {
                     ForEach(Interest.allCases) { interest in
                         ChipToggle(title: interest.title, isSelected: selectedInterests.contains(interest)) {
                             toggle(interest)
@@ -49,17 +49,17 @@ struct InterestsView: View {
                 }
 
                 Text("Pick your explorer look")
-                    .font(.subheadline.weight(.bold))
+                    .font(.auraSectionLabel)
                     .foregroundStyle(Color.auraMuted)
-                    .padding(.top, 12)
+                    .padding(.top, AuraSpacing.medium)
 
-                HStack(spacing: 16) {
+                HStack(spacing: AuraSpacing.large) {
                     ForEach(AvatarPreset.allCases) { preset in
                         Button {
                             avatar = preset
                         } label: {
                             AvatarView(preset: preset, size: 56)
-                                .padding(4)
+                                .padding(AuraSpacing.xxSmall)
                                 .overlay {
                                     Circle().strokeBorder(Color.auraText, lineWidth: avatar == preset ? 3 : 0)
                                 }
@@ -85,7 +85,7 @@ struct InterestsView: View {
                 }
                 .buttonStyle(AuraButtonStyle(kind: .highlight))
                 .disabled(isWorking)
-                .padding(.top, 12)
+                .padding(.top, AuraSpacing.medium)
 
                 Button("Sign out") {
                     do {
@@ -94,11 +94,11 @@ struct InterestsView: View {
                         errorMessage = error.localizedDescription
                     }
                 }
-                .font(.subheadline.weight(.bold))
+                .font(.auraLink)
                 .foregroundStyle(Color.auraText)
-                .frame(maxWidth: .infinity, minHeight: 44)
+                .frame(maxWidth: .infinity, minHeight: AuraSize.minTap)
             }
-            .padding(20)
+            .padding(AuraSpacing.screen)
         }
         .background(Color.auraBackground)
     }

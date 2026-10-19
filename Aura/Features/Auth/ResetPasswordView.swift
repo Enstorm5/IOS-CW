@@ -11,13 +11,13 @@ struct ResetPasswordView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: AuraSpacing.medium) {
                 Text("Reset password")
-                    .font(.largeTitle.weight(.heavy))
+                    .font(.auraScreenTitle)
                     .foregroundStyle(Color.auraText)
                 Text("Enter your account email and we'll send you a link to choose a new password.")
                     .foregroundStyle(Color.auraMuted)
-                    .padding(.bottom, 8)
+                    .padding(.bottom, AuraSpacing.small)
 
                 AuraTextField(title: "Email", text: $email, error: showFieldErrors ? emailValidationError(email) : nil)
                     .textContentType(.emailAddress)
@@ -31,7 +31,7 @@ struct ResetPasswordView: View {
 
                 if didSend {
                     Label("If an account uses that email, a reset link is on its way.", systemImage: "envelope.badge")
-                        .font(.subheadline.weight(.semibold))
+                        .font(.auraNotice)
                         .foregroundStyle(Color.auraText)
                 }
 
@@ -46,9 +46,9 @@ struct ResetPasswordView: View {
                 }
                 .buttonStyle(AuraButtonStyle())
                 .disabled(isWorking)
-                .padding(.top, 8)
+                .padding(.top, AuraSpacing.small)
             }
-            .padding(20)
+            .padding(AuraSpacing.screen)
         }
         .scrollDismissesKeyboard(.interactively)
         .background(Color.auraBackground)

@@ -24,7 +24,7 @@ struct WelcomeView: View {
         ZStack {
             AuraNightBackground()
 
-            VStack(spacing: 8) {
+            VStack(spacing: AuraSpacing.small) {
                 TabView(selection: $pageIndex) {
                     ForEach(introPages.indices, id: \.self) { index in
                         IntroPageView(page: introPages[index])
@@ -48,12 +48,12 @@ struct WelcomeView: View {
                 }
 
                 Button("I already have an account", action: onLogIn)
-                    .font(.subheadline.weight(.bold))
+                    .font(.auraLink)
                     .foregroundStyle(.white)
-                    .frame(minHeight: 44)
+                    .frame(minHeight: AuraSize.minTap)
             }
-            .padding(.horizontal, 20)
-            .padding(.bottom, 8)
+            .padding(.horizontal, AuraSpacing.screen)
+            .padding(.bottom, AuraSpacing.small)
         }
         .toolbar(.hidden, for: .navigationBar)
     }
@@ -63,21 +63,21 @@ private struct IntroPageView: View {
     let page: IntroPage
 
     var body: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: AuraSpacing.medium) {
             Text(page.chip)
-                .font(.footnote.weight(.heavy))
+                .font(.auraPill)
                 .foregroundStyle(Color.auraInk)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
+                .padding(.horizontal, AuraSpacing.medium)
+                .padding(.vertical, AuraSpacing.xSmall)
                 .background(Color.auraYellow, in: .capsule)
             Text(page.title)
-                .font(.title.weight(.heavy))
+                .font(.auraHeading)
             Text(page.message)
                 .opacity(0.75)
         }
         .multilineTextAlignment(.center)
         .foregroundStyle(.white)
-        .padding(.horizontal, 12)
+        .padding(.horizontal, AuraSpacing.medium)
     }
 }
 

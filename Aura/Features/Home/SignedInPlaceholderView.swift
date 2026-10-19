@@ -8,19 +8,19 @@ struct SignedInPlaceholderView: View {
     @State private var errorMessage: String?
 
     var body: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: AuraSpacing.large) {
             Text("Development placeholder: main tabs arrive in P02")
-                .font(.footnote.weight(.bold))
+                .font(.auraPill)
                 .foregroundStyle(Color.auraInk)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
+                .padding(.horizontal, AuraSpacing.medium)
+                .padding(.vertical, AuraSpacing.xSmall)
                 .background(Color.auraYellow, in: .capsule)
 
             Spacer()
 
             AvatarView(preset: profile.avatarPreset, size: 88)
             Text("Hi, \(profile.displayName)")
-                .font(.title.weight(.heavy))
+                .font(.auraHeading)
                 .foregroundStyle(Color.auraText)
             Text(profile.interests.map(\.title).joined(separator: " · "))
                 .foregroundStyle(Color.auraMuted)
@@ -37,7 +37,7 @@ struct SignedInPlaceholderView: View {
             }
             .buttonStyle(AuraButtonStyle(kind: .outline))
         }
-        .padding(20)
+        .padding(AuraSpacing.screen)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.auraBackground)
         .confirmationDialog("Sign out of Aura?", isPresented: $isConfirmingSignOut, titleVisibility: .visible) {

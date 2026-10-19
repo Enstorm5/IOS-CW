@@ -29,10 +29,10 @@ struct SessionErrorView: View {
     @State private var signOutError: String?
 
     var body: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: AuraSpacing.large) {
             Spacer()
             Image(systemName: "wifi.exclamationmark")
-                .font(.largeTitle)
+                .font(.auraIcon)
                 .foregroundStyle(Color.auraMuted)
             Text(message)
                 .multilineTextAlignment(.center)
@@ -54,7 +54,7 @@ struct SessionErrorView: View {
             }
             .buttonStyle(AuraButtonStyle(kind: .outline))
         }
-        .padding(24)
+        .padding(AuraSpacing.xLarge)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.auraBackground)
     }

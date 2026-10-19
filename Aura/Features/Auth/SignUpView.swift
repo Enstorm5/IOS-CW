@@ -13,11 +13,11 @@ struct SignUpView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: AuraSpacing.medium) {
                 Text("Create account")
-                    .font(.largeTitle.weight(.heavy))
+                    .font(.auraScreenTitle)
                     .foregroundStyle(Color.auraText)
-                    .padding(.bottom, 8)
+                    .padding(.bottom, AuraSpacing.small)
 
                 AuraTextField(title: "Email", text: $email, error: fieldError(emailValidationError(email)))
                     .textContentType(.emailAddress)
@@ -46,14 +46,14 @@ struct SignUpView: View {
                 }
                 .buttonStyle(AuraButtonStyle())
                 .disabled(isWorking)
-                .padding(.top, 8)
+                .padding(.top, AuraSpacing.small)
 
                 Button("I already have an account", action: onLogInInstead)
-                    .font(.subheadline.weight(.bold))
+                    .font(.auraLink)
                     .foregroundStyle(Color.auraText)
-                    .frame(maxWidth: .infinity, minHeight: 44)
+                    .frame(maxWidth: .infinity, minHeight: AuraSize.minTap)
             }
-            .padding(20)
+            .padding(AuraSpacing.screen)
         }
         .scrollDismissesKeyboard(.interactively)
         .background(Color.auraBackground)

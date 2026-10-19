@@ -14,13 +14,13 @@ struct AuraButtonStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.headline.weight(.heavy))
-            .frame(maxWidth: .infinity, minHeight: 50)
+            .font(.auraButton)
+            .frame(maxWidth: .infinity, minHeight: AuraSize.control)
             .foregroundStyle(foreground)
-            .background(background, in: .rect(cornerRadius: 12))
+            .background(background, in: .rect(cornerRadius: AuraRadius.control))
             .overlay {
                 if kind == .outline {
-                    RoundedRectangle(cornerRadius: 12).strokeBorder(foreground, lineWidth: 2)
+                    RoundedRectangle(cornerRadius: AuraRadius.control).strokeBorder(foreground, lineWidth: 2)
                 }
             }
             .opacity(isEnabled ? 1 : 0.5)
@@ -51,7 +51,7 @@ struct AuraTextField: View {
     var isSecure = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: AuraSpacing.xxSmall) {
             Group {
                 if isSecure {
                     SecureField(title, text: $text)
@@ -60,11 +60,11 @@ struct AuraTextField: View {
                 }
             }
             .foregroundStyle(Color.auraText)
-            .padding(.horizontal, 14)
-            .frame(minHeight: 50)
-            .background(Color.auraCard, in: .rect(cornerRadius: 12))
+            .padding(.horizontal, AuraSpacing.control)
+            .frame(minHeight: AuraSize.control)
+            .background(Color.auraCard, in: .rect(cornerRadius: AuraRadius.control))
             .overlay {
-                RoundedRectangle(cornerRadius: 12)
+                RoundedRectangle(cornerRadius: AuraRadius.control)
                     .strokeBorder(error == nil ? Color.clear : Color.auraError, lineWidth: 2)
             }
 
@@ -80,7 +80,7 @@ struct ErrorMessage: View {
 
     var body: some View {
         Label(text, systemImage: "exclamationmark.circle")
-            .font(.footnote.weight(.semibold))
+            .font(.auraErrorText)
             .foregroundStyle(Color.auraError)
     }
 }
@@ -92,16 +92,16 @@ struct ChipToggle: View {
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 6) {
+            HStack(spacing: AuraSpacing.xSmall) {
                 if isSelected {
                     Image(systemName: "checkmark")
                 }
                 Text(title)
             }
-            .font(.subheadline.weight(isSelected ? .heavy : .semibold))
+            .font(isSelected ? .auraChipSelected : .auraChip)
             .foregroundStyle(isSelected ? Color.auraInk : Color.auraText)
-            .padding(.horizontal, 14)
-            .frame(maxWidth: .infinity, minHeight: 44)
+            .padding(.horizontal, AuraSpacing.control)
+            .frame(maxWidth: .infinity, minHeight: AuraSize.minTap)
             .background(isSelected ? Color.auraYellow : Color.auraChipOff, in: .capsule)
         }
         .buttonStyle(.plain)
@@ -112,12 +112,12 @@ struct ChipToggle: View {
 struct AuraLogo: View {
     var body: some View {
         Text("A")
-            .font(.system(size: 34, weight: .heavy))
+            .font(.auraLogo)
             .foregroundStyle(Color.auraInk)
             .frame(width: 76, height: 76)
             .background(
                 AngularGradient(colors: [.auraYellow, .auraMagenta, .auraMint, .auraYellow], center: .center),
-                in: .rect(cornerRadius: 24)
+                in: .rect(cornerRadius: AuraRadius.logo)
             )
             .accessibilityHidden(true)
     }
