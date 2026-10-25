@@ -62,13 +62,14 @@ final class WallDetailViewModel {
         }
     }
 
-    func post(text: String, color: MessageColor, author: UserProfile, now: Date) async throws {
+    func post(text: String, color: MessageColor, author: UserProfile) async throws {
         let cleaned = text.trimmingCharacters(in: .whitespacesAndNewlines)
         if let validationError = messageValidationError(cleaned) {
             throw UserFacingError(message: validationError)
         }
 
-        let postingCheck = wallProximity(wallCoordinate: wall.coordinate, access: locationService.access, fix: currentFix(), policy: wallPostingPolicy, now: now)
+        let freshFix = await locationService.freshLocation(timeoutSeconds: freshFixTimeoutSeconds).map(locationFix(from:))
+        let postingCheck = wallProximity(wallCoordinate: wall.coordinate, access: locationService.access, fix: freshFix ?? currentFix(), policy: wallPostingPolicy, now: Date())
         if let blockedMessage = postingBlockedMessage(for: postingCheck, policy: wallPostingPolicy) {
             throw UserFacingError(message: blockedMessage)
         }
@@ -97,10 +98,12 @@ final class WallDetailViewModel {
         }
     }
 
+    func requestFreshFix() async {
+        _ = await locationService.freshLocation(timeoutSeconds: freshFixTimeoutSeconds)
+    }
+
     private func currentFix() -> LocationFix? {
-        locationService.latestLocation.map {
-            LocationFix(coordinate: Coordinate($0.coordinate), horizontalAccuracyMeters: $0.horizontalAccuracy, timestamp: $0.timestamp)
-        }
+        locationService.latestLocation.map(locationFix(from:))
     }
 
     func loadTeaser() async {
@@ -150,6 +153,12 @@ final class WallDetailViewModel {
         }
         isLoadingMore = false
     }
+}
+
+let freshFixTimeoutSeconds = 10.0
+
+func locationFix(from location: CLLocation) -> LocationFix {
+    LocationFix(coordinate: Coordinate(location.coordinate), horizontalAccuracyMeters: location.horizontalAccuracy, timestamp: location.timestamp)
 }
 
 func appendingNewMessages(_ newMessages: [WallMessage], to existing: [WallMessage]) -> [WallMessage] {

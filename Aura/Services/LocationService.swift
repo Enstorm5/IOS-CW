@@ -63,6 +63,15 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
         }
     }
 
+    func freshLocation(timeoutSeconds: Double) async -> CLLocation? {
+        guard access.isAllowed else { return nil }
+        let location = await firstLiveLocation(timeoutSeconds: timeoutSeconds)
+        if let location {
+            latestLocation = location
+        }
+        return location
+    }
+
     nonisolated func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
         let newAccess = locationAccess(status: manager.authorizationStatus, isPrecise: manager.accuracyAuthorization == .fullAccuracy)
         Task { @MainActor in
@@ -81,4 +90,32 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
     }
 
     nonisolated func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {}
+}
+
+nonisolated func firstLiveLocation(timeoutSeconds: Double) async -> CLLocation? {
+    await withTaskGroup(of: CLLocation?.self) { group in
+        group.addTask {
+            await firstLocationFromLiveUpdates()
+        }
+        group.addTask {
+            try? await Task.sleep(for: .seconds(timeoutSeconds))
+            return nil
+        }
+        let first = await group.next() ?? nil
+        group.cancelAll()
+        return first
+    }
+}
+
+nonisolated func firstLocationFromLiveUpdates() async -> CLLocation? {
+    do {
+        for try await update in CLLocationUpdate.liveUpdates() {
+            if let location = update.location {
+                return location
+            }
+        }
+    } catch {
+        return nil
+    }
+    return nil
 }

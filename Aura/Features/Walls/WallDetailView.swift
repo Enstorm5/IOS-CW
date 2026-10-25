@@ -41,10 +41,11 @@ struct WallDetailView: View {
         }
         .sheet(isPresented: $isWriting) {
             WriteMessageView { text, color in
-                try await viewModel.post(text: text, color: color, author: currentUser, now: .now)
+                try await viewModel.post(text: text, color: color, author: currentUser)
             }
         }
         .onAppear { viewModel.appeared() }
+        .task { await viewModel.requestFreshFix() }
         .onDisappear { viewModel.disappeared() }
         .task(id: viewModel.locationService.latestLocation) {
             await viewModel.refreshProximity(now: .now)
