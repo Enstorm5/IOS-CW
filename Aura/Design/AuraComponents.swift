@@ -203,3 +203,16 @@ struct StatusBanner: View {
         .padding(.horizontal, AuraSpacing.screen)
     }
 }
+
+struct AuraPill: View {
+    let text: String
+
+    var body: some View {
+        Text(text)
+            .font(.auraPill)
+            .foregroundStyle(Color.auraInk)
+            .padding(.horizontal, AuraSpacing.medium)
+            .padding(.vertical, AuraSpacing.xSmall)
+            .background(Color.auraYellow, in: .capsule)
+    }
+}

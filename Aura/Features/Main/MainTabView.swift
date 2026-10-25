@@ -90,11 +90,6 @@ struct MePlaceholderView: View {
 
 struct DevelopmentPill: View {
     var body: some View {
-        Text("Placeholder: not built yet")
-            .font(.auraPill)
-            .foregroundStyle(Color.auraInk)
-            .padding(.horizontal, AuraSpacing.medium)
-            .padding(.vertical, AuraSpacing.xSmall)
-            .background(Color.auraYellow, in: .capsule)
+        AuraPill(text: "Placeholder: not built yet")
     }
 }

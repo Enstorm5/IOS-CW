@@ -64,12 +64,7 @@ private struct IntroPageView: View {
 
     var body: some View {
         VStack(spacing: AuraSpacing.medium) {
-            Text(page.chip)
-                .font(.auraPill)
-                .foregroundStyle(Color.auraInk)
-                .padding(.horizontal, AuraSpacing.medium)
-                .padding(.vertical, AuraSpacing.xSmall)
-                .background(Color.auraYellow, in: .capsule)
+            AuraPill(text: page.chip)
             Text(page.title)
                 .font(.auraHeading)
             Text(page.message)

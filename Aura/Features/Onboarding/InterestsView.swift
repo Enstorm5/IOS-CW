@@ -2,22 +2,21 @@ import SwiftUI
 
 struct InterestsView: View {
     let session: SessionStore
-    let userID: String
+    let suggestedName: String
+    let onContinue: (OnboardingChoices) -> Void
 
-    @State private var displayName: String
+    @State private var typedName = ""
     @State private var selectedInterests: Set<Interest> = []
     @State private var avatar: AvatarPreset = .magenta
     @State private var showFieldErrors = false
-    @State private var isWorking = false
     @State private var errorMessage: String?
 
-    private let needsNameField: Bool
+    private var needsNameField: Bool {
+        displayNameValidationError(suggestedName) != nil
+    }
 
-    init(session: SessionStore, userID: String, suggestedName: String) {
-        self.session = session
-        self.userID = userID
-        _displayName = State(initialValue: suggestedName)
-        needsNameField = displayNameValidationError(suggestedName) != nil
+    private var chosenName: String {
+        needsNameField ? typedName : suggestedName
     }
 
     private let columns = [GridItem(.adaptive(minimum: 130), spacing: AuraSpacing.small)]
@@ -32,7 +31,7 @@ struct InterestsView: View {
                     .foregroundStyle(Color.auraMuted)
 
                 if needsNameField {
-                    AuraTextField(title: "Display name", text: $displayName, error: showFieldErrors ? displayNameValidationError(displayName) : nil)
+                    AuraTextField(title: "Display name", text: $typedName, error: showFieldErrors ? displayNameValidationError(typedName) : nil)
                         .textContentType(.nickname)
                 }
 
@@ -74,18 +73,9 @@ struct InterestsView: View {
                     ErrorMessage(text: errorMessage)
                 }
 
-                Button {
-                    Task { await finish() }
-                } label: {
-                    if isWorking {
-                        ProgressView().tint(Color.auraInk)
-                    } else {
-                        Text("Continue")
-                    }
-                }
-                .buttonStyle(AuraButtonStyle(kind: .highlight))
-                .disabled(isWorking)
-                .padding(.top, AuraSpacing.medium)
+                Button("Continue", action: continueTapped)
+                    .buttonStyle(AuraButtonStyle(kind: .highlight))
+                    .padding(.top, AuraSpacing.medium)
 
                 Button("Sign out") {
                     do {
@@ -111,24 +101,15 @@ struct InterestsView: View {
         }
     }
 
-    private func finish() async {
+    private func continueTapped() {
         showFieldErrors = true
-        guard displayNameValidationError(displayName) == nil,
+        guard displayNameValidationError(chosenName) == nil,
               interestsValidationError(selectedInterests) == nil else { return }
 
-        isWorking = true
-        errorMessage = nil
-        do {
-            let interests = Interest.allCases.filter { selectedInterests.contains($0) }
-            try await session.completeOnboarding(
-                userID: userID,
-                displayName: displayName.trimmingCharacters(in: .whitespacesAndNewlines),
-                interests: interests,
-                avatar: avatar
-            )
-        } catch {
-            errorMessage = error.localizedDescription
-        }
-        isWorking = false
+        onContinue(OnboardingChoices(
+            displayName: chosenName.trimmingCharacters(in: .whitespacesAndNewlines),
+            interests: Interest.allCases.filter { selectedInterests.contains($0) },
+            avatar: avatar
+        ))
     }
 }

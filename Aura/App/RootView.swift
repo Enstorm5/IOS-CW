@@ -12,7 +12,7 @@ struct RootView: View {
             case .signedOut:
                 AuthFlowView(session: session)
             case .needsOnboarding(let userID, let suggestedName):
-                InterestsView(session: session, userID: userID, suggestedName: suggestedName)
+                OnboardingFlowView(session: session, userID: userID, suggestedName: suggestedName, locationService: services.location)
             case .signedIn(let profile):
                 MainTabView(session: session, profile: profile, services: services)
             case .failed(let message):
