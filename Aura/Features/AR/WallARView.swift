@@ -98,8 +98,8 @@ struct WallARView: View {
         .sheet(isPresented: $isWriting) {
             WriteMessageView(
                 initialDraft: detailViewModel.savedDraft(),
-                onPost: { text, color in
-                    try await detailViewModel.post(text: text, color: color, author: currentUser)
+                onPost: { content in
+                    try await detailViewModel.post(content, author: currentUser)
                 },
                 onSaveDraft: { text, color in detailViewModel.saveDraft(text: text, color: color) },
                 onDiscardDraft: { detailViewModel.discardDraft() }

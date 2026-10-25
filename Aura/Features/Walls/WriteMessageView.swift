@@ -1,13 +1,28 @@
 import SwiftUI
 
+enum WriteMode: String, CaseIterable {
+    case type
+    case draw
+
+    var title: String {
+        switch self {
+        case .type: "Type"
+        case .draw: "Draw"
+        }
+    }
+}
+
 struct WriteMessageView: View {
-    let onPost: (String, MessageColor) async throws -> Void
+    let onPost: (MessageContent) async throws -> Void
     let onSaveDraft: (String, MessageColor) -> Void
     let onDiscardDraft: () -> Void
 
     @Environment(\.dismiss) private var dismiss
+    @State private var mode: WriteMode = .type
     @State private var text: String
     @State private var color: MessageColor
+    @State private var drawing = MessageDrawing()
+    @State private var strokeWidth: StrokeWidth = .medium
     @State private var isPosting = false
     @State private var didPost = false
     @State private var restoredDraft: Bool
@@ -16,7 +31,7 @@ struct WriteMessageView: View {
 
     init(
         initialDraft: MessageDraft?,
-        onPost: @escaping (String, MessageColor) async throws -> Void,
+        onPost: @escaping (MessageContent) async throws -> Void,
         onSaveDraft: @escaping (String, MessageColor) -> Void,
         onDiscardDraft: @escaping () -> Void
     ) {
@@ -32,27 +47,18 @@ struct WriteMessageView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: AuraSpacing.medium) {
-                    if restoredDraft {
-                        HStack {
-                            AuraPill(text: "Draft restored")
-                            Spacer()
-                            Button("Discard draft") {
-                                text = ""
-                                restoredDraft = false
-                                onDiscardDraft()
-                            }
-                            .font(.auraLink)
-                            .foregroundStyle(Color.auraText)
-                            .frame(minHeight: AuraSize.minTap)
+                    Picker("Message type", selection: $mode) {
+                        ForEach(WriteMode.allCases, id: \.self) { option in
+                            Text(option.title).tag(option)
                         }
                     }
+                    .pickerStyle(.segmented)
 
-                    editor
-
-                    Text(characterCountText(text))
-                        .font(.auraErrorText)
-                        .foregroundStyle(isOverMessageLength(text) ? Color.auraError : Color.auraMuted)
-                        .frame(maxWidth: .infinity, alignment: .trailing)
+                    if mode == .type {
+                        typeSection
+                    } else {
+                        drawSection
+                    }
 
                     Text("Color")
                         .font(.auraSectionLabel)
@@ -85,6 +91,7 @@ struct WriteMessageView: View {
                 }
                 .padding(AuraSpacing.screen)
             }
+            .scrollDisabled(mode == .draw)
             .scrollDismissesKeyboard(.interactively)
             .background(Color.auraBackground)
             .navigationTitle("New message")
@@ -96,6 +103,10 @@ struct WriteMessageView: View {
                 }
             }
             .onAppear { isEditorFocused = true }
+            .onChange(of: mode) {
+                errorMessage = nil
+                isEditorFocused = mode == .type
+            }
             .onDisappear {
                 if !didPost {
                     onSaveDraft(text, color)
@@ -103,7 +114,68 @@ struct WriteMessageView: View {
             }
         }
         .tint(Color.auraText)
-        .interactiveDismissDisabled(isPosting)
+        .interactiveDismissDisabled(isPosting || !drawing.strokes.isEmpty)
+    }
+
+    @ViewBuilder
+    private var typeSection: some View {
+        if restoredDraft {
+            HStack {
+                AuraPill(text: "Draft restored")
+                Spacer()
+                Button("Discard draft") {
+                    text = ""
+                    restoredDraft = false
+                    onDiscardDraft()
+                }
+                .font(.auraLink)
+                .foregroundStyle(Color.auraText)
+                .frame(minHeight: AuraSize.minTap)
+            }
+        }
+
+        editor
+
+        Text(characterCountText(text))
+            .font(.auraErrorText)
+            .foregroundStyle(isOverMessageLength(text) ? Color.auraError : Color.auraMuted)
+            .frame(maxWidth: .infinity, alignment: .trailing)
+    }
+
+    @ViewBuilder
+    private var drawSection: some View {
+        DrawingPad(drawing: $drawing, color: color, width: strokeWidth)
+
+        HStack(spacing: AuraSpacing.small) {
+            ForEach(StrokeWidth.allCases, id: \.self) { option in
+                ChipToggle(title: option.title, isSelected: option == strokeWidth) {
+                    strokeWidth = option
+                }
+            }
+        }
+
+        HStack {
+            Button {
+                if !drawing.strokes.isEmpty {
+                    drawing.strokes.removeLast()
+                }
+            } label: {
+                Label("Undo", systemImage: "arrow.uturn.backward")
+            }
+            .disabled(drawing.strokes.isEmpty)
+
+            Spacer()
+
+            Button(role: .destructive) {
+                drawing = MessageDrawing()
+            } label: {
+                Label("Clear", systemImage: "trash")
+            }
+            .disabled(drawing.strokes.isEmpty)
+        }
+        .font(.auraLink)
+        .foregroundStyle(Color.auraText)
+        .frame(minHeight: AuraSize.minTap)
     }
 
     private var editor: some View {
@@ -130,14 +202,20 @@ struct WriteMessageView: View {
 
     private func post() async {
         errorMessage = nil
-        if let validationError = messageValidationError(text) {
-            errorMessage = validationError
+        let content: MessageContent = mode == .type ? .text(text, color) : .drawing(drawing)
+        do {
+            _ = try preparedMessage(from: content)
+        } catch {
+            errorMessage = error.localizedDescription
             return
         }
 
         isPosting = true
         do {
-            try await onPost(text, color)
+            try await onPost(content)
+            if mode == .draw {
+                onSaveDraft(text, color)
+            }
             didPost = true
             dismiss()
         } catch {

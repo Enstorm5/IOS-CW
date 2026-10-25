@@ -58,8 +58,8 @@ struct WallDetailView: View {
         .sheet(isPresented: $isWriting) {
             WriteMessageView(
                 initialDraft: viewModel.savedDraft(),
-                onPost: { text, color in
-                    try await viewModel.post(text: text, color: color, author: currentUser)
+                onPost: { content in
+                    try await viewModel.post(content, author: currentUser)
                 },
                 onSaveDraft: { text, color in viewModel.saveDraft(text: text, color: color) },
                 onDiscardDraft: { viewModel.discardDraft() }
@@ -198,9 +198,13 @@ struct MessageRow: View {
                 Text(isMine ? "You" : message.authorName)
                     .font(.auraCardTitle)
                     .foregroundStyle(Color.auraText)
-                Text("\u{201C}\(message.text)\u{201D}")
-                    .font(.auraNotice)
-                    .foregroundStyle(Color.auraMuted)
+                if message.contentType == .drawing, let drawing = message.drawing {
+                    DrawingThumbnail(drawing: drawing)
+                } else {
+                    Text("\u{201C}\(message.text)\u{201D}")
+                        .font(.auraNotice)
+                        .foregroundStyle(Color.auraMuted)
+                }
             }
 
             Spacer(minLength: 0)
@@ -216,6 +220,6 @@ struct MessageRow: View {
         .background(Color.auraCard, in: .rect(cornerRadius: AuraRadius.row))
         .padding(.horizontal, AuraSpacing.medium)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(Text("\(isMine ? "You" : message.authorName) wrote \(message.text). \(message.sparkCount) sparks."))
+        .accessibilityLabel(Text(messageAccessibilityLabel(message, isMine: isMine)))
     }
 }

@@ -66,7 +66,9 @@ final class WallMessageService {
             sparkCount: 0,
             createdAt: Date(),
             normalizedX: message.normalizedX,
-            normalizedY: message.normalizedY
+            normalizedY: message.normalizedY,
+            contentType: message.contentType,
+            drawing: message.drawingPayload.flatMap(decodeDrawing)
         )
     }
 
@@ -87,23 +89,34 @@ final class WallMessageService {
 }
 
 func firestoreFields(for message: NewWallMessage) -> [String: Any] {
-    [
+    var fields: [String: Any] = [
         "authorID": message.authorID,
         "authorName": message.authorName,
         "text": message.text,
-        "contentType": "text",
+        "contentType": message.contentType.rawValue,
         "color": message.color.rawValue,
         "sparkCount": 0,
         "normalizedX": message.normalizedX,
         "normalizedY": message.normalizedY,
         "moderationStatus": "active",
     ]
+    if let drawingPayload = message.drawingPayload {
+        fields["drawing"] = drawingPayload
+    }
+    return fields
 }
 
 func wallMessage(id: String, wallID: String, fields: [String: Any]) -> WallMessage? {
     guard let authorID = fields["authorID"] as? String,
           let text = fields["text"] as? String,
           let createdAt = fields["createdAt"] as? Date else { return nil }
+
+    let contentType = MessageContentType(rawValue: fields["contentType"] as? String ?? "") ?? .text
+    var drawing: MessageDrawing?
+    if contentType == .drawing {
+        guard let payload = fields["drawing"] as? String, let decoded = decodeDrawing(payload) else { return nil }
+        drawing = decoded
+    }
 
     return WallMessage(
         id: id,
@@ -115,6 +128,8 @@ func wallMessage(id: String, wallID: String, fields: [String: Any]) -> WallMessa
         sparkCount: max(0, fields["sparkCount"] as? Int ?? 0),
         createdAt: createdAt,
         normalizedX: min(1, max(0, fields["normalizedX"] as? Double ?? 0.5)),
-        normalizedY: min(1, max(0, fields["normalizedY"] as? Double ?? 0.5))
+        normalizedY: min(1, max(0, fields["normalizedY"] as? Double ?? 0.5)),
+        contentType: contentType,
+        drawing: drawing
     )
 }

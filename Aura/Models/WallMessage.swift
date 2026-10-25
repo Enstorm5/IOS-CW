@@ -1,6 +1,6 @@
 import Foundation
 
-enum MessageColor: String, CaseIterable {
+enum MessageColor: String, CaseIterable, Codable {
     case magenta
     case mint
     case yellow
@@ -25,6 +25,8 @@ struct NewWallMessage: Equatable {
     let color: MessageColor
     let normalizedX: Double
     let normalizedY: Double
+    var contentType: MessageContentType = .text
+    var drawingPayload: String? = nil
 }
 
 struct WallTeaser: Equatable {
@@ -43,4 +45,6 @@ struct WallMessage: Identifiable, Equatable {
     var createdAt: Date
     var normalizedX: Double = 0.5
     var normalizedY: Double = 0.5
+    var contentType: MessageContentType = .text
+    var drawing: MessageDrawing? = nil
 }

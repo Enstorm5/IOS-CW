@@ -85,11 +85,8 @@ final class WallDetailViewModel {
         }
     }
 
-    func post(text: String, color: MessageColor, author: UserProfile) async throws {
-        let cleaned = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        if let validationError = messageValidationError(cleaned) {
-            throw UserFacingError(message: validationError)
-        }
+    func post(_ content: MessageContent, author: UserProfile) async throws {
+        let prepared = try preparedMessage(from: content)
 
         let freshFix = await locationService.freshLocation(timeoutSeconds: freshFixTimeoutSeconds).map(locationFix(from:))
         let postingCheck = wallProximity(wallCoordinate: wall.coordinate, access: locationService.access, fix: freshFix ?? currentFix(), policy: wallPostingPolicy, now: Date())
@@ -97,24 +94,28 @@ final class WallDetailViewModel {
             throw UserFacingError(message: blockedMessage)
         }
 
-        let messageID = messageIDForPost(text: cleaned, color: color, previous: pendingPost) { UUID().uuidString }
-        pendingPost = PendingPost(id: messageID, text: cleaned, color: color)
+        let messageID = messageIDForPost(text: prepared.retryKey, color: prepared.color, previous: pendingPost) { UUID().uuidString }
+        pendingPost = PendingPost(id: messageID, text: prepared.retryKey, color: prepared.color)
         let placement = messagePlacement(forMessageID: messageID)
         let newMessage = NewWallMessage(
             id: messageID,
             wallID: wall.id,
             authorID: author.id,
             authorName: author.displayName,
-            text: cleaned,
-            color: color,
+            text: prepared.text,
+            color: prepared.color,
             normalizedX: placement.x,
-            normalizedY: placement.y
+            normalizedY: placement.y,
+            contentType: prepared.contentType,
+            drawingPayload: prepared.drawingPayload
         )
 
         do {
             let saved = try await messageService.post(newMessage)
             pendingPost = nil
-            discardDraft()
+            if prepared.contentType == .text {
+                discardDraft()
+            }
             messages = [saved] + messages.filter { $0.id != saved.id }
             hasLoaded = true
         } catch {

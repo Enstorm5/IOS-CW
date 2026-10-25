@@ -45,4 +45,6 @@ enum AuraSize {
     static let teaserBlur: CGFloat = 6
     static let messageEditorHeight: CGFloat = 110
     static let guidancePhotoWidth: CGFloat = 120
+    static let drawingThumbnailHeight: CGFloat = 90
+    static let drawingTexturePixelWidth: CGFloat = 640
 }
