@@ -43,6 +43,31 @@ final class WallMessageService {
         return WallTeaser(messageCount: countSnapshot.count.intValue, latestMessage: latest)
     }
 
+    func post(_ message: NewWallMessage) async throws -> WallMessage {
+        let document = database.collection("walls").document(message.wallID).collection("messages").document(message.id)
+        var fields = firestoreFields(for: message)
+        fields["createdAt"] = FieldValue.serverTimestamp()
+        fields["updatedAt"] = FieldValue.serverTimestamp()
+
+        do {
+            try await document.setData(fields)
+        } catch {
+            let existing = try? await document.getDocument()
+            guard existing?.data()?["authorID"] as? String == message.authorID else { throw error }
+        }
+
+        return WallMessage(
+            id: message.id,
+            wallID: message.wallID,
+            authorID: message.authorID,
+            authorName: message.authorName,
+            text: message.text,
+            color: message.color,
+            sparkCount: 0,
+            createdAt: Date()
+        )
+    }
+
     private func activeMessages(wallID: String) -> Query {
         database.collection("walls").document(wallID).collection("messages")
             .whereField("moderationStatus", isEqualTo: "active")
@@ -57,6 +82,20 @@ final class WallMessageService {
         }
         return converted
     }
+}
+
+func firestoreFields(for message: NewWallMessage) -> [String: Any] {
+    [
+        "authorID": message.authorID,
+        "authorName": message.authorName,
+        "text": message.text,
+        "contentType": "text",
+        "color": message.color.rawValue,
+        "sparkCount": 0,
+        "normalizedX": message.normalizedX,
+        "normalizedY": message.normalizedY,
+        "moderationStatus": "active",
+    ]
 }
 
 func wallMessage(id: String, wallID: String, fields: [String: Any]) -> WallMessage? {

@@ -3,7 +3,7 @@ import MapKit
 
 struct DiscoveryMapView: View {
     @Bindable var viewModel: DiscoveryViewModel
-    let currentUserID: String
+    let currentUser: UserProfile
     let messageService: WallMessageService
 
     @Environment(\.openURL) private var openURL
@@ -49,7 +49,7 @@ struct DiscoveryMapView: View {
         }
         .toolbar(.hidden, for: .navigationBar)
         .navigationDestination(item: $openedWall) { wall in
-            WallDetailView(wall: wall, currentUserID: currentUserID, messageService: messageService, locationService: viewModel.locationService)
+            WallDetailView(wall: wall, currentUser: currentUser, messageService: messageService, locationService: viewModel.locationService)
         }
         .onAppear { viewModel.mapAppeared() }
         .onDisappear { viewModel.mapDisappeared() }

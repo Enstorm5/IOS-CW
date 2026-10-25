@@ -18,7 +18,7 @@ struct MainTabView: View {
         TabView {
             Tab("Map", systemImage: "map") {
                 NavigationStack {
-                    DiscoveryMapView(viewModel: discovery, currentUserID: profile.id, messageService: messageService)
+                    DiscoveryMapView(viewModel: discovery, currentUser: profile, messageService: messageService)
                 }
             }
             Tab("Quests", systemImage: "flag.checkered") {

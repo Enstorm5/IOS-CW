@@ -2,14 +2,15 @@ import SwiftUI
 
 struct WallDetailView: View {
     let wall: Wall
-    let currentUserID: String
+    let currentUser: UserProfile
 
     @Environment(\.openURL) private var openURL
     @State private var viewModel: WallDetailViewModel
+    @State private var isWriting = false
 
-    init(wall: Wall, currentUserID: String, messageService: WallMessageService, locationService: LocationService) {
+    init(wall: Wall, currentUser: UserProfile, messageService: WallMessageService, locationService: LocationService) {
         self.wall = wall
-        self.currentUserID = currentUserID
+        self.currentUser = currentUser
         _viewModel = State(initialValue: WallDetailViewModel(wall: wall, messageService: messageService, locationService: locationService))
     }
 
@@ -27,6 +28,22 @@ struct WallDetailView: View {
         }
         .background(Color.auraBackground)
         .navigationBarTitleDisplayMode(.inline)
+        .safeAreaInset(edge: .bottom) {
+            if viewModel.isUnlocked {
+                Button("Write on wall") {
+                    isWriting = true
+                }
+                .buttonStyle(AuraButtonStyle(kind: .highlight))
+                .padding(.horizontal, AuraSpacing.screen)
+                .padding(.vertical, AuraSpacing.small)
+                .background(Color.auraBackground)
+            }
+        }
+        .sheet(isPresented: $isWriting) {
+            WriteMessageView { text, color in
+                try await viewModel.post(text: text, color: color, author: currentUser, now: .now)
+            }
+        }
         .onAppear { viewModel.appeared() }
         .onDisappear { viewModel.disappeared() }
         .task(id: viewModel.locationService.latestLocation) {
@@ -110,7 +127,7 @@ struct WallDetailView: View {
             StatusBanner(systemImage: "text.bubble", message: "No messages on this wall yet.")
         } else {
             ForEach(viewModel.messages) { message in
-                MessageRow(message: message, isMine: message.authorID == currentUserID)
+                MessageRow(message: message, isMine: message.authorID == currentUser.id)
             }
 
             if let errorMessage = viewModel.errorMessage {
@@ -144,7 +161,7 @@ struct MessageRow: View {
     var body: some View {
         HStack(spacing: AuraSpacing.medium) {
             RoundedRectangle(cornerRadius: AuraRadius.swatch)
-                .fill(swatchColor)
+                .fill(message.color.swatchColor)
                 .frame(width: AuraSize.messageSwatch, height: AuraSize.messageSwatch)
 
             VStack(alignment: .leading, spacing: AuraSpacing.xxSmall) {
@@ -170,14 +187,5 @@ struct MessageRow: View {
         .padding(.horizontal, AuraSpacing.medium)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(Text("\(isMine ? "You" : message.authorName) wrote \(message.text). \(message.sparkCount) sparks."))
-    }
-
-    private var swatchColor: Color {
-        switch message.color {
-        case .magenta: .auraMagenta
-        case .mint: .auraMint
-        case .yellow: .auraYellow
-        case .ink: .auraInk
-        }
     }
 }

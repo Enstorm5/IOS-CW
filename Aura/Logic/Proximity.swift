@@ -13,6 +13,7 @@ struct ProximityPolicy {
 }
 
 let wallReadingPolicy = ProximityPolicy(radiusMeters: 50, maximumAccuracyMeters: 25, maximumAgeSeconds: 120)
+let wallPostingPolicy = ProximityPolicy(radiusMeters: 50, maximumAccuracyMeters: 25, maximumAgeSeconds: 15)
 
 enum WallProximity: Equatable {
     case unlocked
@@ -54,6 +55,19 @@ func lockedWallMessage(for proximity: WallProximity, policy: ProximityPolicy) ->
         return "Finding your location…"
     case .tooFar(let distanceMeters):
         return "Walk within \(radius) to read this wall. You're \(formattedDistance(meters: distanceMeters)) away."
+    }
+}
+
+func postingBlockedMessage(for proximity: WallProximity, policy: ProximityPolicy) -> String? {
+    switch proximity {
+    case .unlocked:
+        return nil
+    case .locationOff, .approximateLocation:
+        return "Turn on precise location to post on this wall."
+    case .findingLocation:
+        return "Waiting for a fresh location fix. Try again in a moment."
+    case .tooFar(let distanceMeters):
+        return "Move within \(Int(policy.radiusMeters)) m of the wall to post. You're \(formattedDistance(meters: distanceMeters)) away."
     }
 }
 

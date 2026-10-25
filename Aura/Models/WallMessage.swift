@@ -5,6 +5,26 @@ enum MessageColor: String, CaseIterable {
     case mint
     case yellow
     case ink
+
+    var title: String {
+        switch self {
+        case .magenta: "Magenta"
+        case .mint: "Mint"
+        case .yellow: "Yellow"
+        case .ink: "Ink"
+        }
+    }
+}
+
+struct NewWallMessage: Equatable {
+    let id: String
+    let wallID: String
+    let authorID: String
+    let authorName: String
+    let text: String
+    let color: MessageColor
+    let normalizedX: Double
+    let normalizedY: Double
 }
 
 struct WallTeaser: Equatable {

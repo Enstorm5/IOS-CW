@@ -18,6 +18,7 @@ final class WallDetailViewModel {
     private let messageService: WallMessageService
     private var nextCursor: MessageCursor?
     private var latestLoadID = 0
+    private var pendingPost: PendingPost?
 
     init(wall: Wall, messageService: WallMessageService, locationService: LocationService) {
         self.wall = wall
@@ -42,10 +43,7 @@ final class WallDetailViewModel {
     func refreshProximity(now: Date) async {
         guard !isUnlocked else { return }
 
-        let fix = locationService.latestLocation.map {
-            LocationFix(coordinate: Coordinate($0.coordinate), horizontalAccuracyMeters: $0.horizontalAccuracy, timestamp: $0.timestamp)
-        }
-        proximity = wallProximity(wallCoordinate: wall.coordinate, access: locationService.access, fix: fix, policy: wallReadingPolicy, now: now)
+        proximity = wallProximity(wallCoordinate: wall.coordinate, access: locationService.access, fix: currentFix(), policy: wallReadingPolicy, now: now)
 
         if isUnlocked {
             if !hasLoaded {
@@ -61,6 +59,47 @@ final class WallDetailViewModel {
             await loadFirstPage()
         } else {
             await loadTeaser()
+        }
+    }
+
+    func post(text: String, color: MessageColor, author: UserProfile, now: Date) async throws {
+        let cleaned = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let validationError = messageValidationError(cleaned) {
+            throw UserFacingError(message: validationError)
+        }
+
+        let postingCheck = wallProximity(wallCoordinate: wall.coordinate, access: locationService.access, fix: currentFix(), policy: wallPostingPolicy, now: now)
+        if let blockedMessage = postingBlockedMessage(for: postingCheck, policy: wallPostingPolicy) {
+            throw UserFacingError(message: blockedMessage)
+        }
+
+        let messageID = messageIDForPost(text: cleaned, color: color, previous: pendingPost) { UUID().uuidString }
+        pendingPost = PendingPost(id: messageID, text: cleaned, color: color)
+        let placement = messagePlacement(forMessageID: messageID)
+        let newMessage = NewWallMessage(
+            id: messageID,
+            wallID: wall.id,
+            authorID: author.id,
+            authorName: author.displayName,
+            text: cleaned,
+            color: color,
+            normalizedX: placement.x,
+            normalizedY: placement.y
+        )
+
+        do {
+            let saved = try await messageService.post(newMessage)
+            pendingPost = nil
+            messages = [saved] + messages.filter { $0.id != saved.id }
+            hasLoaded = true
+        } catch {
+            throw UserFacingError(message: "Your message wasn't posted. Check your connection and try again.")
+        }
+    }
+
+    private func currentFix() -> LocationFix? {
+        locationService.latestLocation.map {
+            LocationFix(coordinate: Coordinate($0.coordinate), horizontalAccuracyMeters: $0.horizontalAccuracy, timestamp: $0.timestamp)
         }
     }
 

@@ -16,6 +16,24 @@ service cloud.firestore {
       return wall.visibility == 'public' && wall.moderationStatus == 'active';
     }
 
+    function isValidNewMessage(data) {
+      let fields = ['authorID', 'authorName', 'text', 'contentType', 'color', 'sparkCount',
+                    'normalizedX', 'normalizedY', 'moderationStatus', 'createdAt', 'updatedAt'];
+      return data.keys().hasOnly(fields)
+        && data.keys().hasAll(fields)
+        && data.authorID == request.auth.uid
+        && data.authorName == get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.displayName
+        && data.text is string && data.text.size() >= 1 && data.text.size() <= 280
+        && data.contentType == 'text'
+        && data.color in ['magenta', 'mint', 'yellow', 'ink']
+        && data.sparkCount == 0
+        && data.normalizedX is number && data.normalizedX >= 0 && data.normalizedX <= 1
+        && data.normalizedY is number && data.normalizedY >= 0 && data.normalizedY <= 1
+        && data.moderationStatus == 'active'
+        && data.createdAt == request.time
+        && data.updatedAt == request.time;
+    }
+
     function isValidProfile(data) {
       return data.keys().hasOnly(['displayName', 'bio', 'avatarPreset', 'interests', 'createdAt'])
         && data.displayName is string
@@ -47,7 +65,10 @@ service cloud.firestore {
         allow read: if isSignedIn()
           && resource.data.moderationStatus == 'active'
           && isReadableWall(wallID);
-        allow write: if false;
+        allow create: if isSignedIn()
+          && isReadableWall(wallID)
+          && isValidNewMessage(request.resource.data);
+        allow update, delete: if false;
       }
     }
   }
