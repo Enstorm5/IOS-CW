@@ -7,6 +7,7 @@ struct SavedWallMetadata: Codable, Equatable {
     var snapshotByteCount: Int
     var osVersion: String
     var archiveVersion: Int
+    var size: WallSize?
 }
 
 final class LocalWorldMapStore {

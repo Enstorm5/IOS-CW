@@ -5,6 +5,7 @@ struct DiscoveryMapView: View {
     @Bindable var viewModel: DiscoveryViewModel
     let currentUser: UserProfile
     let messageService: WallMessageService
+    let publisher: WallPublishService
 
     @Environment(\.openURL) private var openURL
     @State private var cameraPosition: MapCameraPosition = .userLocation(
@@ -49,7 +50,7 @@ struct DiscoveryMapView: View {
         }
         .toolbar(.hidden, for: .navigationBar)
         .navigationDestination(item: $openedWall) { wall in
-            WallDetailView(wall: wall, currentUser: currentUser, messageService: messageService, locationService: viewModel.locationService)
+            WallDetailView(wall: wall, currentUser: currentUser, messageService: messageService, locationService: viewModel.locationService, publisher: publisher)
         }
         .onAppear { viewModel.mapAppeared() }
         .onDisappear { viewModel.mapDisappeared() }

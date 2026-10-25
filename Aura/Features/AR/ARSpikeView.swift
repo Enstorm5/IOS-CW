@@ -2,14 +2,21 @@ import SwiftUI
 import ARKit
 
 struct ARSpikeView: View {
-    @State private var service = ARSessionService()
+    @State private var viewModel: PlaceWallViewModel
+    @State private var isNaming = false
 
     private let isARSupported = ARWorldTrackingConfiguration.isSupported
 
+    init(publisher: WallPublishService, locationService: LocationService, currentUser: UserProfile) {
+        _viewModel = State(initialValue: PlaceWallViewModel(publisher: publisher, locationService: locationService, currentUser: currentUser))
+    }
+
+    private var arSession: ARSessionService { viewModel.arSession }
+
     var body: some View {
         ZStack {
-            if service.isCameraActive {
-                ARWallView(service: service)
+            if arSession.isCameraActive {
+                ARWallView(service: arSession)
                     .ignoresSafeArea()
             } else {
                 AuraNightBackground()
@@ -17,35 +24,51 @@ struct ARSpikeView: View {
 
             VStack(alignment: .leading, spacing: AuraSpacing.small) {
                 HStack {
-                    Text("AR test")
+                    Text("Place a wall")
                         .font(.auraHeading)
                         .foregroundStyle(.white)
                     Spacer()
-                    AuraPill(text: "Development: P01")
                 }
 
                 statusLines
 
                 Spacer()
 
-                if case .restoring = service.phase, let snapshot = service.savedSnapshot {
+                if case .restoring = arSession.phase, let snapshot = arSession.savedSnapshot {
                     GuidancePhoto(image: snapshot)
+                }
+
+                if arSession.phase == .mapping {
+                    WallSizeControls(size: arSession.wallSize) { widthSteps, heightSteps in
+                        arSession.stepWallSize(widthSteps: widthSteps, heightSteps: heightSteps)
+                    }
                 }
 
                 bottomControls
             }
             .padding(AuraSpacing.screen)
         }
-        .onDisappear { service.stopCamera() }
+        .sheet(isPresented: $isNaming) {
+            NameWallSheet(isPublishing: viewModel.isPublishing, errorMessage: viewModel.publishError) { title in
+                Task { await viewModel.publish(title: title) }
+            }
+        }
+        .onChange(of: viewModel.publishedTitle) {
+            if viewModel.publishedTitle != nil {
+                isNaming = false
+            }
+        }
+        .onDisappear { arSession.stopCamera() }
     }
 
     @ViewBuilder
     private var statusLines: some View {
-        switch service.phase {
+        switch arSession.phase {
         case .placing:
             AuraPill(text: "Point at a wall, then tap it")
         case .mapping:
-            AuraPill(text: mappingGuidance(service.mapping))
+            AuraPill(text: mappingGuidance(arSession.mapping))
+            AuraPill(text: "Pinch to resize. Tap again to move it.")
         case .restoring:
             AuraPill(text: "Match this view and move slowly")
         case .restored:
@@ -54,54 +77,50 @@ struct ARSpikeView: View {
             EmptyView()
         }
 
-        if service.isCameraActive, let guidance = trackingGuidance(service.tracking) {
+        if arSession.isCameraActive, let guidance = trackingGuidance(arSession.tracking) {
             AuraPill(text: guidance)
         }
     }
 
     @ViewBuilder
     private var bottomControls: some View {
-        switch service.phase {
-        case .idle:
-            idleControls
-        case .placing:
-            Button("Cancel") { service.finish() }
-                .buttonStyle(AuraButtonStyle(kind: .outline, onNight: true))
-        case .mapping:
-            Button("Save wall") {
-                Task { await service.saveWall() }
-            }
-            .buttonStyle(AuraButtonStyle(kind: .highlight))
-            .disabled(!service.canSave)
-            Button("Cancel") { service.finish() }
-                .buttonStyle(AuraButtonStyle(kind: .outline, onNight: true))
-        case .saving:
-            ProgressView("Saving…")
-                .tint(.white)
-                .foregroundStyle(.white)
-                .frame(maxWidth: .infinity, minHeight: AuraSize.control)
-        case .saved:
-            if let savedWall = service.savedWall {
-                StatusBanner(systemImage: "checkmark.circle", message: "Saved. Map \(formattedByteCount(savedWall.mapByteCount)). Close and reopen the app, then restore it.")
-            }
-            Button("Restore now") { service.restoreSavedWall() }
+        if let publishedTitle = viewModel.publishedTitle {
+            StatusBanner(systemImage: "checkmark.circle", message: "\u{201C}\(publishedTitle)\u{201D} is live. People within 50 m can now open it from the map.")
+            Button("Place another wall") { viewModel.startPlacing() }
                 .buttonStyle(AuraButtonStyle(kind: .highlight))
-            Button("Done") { service.finish() }
+            Button("Done") { viewModel.finish() }
                 .buttonStyle(AuraButtonStyle(kind: .outline, onNight: true))
-        case .restoring:
-            Button("Cancel") { service.finish() }
-                .buttonStyle(AuraButtonStyle(kind: .outline, onNight: true))
-        case .restored:
-            Button("Done") { service.finish() }
+        } else {
+            switch arSession.phase {
+            case .idle:
+                idleControls
+            case .placing:
+                Button("Cancel") { viewModel.finish() }
+                    .buttonStyle(AuraButtonStyle(kind: .outline, onNight: true))
+            case .mapping:
+                Button("Publish wall") {
+                    viewModel.clearPublishError()
+                    isNaming = true
+                }
                 .buttonStyle(AuraButtonStyle(kind: .highlight))
-        case .failed(let message, let canRetryRestore):
-            StatusBanner(systemImage: "exclamationmark.triangle", message: message)
-            if canRetryRestore {
-                Button("Try again") { service.restoreSavedWall() }
+                .disabled(!arSession.canExport || viewModel.isPublishing)
+                Button("Cancel") { viewModel.finish() }
+                    .buttonStyle(AuraButtonStyle(kind: .outline, onNight: true))
+            case .restoring:
+                Button("Cancel") { viewModel.finish() }
+                    .buttonStyle(AuraButtonStyle(kind: .outline, onNight: true))
+            case .restored:
+                Button("Done") { viewModel.finish() }
                     .buttonStyle(AuraButtonStyle(kind: .highlight))
+            case .failed(let message, let canRetryRestore):
+                StatusBanner(systemImage: "exclamationmark.triangle", message: message)
+                if canRetryRestore {
+                    Button("Try again") { arSession.restoreSavedWall() }
+                        .buttonStyle(AuraButtonStyle(kind: .highlight))
+                }
+                Button("Back") { viewModel.finish() }
+                    .buttonStyle(AuraButtonStyle(kind: .outline, onNight: true))
             }
-            Button("Back") { service.finish() }
-                .buttonStyle(AuraButtonStyle(kind: .outline, onNight: true))
         }
     }
 
@@ -110,27 +129,71 @@ struct ARSpikeView: View {
         if !isARSupported {
             StatusBanner(systemImage: "arkit", message: "This device can't run AR. Use a physical iPhone that supports ARKit.")
         } else {
-            Text("Place a test wall, scan the area until it's mapped, then save. Reopen the app and restore it in the same spot.")
+            Text("Tap a wall to place it, resize it, then scan the area until it's mapped. Publishing puts it on the map at your location.")
                 .font(.auraNotice)
                 .foregroundStyle(.white)
                 .opacity(0.75)
 
-            Button("Place test wall") { service.startPlacing() }
+            Button("Place a wall") { viewModel.startPlacing() }
                 .buttonStyle(AuraButtonStyle(kind: .highlight))
 
-            if let savedWall = service.savedWall {
-                Button("Restore saved wall") { service.restoreSavedWall() }
+            if let savedWall = arSession.savedWall {
+                Button("Test: restore my last wall") { arSession.restoreSavedWall() }
                     .buttonStyle(AuraButtonStyle(kind: .outline, onNight: true))
-                Text("Saved \(savedWall.savedAt.formatted(date: .abbreviated, time: .shortened)) · \(formattedByteCount(savedWall.mapByteCount))")
+                Text("Saved on this phone \(savedWall.savedAt.formatted(date: .abbreviated, time: .shortened)) · \(formattedByteCount(savedWall.mapByteCount))")
                     .font(.auraErrorText)
                     .foregroundStyle(.white)
                     .opacity(0.75)
-                Button("Delete saved wall") { service.deleteSavedWall() }
+                Button("Delete local copy") { arSession.deleteSavedWall() }
                     .font(.auraLink)
                     .foregroundStyle(.white)
                     .frame(minHeight: AuraSize.minTap)
             }
         }
+    }
+}
+
+struct WallSizeControls: View {
+    let size: WallSize
+    let onStep: (Int, Int) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: AuraSpacing.small) {
+            Text(wallSizeText(size))
+                .font(.auraCardTitle)
+                .foregroundStyle(Color.auraText)
+            SizeStepperRow(title: "Width", onDecrease: { onStep(-1, 0) }, onIncrease: { onStep(1, 0) })
+            SizeStepperRow(title: "Height", onDecrease: { onStep(0, -1) }, onIncrease: { onStep(0, 1) })
+        }
+        .padding(AuraSpacing.medium)
+        .background(Color.auraCard, in: .rect(cornerRadius: AuraRadius.card))
+    }
+}
+
+private struct SizeStepperRow: View {
+    let title: String
+    let onDecrease: () -> Void
+    let onIncrease: () -> Void
+
+    var body: some View {
+        HStack {
+            Text(title)
+                .font(.auraNotice)
+                .foregroundStyle(Color.auraText)
+            Spacer()
+            Button(action: onDecrease) {
+                Image(systemName: "minus")
+                    .frame(width: AuraSize.minTap, height: AuraSize.minTap)
+            }
+            .accessibilityLabel("Decrease \(title.lowercased())")
+            Button(action: onIncrease) {
+                Image(systemName: "plus")
+                    .frame(width: AuraSize.minTap, height: AuraSize.minTap)
+            }
+            .accessibilityLabel("Increase \(title.lowercased())")
+        }
+        .font(.auraCardTitle)
+        .foregroundStyle(Color.auraText)
     }
 }
 

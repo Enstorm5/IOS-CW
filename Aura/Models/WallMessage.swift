@@ -41,4 +41,6 @@ struct WallMessage: Identifiable, Equatable {
     var color: MessageColor
     var sparkCount: Int
     var createdAt: Date
+    var normalizedX: Double = 0.5
+    var normalizedY: Double = 0.5
 }

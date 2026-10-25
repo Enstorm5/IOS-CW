@@ -5,5 +5,6 @@ struct AppServices {
     let profiles = ProfileService()
     let walls = WallService()
     let messages = WallMessageService()
+    let publisher = WallPublishService()
     let location = LocationService()
 }

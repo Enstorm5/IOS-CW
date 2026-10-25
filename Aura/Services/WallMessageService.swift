@@ -64,7 +64,9 @@ final class WallMessageService {
             text: message.text,
             color: message.color,
             sparkCount: 0,
-            createdAt: Date()
+            createdAt: Date(),
+            normalizedX: message.normalizedX,
+            normalizedY: message.normalizedY
         )
     }
 
@@ -111,6 +113,8 @@ func wallMessage(id: String, wallID: String, fields: [String: Any]) -> WallMessa
         text: text,
         color: MessageColor(rawValue: fields["color"] as? String ?? "") ?? .magenta,
         sparkCount: max(0, fields["sparkCount"] as? Int ?? 0),
-        createdAt: createdAt
+        createdAt: createdAt,
+        normalizedX: min(1, max(0, fields["normalizedX"] as? Double ?? 0.5)),
+        normalizedY: min(1, max(0, fields["normalizedY"] as? Double ?? 0.5))
     )
 }

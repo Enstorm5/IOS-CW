@@ -31,6 +31,52 @@ func wall(id: String, fields: [String: Any]) -> Wall? {
         id: id,
         title: title,
         coordinate: Coordinate(latitude: latitude, longitude: longitude),
-        kind: WallKind(rawValue: fields["kind"] as? String ?? "") ?? .community
+        kind: WallKind(rawValue: fields["kind"] as? String ?? "") ?? .community,
+        map: wallMapInfo(fields: fields)
     )
+}
+
+func wallMapInfo(fields: [String: Any]) -> WallMapInfo? {
+    guard fields["anchorMode"] as? String == "worldMap",
+          fields["mapStorage"] as? String == firestoreChunkStorage,
+          let chunkCount = fields["mapChunkCount"] as? Int,
+          let version = fields["activeMapVersion"] as? Int,
+          let checksum = fields["mapChecksum"] as? String,
+          let byteCount = fields["mapByteCount"] as? Int,
+          let anchorName = fields["anchorName"] as? String,
+          let width = fields["widthMeters"] as? Double,
+          let height = fields["heightMeters"] as? Double else { return nil }
+
+    return WallMapInfo(
+        chunkCount: chunkCount,
+        version: version,
+        checksum: checksum,
+        byteCount: byteCount,
+        anchorName: anchorName,
+        size: clampedWallSize(WallSize(width: width, height: height))
+    )
+}
+
+func newWallFields(for draft: NewWallDraft) -> [String: Any] {
+    [
+        "title": draft.title,
+        "latitude": draft.coordinate.latitude,
+        "longitude": draft.coordinate.longitude,
+        "geohash": geohash(for: draft.coordinate, precision: wallGeohashPrecision),
+        "kind": WallKind.community.rawValue,
+        "visibility": "public",
+        "moderationStatus": "active",
+        "ownerID": draft.ownerID,
+        "anchorMode": "worldMap",
+        "anchorName": draft.wallID,
+        "widthMeters": draft.size.width,
+        "heightMeters": draft.size.height,
+        "activeMapVersion": firstMapVersion,
+        "mapStorage": firestoreChunkStorage,
+        "mapChunkCount": draft.mapChunkCount,
+        "mapByteCount": draft.mapByteCount,
+        "mapChecksum": draft.mapChecksum,
+        "archiveVersion": worldMapArchiveVersion,
+        "captureOSVersion": draft.captureOSVersion,
+    ]
 }

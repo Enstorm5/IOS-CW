@@ -21,11 +21,33 @@ enum WallKind: String {
     case sponsored
 }
 
+struct WallMapInfo: Hashable {
+    var chunkCount: Int
+    var version: Int
+    var checksum: String
+    var byteCount: Int
+    var anchorName: String
+    var size: WallSize
+}
+
 struct Wall: Identifiable, Hashable {
     var id: String
     var title: String
     var coordinate: Coordinate
     var kind: WallKind
+    var map: WallMapInfo? = nil
+}
+
+struct NewWallDraft: Equatable {
+    let wallID: String
+    let ownerID: String
+    let title: String
+    let coordinate: Coordinate
+    let size: WallSize
+    let mapChunkCount: Int
+    let mapByteCount: Int
+    let mapChecksum: String
+    let captureOSVersion: String
 }
 
 struct NearbyWall: Identifiable, Equatable {

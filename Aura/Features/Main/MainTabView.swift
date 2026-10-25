@@ -6,11 +6,15 @@ struct MainTabView: View {
 
     @State private var discovery: DiscoveryViewModel
     private let messageService: WallMessageService
+    private let publisher: WallPublishService
+    private let locationService: LocationService
 
     init(session: SessionStore, profile: UserProfile, services: AppServices) {
         self.session = session
         self.profile = profile
         self.messageService = services.messages
+        self.publisher = services.publisher
+        self.locationService = services.location
         _discovery = State(initialValue: DiscoveryViewModel(wallService: services.walls, locationService: services.location))
     }
 
@@ -18,14 +22,14 @@ struct MainTabView: View {
         TabView {
             Tab("Map", systemImage: "map") {
                 NavigationStack {
-                    DiscoveryMapView(viewModel: discovery, currentUser: profile, messageService: messageService)
+                    DiscoveryMapView(viewModel: discovery, currentUser: profile, messageService: messageService, publisher: publisher)
                 }
             }
             Tab("Quests", systemImage: "flag.checkered") {
                 PlaceholderTabView(title: "Quests")
             }
             Tab("Camera", systemImage: "camera.viewfinder") {
-                ARSpikeView()
+                ARSpikeView(publisher: publisher, locationService: locationService, currentUser: profile)
             }
             Tab("Crew", systemImage: "person.3") {
                 PlaceholderTabView(title: "Crew")

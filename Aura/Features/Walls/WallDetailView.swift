@@ -1,16 +1,24 @@
 import SwiftUI
+import ARKit
 
 struct WallDetailView: View {
     let wall: Wall
     let currentUser: UserProfile
+    let publisher: WallPublishService
 
     @Environment(\.openURL) private var openURL
     @State private var viewModel: WallDetailViewModel
     @State private var isWriting = false
+    @State private var isViewingAR = false
 
-    init(wall: Wall, currentUser: UserProfile, messageService: WallMessageService, locationService: LocationService) {
+    private var canViewInAR: Bool {
+        wall.map != nil && ARWorldTrackingConfiguration.isSupported
+    }
+
+    init(wall: Wall, currentUser: UserProfile, messageService: WallMessageService, locationService: LocationService, publisher: WallPublishService) {
         self.wall = wall
         self.currentUser = currentUser
+        self.publisher = publisher
         _viewModel = State(initialValue: WallDetailViewModel(wall: wall, messageService: messageService, locationService: locationService))
     }
 
@@ -30,10 +38,18 @@ struct WallDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .safeAreaInset(edge: .bottom) {
             if viewModel.isUnlocked {
-                Button("Write on wall") {
-                    isWriting = true
+                HStack(spacing: AuraSpacing.small) {
+                    if canViewInAR {
+                        Button("View in AR") {
+                            isViewingAR = true
+                        }
+                        .buttonStyle(AuraButtonStyle())
+                    }
+                    Button("Write on wall") {
+                        isWriting = true
+                    }
+                    .buttonStyle(AuraButtonStyle(kind: .highlight))
                 }
-                .buttonStyle(AuraButtonStyle(kind: .highlight))
                 .padding(.horizontal, AuraSpacing.screen)
                 .padding(.vertical, AuraSpacing.small)
                 .background(Color.auraBackground)
@@ -43,6 +59,9 @@ struct WallDetailView: View {
             WriteMessageView { text, color in
                 try await viewModel.post(text: text, color: color, author: currentUser)
             }
+        }
+        .fullScreenCover(isPresented: $isViewingAR) {
+            WallARView(wall: wall, currentUser: currentUser, detailViewModel: viewModel, publisher: publisher)
         }
         .onAppear { viewModel.appeared() }
         .task { await viewModel.requestFreshFix() }
