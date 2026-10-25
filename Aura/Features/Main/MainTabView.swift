@@ -25,7 +25,7 @@ struct MainTabView: View {
                 PlaceholderTabView(title: "Quests")
             }
             Tab("Camera", systemImage: "camera.viewfinder") {
-                PlaceholderTabView(title: "Camera")
+                ARSpikeView()
             }
             Tab("Crew", systemImage: "person.3") {
                 PlaceholderTabView(title: "Crew")

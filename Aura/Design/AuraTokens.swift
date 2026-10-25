@@ -44,4 +44,5 @@ enum AuraSize {
     static let messageSwatch: CGFloat = 32
     static let teaserBlur: CGFloat = 6
     static let messageEditorHeight: CGFloat = 110
+    static let guidancePhotoWidth: CGFloat = 120
 }
