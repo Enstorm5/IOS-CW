@@ -18,7 +18,7 @@ final class WallService {
                 .getDocuments()
             found += snapshot.documents.compactMap { wall(id: $0.documentID, fields: $0.data()) }
         }
-        return nearbyWalls(from: found, center: center, radiusMeters: radiusMeters)
+        return wallsWithinRadius(from: found, center: center, radiusMeters: radiusMeters)
     }
 }
 

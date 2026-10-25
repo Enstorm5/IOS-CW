@@ -56,7 +56,7 @@ struct GeoTests {
         let middle = Wall(id: "middle", title: "Middle", coordinate: Coordinate(latitude: 6.9150, longitude: 79.8640), kind: .sponsored)
         let far = Wall(id: "far", title: "Far", coordinate: Coordinate(latitude: 6.9300, longitude: 79.8640), kind: .community)
 
-        let result = nearbyWalls(from: [middle, far, close, middle], center: colomboSeven, radiusMeters: 1000)
+        let result = wallsWithinRadius(from: [middle, far, close, middle], center: colomboSeven, radiusMeters: 1000)
         #expect(result.map(\.id) == ["close", "middle"])
     }
 

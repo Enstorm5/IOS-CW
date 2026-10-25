@@ -105,7 +105,7 @@ func geohashQueryRanges(center: Coordinate, radiusMeters: Double) -> [GeohashRan
     return hashes.sorted().map { GeohashRange(start: $0, end: $0 + "~") }
 }
 
-func nearbyWalls(from walls: [Wall], center: Coordinate, radiusMeters: Double) -> [NearbyWall] {
+func wallsWithinRadius(from walls: [Wall], center: Coordinate, radiusMeters: Double) -> [NearbyWall] {
     var seenIDs: Set<String> = []
     var result: [NearbyWall] = []
     for wall in walls where !seenIDs.contains(wall.id) {

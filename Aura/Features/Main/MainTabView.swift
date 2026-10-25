@@ -8,6 +8,7 @@ struct MainTabView: View {
     private let messageService: WallMessageService
     private let publisher: WallPublishService
     private let locationService: LocationService
+    private let localStore: LocalStore
 
     init(session: SessionStore, profile: UserProfile, services: AppServices) {
         self.session = session
@@ -15,14 +16,20 @@ struct MainTabView: View {
         self.messageService = services.messages
         self.publisher = services.publisher
         self.locationService = services.location
-        _discovery = State(initialValue: DiscoveryViewModel(wallService: services.walls, locationService: services.location))
+        self.localStore = services.localStore
+        _discovery = State(initialValue: DiscoveryViewModel(
+            wallService: services.walls,
+            locationService: services.location,
+            localStore: services.localStore,
+            accountID: profile.id
+        ))
     }
 
     var body: some View {
         TabView {
             Tab("Map", systemImage: "map") {
                 NavigationStack {
-                    DiscoveryMapView(viewModel: discovery, currentUser: profile, messageService: messageService, publisher: publisher)
+                    DiscoveryMapView(viewModel: discovery, currentUser: profile, messageService: messageService, publisher: publisher, localStore: localStore)
                 }
             }
             Tab("Quests", systemImage: "flag.checkered") {
@@ -35,7 +42,7 @@ struct MainTabView: View {
                 PlaceholderTabView(title: "Crew")
             }
             Tab("Me", systemImage: "person.crop.circle") {
-                MePlaceholderView(session: session, profile: profile)
+                MePlaceholderView(session: session, profile: profile, localStore: localStore)
             }
         }
         .tint(Color.auraText)
@@ -60,8 +67,11 @@ struct PlaceholderTabView: View {
 struct MePlaceholderView: View {
     let session: SessionStore
     let profile: UserProfile
+    let localStore: LocalStore
 
     @State private var isConfirmingSignOut = false
+    @State private var isConfirmingReset = false
+    @State private var unsentDraftCount = 0
     @State private var errorMessage: String?
 
     var body: some View {
@@ -77,21 +87,47 @@ struct MePlaceholderView: View {
             }
             Spacer()
             Button("Sign out") {
+                unsentDraftCount = localStore.draftCount(accountID: profile.id)
                 isConfirmingSignOut = true
             }
             .buttonStyle(AuraButtonStyle(kind: .outline))
+
+            Button("Development: reset local data") {
+                isConfirmingReset = true
+            }
+            .font(.auraLink)
+            .foregroundStyle(Color.auraMuted)
+            .frame(minHeight: AuraSize.minTap)
         }
         .padding(AuraSpacing.screen)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.auraBackground)
         .confirmationDialog("Sign out of Aura?", isPresented: $isConfirmingSignOut, titleVisibility: .visible) {
-            Button("Sign out", role: .destructive) {
+            Button(unsentDraftCount > 0 ? "Delete drafts and sign out" : "Sign out", role: .destructive) {
+                signOut()
+            }
+        } message: {
+            Text(signOutMessage(unsentDraftCount: unsentDraftCount))
+        }
+        .confirmationDialog("Reset local data?", isPresented: $isConfirmingReset, titleVisibility: .visible) {
+            Button("Reset", role: .destructive) {
                 do {
-                    try session.signOut()
+                    try localStore.deleteEverything()
                 } catch {
-                    errorMessage = error.localizedDescription
+                    errorMessage = "Couldn't reset local data."
                 }
             }
+        } message: {
+            Text("Deletes all drafts and saved walls and messages on this phone. Nothing online changes.")
+        }
+    }
+
+    private func signOut() {
+        do {
+            try localStore.deleteAccountData(accountID: profile.id)
+            try session.signOut()
+        } catch {
+            errorMessage = error.localizedDescription
         }
     }
 }

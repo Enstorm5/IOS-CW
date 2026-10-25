@@ -12,16 +12,22 @@ final class DiscoveryViewModel {
     private(set) var isLoading = false
     private(set) var errorMessage: String?
     private(set) var lastSearchCenter: Coordinate?
+    private(set) var showingSavedWallsSince: Date?
+    private(set) var isShowingSavedWalls = false
     var selectedWallID: String?
 
     let locationService: LocationService
     private let wallService: WallService
+    private let localStore: LocalStore
+    private let accountID: String
     private var lastRequestedCenter: Coordinate?
     private var latestSearchID = 0
 
-    init(wallService: WallService, locationService: LocationService) {
+    init(wallService: WallService, locationService: LocationService, localStore: LocalStore, accountID: String) {
         self.wallService = wallService
         self.locationService = locationService
+        self.localStore = localStore
+        self.accountID = accountID
     }
 
     var selectedWall: NearbyWall? {
@@ -62,12 +68,24 @@ final class DiscoveryViewModel {
             guard searchID == latestSearchID else { return }
             nearbyWalls = walls
             lastSearchCenter = center
+            isShowingSavedWalls = false
+            showingSavedWallsSince = nil
+            try? localStore.cacheWalls(walls.map(\.wall), accountID: accountID, fetchedAt: Date())
             if selectedWall == nil {
                 selectedWallID = nil
             }
         } catch {
             guard searchID == latestSearchID else { return }
-            errorMessage = "We couldn't load walls. Check your connection and try again."
+            let saved = localStore.cachedWalls(accountID: accountID)
+            let savedNearby = wallsWithinRadius(from: saved.walls, center: center, radiusMeters: discoveryRadiusMeters)
+            if savedNearby.isEmpty {
+                errorMessage = "We couldn't load walls. Check your connection and try again."
+            } else {
+                nearbyWalls = savedNearby
+                lastSearchCenter = center
+                isShowingSavedWalls = true
+                showingSavedWallsSince = saved.savedAt
+            }
         }
         isLoading = false
     }

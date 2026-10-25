@@ -96,9 +96,14 @@ struct WallARView: View {
         }
         .onDisappear { arSession.stopCamera() }
         .sheet(isPresented: $isWriting) {
-            WriteMessageView { text, color in
-                try await detailViewModel.post(text: text, color: color, author: currentUser)
-            }
+            WriteMessageView(
+                initialDraft: detailViewModel.savedDraft(),
+                onPost: { text, color in
+                    try await detailViewModel.post(text: text, color: color, author: currentUser)
+                },
+                onSaveDraft: { text, color in detailViewModel.saveDraft(text: text, color: color) },
+                onDiscardDraft: { detailViewModel.discardDraft() }
+            )
         }
     }
 

@@ -15,11 +15,11 @@ struct WallDetailView: View {
         wall.map != nil && ARWorldTrackingConfiguration.isSupported
     }
 
-    init(wall: Wall, currentUser: UserProfile, messageService: WallMessageService, locationService: LocationService, publisher: WallPublishService) {
+    init(wall: Wall, currentUser: UserProfile, messageService: WallMessageService, locationService: LocationService, publisher: WallPublishService, localStore: LocalStore) {
         self.wall = wall
         self.currentUser = currentUser
         self.publisher = publisher
-        _viewModel = State(initialValue: WallDetailViewModel(wall: wall, messageService: messageService, locationService: locationService))
+        _viewModel = State(initialValue: WallDetailViewModel(wall: wall, messageService: messageService, locationService: locationService, localStore: localStore, accountID: currentUser.id))
     }
 
     var body: some View {
@@ -56,9 +56,14 @@ struct WallDetailView: View {
             }
         }
         .sheet(isPresented: $isWriting) {
-            WriteMessageView { text, color in
-                try await viewModel.post(text: text, color: color, author: currentUser)
-            }
+            WriteMessageView(
+                initialDraft: viewModel.savedDraft(),
+                onPost: { text, color in
+                    try await viewModel.post(text: text, color: color, author: currentUser)
+                },
+                onSaveDraft: { text, color in viewModel.saveDraft(text: text, color: color) },
+                onDiscardDraft: { viewModel.discardDraft() }
+            )
         }
         .fullScreenCover(isPresented: $isViewingAR) {
             WallARView(wall: wall, currentUser: currentUser, detailViewModel: viewModel, publisher: publisher)
@@ -146,6 +151,11 @@ struct WallDetailView: View {
         } else if viewModel.hasLoaded && viewModel.messages.isEmpty {
             StatusBanner(systemImage: "text.bubble", message: "No messages on this wall yet.")
         } else {
+            if viewModel.isShowingSavedMessages {
+                StatusBanner(systemImage: "icloud.slash", message: offlineSavedText(viewModel.showingSavedMessagesSince, now: .now), actionTitle: "Retry") {
+                    Task { await viewModel.loadFirstPage() }
+                }
+            }
             ForEach(viewModel.messages) { message in
                 MessageRow(message: message, isMine: message.authorID == currentUser.id)
             }

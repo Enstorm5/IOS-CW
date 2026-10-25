@@ -2,18 +2,51 @@ import SwiftUI
 
 struct WriteMessageView: View {
     let onPost: (String, MessageColor) async throws -> Void
+    let onSaveDraft: (String, MessageColor) -> Void
+    let onDiscardDraft: () -> Void
 
     @Environment(\.dismiss) private var dismiss
-    @State private var text = ""
-    @State private var color: MessageColor = .magenta
+    @State private var text: String
+    @State private var color: MessageColor
     @State private var isPosting = false
+    @State private var didPost = false
+    @State private var restoredDraft: Bool
     @State private var errorMessage: String?
     @FocusState private var isEditorFocused: Bool
+
+    init(
+        initialDraft: MessageDraft?,
+        onPost: @escaping (String, MessageColor) async throws -> Void,
+        onSaveDraft: @escaping (String, MessageColor) -> Void,
+        onDiscardDraft: @escaping () -> Void
+    ) {
+        self.onPost = onPost
+        self.onSaveDraft = onSaveDraft
+        self.onDiscardDraft = onDiscardDraft
+        _text = State(initialValue: initialDraft?.text ?? "")
+        _color = State(initialValue: initialDraft?.color ?? .magenta)
+        _restoredDraft = State(initialValue: initialDraft != nil)
+    }
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: AuraSpacing.medium) {
+                    if restoredDraft {
+                        HStack {
+                            AuraPill(text: "Draft restored")
+                            Spacer()
+                            Button("Discard draft") {
+                                text = ""
+                                restoredDraft = false
+                                onDiscardDraft()
+                            }
+                            .font(.auraLink)
+                            .foregroundStyle(Color.auraText)
+                            .frame(minHeight: AuraSize.minTap)
+                        }
+                    }
+
                     editor
 
                     Text(characterCountText(text))
@@ -63,6 +96,11 @@ struct WriteMessageView: View {
                 }
             }
             .onAppear { isEditorFocused = true }
+            .onDisappear {
+                if !didPost {
+                    onSaveDraft(text, color)
+                }
+            }
         }
         .tint(Color.auraText)
         .interactiveDismissDisabled(isPosting)
@@ -100,6 +138,7 @@ struct WriteMessageView: View {
         isPosting = true
         do {
             try await onPost(text, color)
+            didPost = true
             dismiss()
         } catch {
             errorMessage = error.localizedDescription

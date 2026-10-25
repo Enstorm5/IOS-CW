@@ -6,6 +6,7 @@ struct DiscoveryMapView: View {
     let currentUser: UserProfile
     let messageService: WallMessageService
     let publisher: WallPublishService
+    let localStore: LocalStore
 
     @Environment(\.openURL) private var openURL
     @State private var cameraPosition: MapCameraPosition = .userLocation(
@@ -50,7 +51,7 @@ struct DiscoveryMapView: View {
         }
         .toolbar(.hidden, for: .navigationBar)
         .navigationDestination(item: $openedWall) { wall in
-            WallDetailView(wall: wall, currentUser: currentUser, messageService: messageService, locationService: viewModel.locationService, publisher: publisher)
+            WallDetailView(wall: wall, currentUser: currentUser, messageService: messageService, locationService: viewModel.locationService, publisher: publisher, localStore: localStore)
         }
         .onAppear { viewModel.mapAppeared() }
         .onDisappear { viewModel.mapDisappeared() }
@@ -90,7 +91,11 @@ struct DiscoveryMapView: View {
 
     @ViewBuilder
     private var statusBanner: some View {
-        if let errorMessage = viewModel.errorMessage {
+        if viewModel.isShowingSavedWalls {
+            StatusBanner(systemImage: "icloud.slash", message: offlineSavedText(viewModel.showingSavedWallsSince, now: .now), actionTitle: "Retry") {
+                Task { await viewModel.retry() }
+            }
+        } else if let errorMessage = viewModel.errorMessage {
             StatusBanner(systemImage: "wifi.exclamationmark", message: errorMessage, actionTitle: "Retry") {
                 Task { await viewModel.retry() }
             }

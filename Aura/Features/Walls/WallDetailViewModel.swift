@@ -12,18 +12,41 @@ final class WallDetailViewModel {
     private(set) var isLoadingMore = false
     private(set) var errorMessage: String?
     private(set) var hasLoaded = false
+    private(set) var isShowingSavedMessages = false
+    private(set) var showingSavedMessagesSince: Date?
 
     let locationService: LocationService
     private let wall: Wall
     private let messageService: WallMessageService
+    private let localStore: LocalStore
+    private let accountID: String
     private var nextCursor: MessageCursor?
     private var latestLoadID = 0
     private var pendingPost: PendingPost?
 
-    init(wall: Wall, messageService: WallMessageService, locationService: LocationService) {
+    init(wall: Wall, messageService: WallMessageService, locationService: LocationService, localStore: LocalStore, accountID: String) {
         self.wall = wall
         self.messageService = messageService
         self.locationService = locationService
+        self.localStore = localStore
+        self.accountID = accountID
+    }
+
+    func savedDraft() -> MessageDraft? {
+        localStore.draft(accountID: accountID, wallID: wall.id)
+    }
+
+    func saveDraft(text: String, color: MessageColor) {
+        let cleaned = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        if cleaned.isEmpty {
+            discardDraft()
+            return
+        }
+        try? localStore.saveDraft(MessageDraft(accountID: accountID, wallID: wall.id, text: text, color: color, updatedAt: Date()))
+    }
+
+    func discardDraft() {
+        try? localStore.deleteDraft(accountID: accountID, wallID: wall.id)
     }
 
     var isUnlocked: Bool { proximity == .unlocked }
@@ -91,6 +114,7 @@ final class WallDetailViewModel {
         do {
             let saved = try await messageService.post(newMessage)
             pendingPost = nil
+            discardDraft()
             messages = [saved] + messages.filter { $0.id != saved.id }
             hasLoaded = true
         } catch {
@@ -129,9 +153,21 @@ final class WallDetailViewModel {
             messages = page.messages
             nextCursor = page.nextCursor
             hasLoaded = true
+            isShowingSavedMessages = false
+            showingSavedMessagesSince = nil
+            try? localStore.replaceCachedMessages(page.messages, wallID: wall.id, accountID: accountID, fetchedAt: Date())
         } catch {
             guard loadID == latestLoadID else { return }
-            errorMessage = "We couldn't load messages. Check your connection and try again."
+            let saved = localStore.cachedMessages(wallID: wall.id, accountID: accountID)
+            if saved.messages.isEmpty {
+                errorMessage = "We couldn't load messages. Check your connection and try again."
+            } else {
+                messages = saved.messages
+                nextCursor = nil
+                hasLoaded = true
+                isShowingSavedMessages = true
+                showingSavedMessagesSince = saved.savedAt
+            }
         }
         isLoading = false
     }
