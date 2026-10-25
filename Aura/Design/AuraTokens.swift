@@ -30,6 +30,8 @@ enum AuraSpacing {
 
 enum AuraRadius {
     static let control: CGFloat = 12
+    static let swatch: CGFloat = 10
+    static let row: CGFloat = 14
     static let card: CGFloat = 18
     static let logo: CGFloat = 24
 }
@@ -39,4 +41,5 @@ enum AuraSize {
     static let minTap: CGFloat = 44
     static let pin: CGFloat = 30
     static let pinBorder: CGFloat = 3
+    static let messageSwatch: CGFloat = 32
 }

@@ -21,7 +21,7 @@ enum WallKind: String {
     case sponsored
 }
 
-struct Wall: Identifiable, Equatable {
+struct Wall: Identifiable, Hashable {
     var id: String
     var title: String
     var coordinate: Coordinate

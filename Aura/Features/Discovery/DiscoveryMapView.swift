@@ -3,6 +3,8 @@ import MapKit
 
 struct DiscoveryMapView: View {
     @Bindable var viewModel: DiscoveryViewModel
+    let currentUserID: String
+    let messageService: WallMessageService
 
     @Environment(\.openURL) private var openURL
     @State private var cameraPosition: MapCameraPosition = .userLocation(
@@ -13,6 +15,7 @@ struct DiscoveryMapView: View {
         ))
     )
     @State private var visibleCenter: Coordinate?
+    @State private var openedWall: Wall?
 
     var body: some View {
         Map(position: $cameraPosition, selection: $viewModel.selectedWallID) {
@@ -39,9 +42,14 @@ struct DiscoveryMapView: View {
                 WallPreviewCard(
                     wall: selected.wall,
                     distanceText: viewModel.distanceText(to: selected.wall),
+                    onOpen: { openedWall = selected.wall },
                     onClose: { viewModel.selectedWallID = nil }
                 )
             }
+        }
+        .toolbar(.hidden, for: .navigationBar)
+        .navigationDestination(item: $openedWall) { wall in
+            WallDetailView(wall: wall, currentUserID: currentUserID, messageService: messageService)
         }
         .onAppear { viewModel.mapAppeared() }
         .onDisappear { viewModel.mapDisappeared() }
@@ -133,6 +141,7 @@ struct WallPin: View {
 struct WallPreviewCard: View {
     let wall: Wall
     let distanceText: String?
+    let onOpen: () -> Void
     let onClose: () -> Void
 
     var body: some View {
@@ -163,8 +172,12 @@ struct WallPreviewCard: View {
                     .foregroundStyle(Color.auraMuted)
             }
 
-            Button("Directions", action: openDirections)
-                .buttonStyle(AuraButtonStyle(kind: .highlight))
+            HStack(spacing: AuraSpacing.small) {
+                Button("Open wall", action: onOpen)
+                    .buttonStyle(AuraButtonStyle(kind: .highlight))
+                Button("Directions", action: openDirections)
+                    .buttonStyle(AuraButtonStyle(kind: .outline))
+            }
         }
         .padding(AuraSpacing.medium)
         .background(Color.auraCard, in: .rect(cornerRadius: AuraRadius.card))

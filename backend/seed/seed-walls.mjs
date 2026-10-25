@@ -1,5 +1,5 @@
 import { initializeApp, applicationDefault } from "firebase-admin/app";
-import { getFirestore, FieldValue } from "firebase-admin/firestore";
+import { getFirestore, FieldValue, Timestamp } from "firebase-admin/firestore";
 
 const projectId = "uni-ios-a6b5f";
 const geohashPrecision = 9;
@@ -12,6 +12,15 @@ const demoWalls = [
   { id: "demo-nelum-pokuna", title: "Nelum Pokuna walkway", latitude: 6.9105, longitude: 79.8625, kind: "community" },
   { id: "demo-college-house", title: "College House corner", latitude: 6.9010, longitude: 79.8605, kind: "community" },
   { id: "demo-cinnamon-bean", title: "Cinnamon Bean Cafe (demo sponsor)", latitude: 6.9128, longitude: 79.8668, kind: "sponsored" },
+];
+
+const demoMessages = [
+  { wallID: "demo-viharamahadevi-fountain", id: "demo-message-1", authorName: "Mira", text: "best flat white in town", color: "yellow", sparkCount: 12, minutesAgo: 5, x: 0.18, y: 0.22 },
+  { wallID: "demo-viharamahadevi-fountain", id: "demo-message-2", authorName: "Dev", text: "exam week survivors", color: "mint", sparkCount: 8, minutesAgo: 40, x: 0.55, y: 0.48 },
+  { wallID: "demo-viharamahadevi-fountain", id: "demo-message-3", authorName: "Sam", text: "meet here at 6?", color: "magenta", sparkCount: 3, minutesAgo: 90, x: 0.3, y: 0.75 },
+  { wallID: "demo-public-library", id: "demo-message-4", authorName: "Ishara", text: "quiet corner on the 2nd floor", color: "mint", sparkCount: 5, minutesAgo: 15, x: 0.2, y: 0.3 },
+  { wallID: "demo-public-library", id: "demo-message-5", authorName: "Kavin", text: "returned my books late again", color: "ink", sparkCount: 2, minutesAgo: 120, x: 0.6, y: 0.6 },
+  { wallID: "demo-cinnamon-bean", id: "demo-message-6", authorName: "Nadia", text: "the cinnamon bun is worth it", color: "yellow", sparkCount: 9, minutesAgo: 25, x: 0.4, y: 0.35 },
 ];
 
 function geohash(latitude, longitude, precision) {
@@ -64,5 +73,22 @@ for (const wall of demoWalls) {
   });
 }
 
+for (const message of demoMessages) {
+  batch.set(db.collection("walls").doc(message.wallID).collection("messages").doc(message.id), {
+    authorID: "aura-demo",
+    authorName: message.authorName,
+    text: message.text,
+    contentType: "text",
+    color: message.color,
+    sparkCount: message.sparkCount,
+    normalizedX: message.x,
+    normalizedY: message.y,
+    moderationStatus: "active",
+    isDemo: true,
+    createdAt: Timestamp.fromMillis(Date.now() - message.minutesAgo * 60 * 1000),
+    updatedAt: FieldValue.serverTimestamp(),
+  });
+}
+
 await batch.commit();
-console.log(`Seeded ${demoWalls.length} demo walls into ${projectId}.`);
+console.log(`Seeded ${demoWalls.length} demo walls and ${demoMessages.length} demo messages into ${projectId}.`);

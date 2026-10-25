@@ -11,6 +11,11 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userID;
     }
 
+    function isReadableWall(wallID) {
+      let wall = get(/databases/$(database)/documents/walls/$(wallID)).data;
+      return wall.visibility == 'public' && wall.moderationStatus == 'active';
+    }
+
     function isValidProfile(data) {
       return data.keys().hasOnly(['displayName', 'bio', 'avatarPreset', 'interests', 'createdAt'])
         && data.displayName is string
@@ -37,6 +42,13 @@ service cloud.firestore {
         && resource.data.visibility == 'public'
         && resource.data.moderationStatus == 'active';
       allow write: if false;
+
+      match /messages/{messageID} {
+        allow read: if isSignedIn()
+          && resource.data.moderationStatus == 'active'
+          && isReadableWall(wallID);
+        allow write: if false;
+      }
     }
   }
 }

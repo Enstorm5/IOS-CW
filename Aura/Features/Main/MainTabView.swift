@@ -5,17 +5,21 @@ struct MainTabView: View {
     let profile: UserProfile
 
     @State private var discovery: DiscoveryViewModel
+    private let messageService: WallMessageService
 
     init(session: SessionStore, profile: UserProfile, services: AppServices) {
         self.session = session
         self.profile = profile
+        self.messageService = services.messages
         _discovery = State(initialValue: DiscoveryViewModel(wallService: services.walls, locationService: services.location))
     }
 
     var body: some View {
         TabView {
             Tab("Map", systemImage: "map") {
-                DiscoveryMapView(viewModel: discovery)
+                NavigationStack {
+                    DiscoveryMapView(viewModel: discovery, currentUserID: profile.id, messageService: messageService)
+                }
             }
             Tab("Quests", systemImage: "flag.checkered") {
                 PlaceholderTabView(title: "Quests")
