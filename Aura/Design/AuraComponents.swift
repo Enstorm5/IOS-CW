@@ -160,3 +160,46 @@ struct AvatarView: View {
         }
     }
 }
+
+struct AuraPillButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.auraLink)
+            .foregroundStyle(Color.auraBackground)
+            .padding(.horizontal, AuraSpacing.large)
+            .frame(minHeight: AuraSize.minTap)
+            .background(Color.auraText, in: .capsule)
+            .scaleEffect(configuration.isPressed ? 0.98 : 1)
+    }
+}
+
+struct StatusBanner: View {
+    let systemImage: String
+    let message: String
+    var actionTitle: String? = nil
+    var action: (() -> Void)? = nil
+
+    var body: some View {
+        HStack(alignment: .top, spacing: AuraSpacing.medium) {
+            Image(systemName: systemImage)
+                .foregroundStyle(Color.auraText)
+                .accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: AuraSpacing.xxSmall) {
+                Text(message)
+                    .font(.auraNotice)
+                    .foregroundStyle(Color.auraText)
+                if let actionTitle, let action {
+                    Button(actionTitle, action: action)
+                        .font(.auraLink)
+                        .foregroundStyle(Color.auraText)
+                        .underline()
+                        .frame(minHeight: AuraSize.minTap)
+                }
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(AuraSpacing.medium)
+        .background(Color.auraCard, in: .rect(cornerRadius: AuraRadius.control))
+        .padding(.horizontal, AuraSpacing.screen)
+    }
+}

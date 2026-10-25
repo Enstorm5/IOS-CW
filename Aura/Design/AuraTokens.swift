@@ -4,6 +4,7 @@ extension Font {
     static let auraScreenTitle = Font.largeTitle.weight(.heavy)
     static let auraHeading = Font.title.weight(.heavy)
     static let auraButton = Font.headline.weight(.heavy)
+    static let auraCardTitle = Font.headline.weight(.heavy)
     static let auraLink = Font.subheadline.weight(.bold)
     static let auraSectionLabel = Font.subheadline.weight(.bold)
     static let auraNotice = Font.subheadline.weight(.semibold)
@@ -13,6 +14,7 @@ extension Font {
     static let auraErrorText = Font.footnote.weight(.semibold)
     static let auraIcon = Font.largeTitle
     static let auraLogo = Font.system(size: 34, weight: .heavy)
+    static let auraPinIcon = Font.caption2.weight(.heavy)
 }
 
 enum AuraSpacing {
@@ -28,10 +30,13 @@ enum AuraSpacing {
 
 enum AuraRadius {
     static let control: CGFloat = 12
+    static let card: CGFloat = 18
     static let logo: CGFloat = 24
 }
 
 enum AuraSize {
     static let control: CGFloat = 50
     static let minTap: CGFloat = 44
+    static let pin: CGFloat = 30
+    static let pinBorder: CGFloat = 3
 }

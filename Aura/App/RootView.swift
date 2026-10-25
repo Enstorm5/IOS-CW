@@ -2,6 +2,7 @@ import SwiftUI
 
 struct RootView: View {
     let session: SessionStore
+    let services: AppServices
 
     var body: some View {
         Group {
@@ -13,7 +14,7 @@ struct RootView: View {
             case .needsOnboarding(let userID, let suggestedName):
                 InterestsView(session: session, userID: userID, suggestedName: suggestedName)
             case .signedIn(let profile):
-                SignedInPlaceholderView(session: session, profile: profile)
+                MainTabView(session: session, profile: profile, services: services)
             case .failed(let message):
                 SessionErrorView(session: session, message: message)
             }
