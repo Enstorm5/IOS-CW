@@ -20,10 +20,29 @@ final class PersistenceController {
         }
         container.persistentStoreDescriptions.first?.shouldMigrateStoreAutomatically = true
         container.persistentStoreDescriptions.first?.shouldInferMappingModelAutomatically = true
-        container.loadPersistentStores { [weak self] _, error in
-            self?.loadError = error
+
+        loadError = loadStores()
+        if loadError != nil && !inMemory {
+            resetStoreFiles()
+            loadError = loadStores()
         }
+
         container.viewContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
         container.viewContext.automaticallyMergesChangesFromParent = true
+    }
+
+    private func loadStores() -> Error? {
+        var firstError: Error?
+        container.loadPersistentStores { _, error in
+            if firstError == nil {
+                firstError = error
+            }
+        }
+        return firstError
+    }
+
+    private func resetStoreFiles() {
+        guard let url = container.persistentStoreDescriptions.first?.url else { return }
+        try? container.persistentStoreCoordinator.destroyPersistentStore(at: url, type: .sqlite)
     }
 }

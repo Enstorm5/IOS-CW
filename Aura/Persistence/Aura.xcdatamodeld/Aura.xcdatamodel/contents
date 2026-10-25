@@ -5,7 +5,9 @@
         <attribute name="authorID" attributeType="String"/>
         <attribute name="authorName" attributeType="String"/>
         <attribute name="colorRaw" attributeType="String"/>
+        <attribute name="contentTypeRaw" attributeType="String" defaultValueString="text"/>
         <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="drawingPayload" optional="YES" attributeType="String"/>
         <attribute name="fetchedAt" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="key" attributeType="String"/>
         <attribute name="messageID" attributeType="String"/>
