@@ -4,31 +4,39 @@ struct WallDetailView: View {
     let wall: Wall
     let currentUserID: String
 
+    @Environment(\.openURL) private var openURL
     @State private var viewModel: WallDetailViewModel
 
-    init(wall: Wall, currentUserID: String, messageService: WallMessageService) {
+    init(wall: Wall, currentUserID: String, messageService: WallMessageService, locationService: LocationService) {
         self.wall = wall
         self.currentUserID = currentUserID
-        _viewModel = State(initialValue: WallDetailViewModel(wallID: wall.id, messageService: messageService))
+        _viewModel = State(initialValue: WallDetailViewModel(wall: wall, messageService: messageService, locationService: locationService))
     }
 
     var body: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: AuraSpacing.small) {
                 header
-                content
+                if viewModel.isUnlocked {
+                    unlockedContent
+                } else {
+                    lockedContent
+                }
             }
             .padding(.vertical, AuraSpacing.medium)
         }
         .background(Color.auraBackground)
         .navigationBarTitleDisplayMode(.inline)
-        .task {
-            if !viewModel.hasLoaded {
-                await viewModel.loadFirstPage()
-            }
+        .onAppear { viewModel.appeared() }
+        .onDisappear { viewModel.disappeared() }
+        .task(id: viewModel.locationService.latestLocation) {
+            await viewModel.refreshProximity(now: .now)
+        }
+        .task(id: viewModel.locationService.access) {
+            await viewModel.refreshProximity(now: .now)
         }
         .refreshable {
-            await viewModel.loadFirstPage()
+            await viewModel.refresh()
         }
     }
 
@@ -47,7 +55,50 @@ struct WallDetailView: View {
     }
 
     @ViewBuilder
-    private var content: some View {
+    private var lockedContent: some View {
+        VStack(alignment: .leading, spacing: AuraSpacing.small) {
+            Label(lockedWallMessage(for: viewModel.proximity, policy: wallReadingPolicy) ?? "", systemImage: "lock.fill")
+                .font(.auraNotice)
+                .foregroundStyle(Color.auraText)
+
+            if viewModel.proximity == .locationOff || viewModel.proximity == .approximateLocation {
+                Button("Open Settings", action: openSettings)
+                    .font(.auraLink)
+                    .foregroundStyle(Color.auraText)
+                    .underline()
+                    .frame(minHeight: AuraSize.minTap)
+            }
+        }
+        .padding(AuraSpacing.medium)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.auraCard, in: .rect(cornerRadius: AuraRadius.card))
+        .padding(.horizontal, AuraSpacing.medium)
+
+        if let teaser = viewModel.teaser {
+            Text(messageCountText(teaser.messageCount))
+                .font(.auraSectionLabel)
+                .foregroundStyle(Color.auraMuted)
+                .padding(.horizontal, AuraSpacing.screen)
+                .padding(.top, AuraSpacing.small)
+
+            if let latest = teaser.latestMessage {
+                MessageRow(message: latest, isMine: false)
+                    .blur(radius: AuraSize.teaserBlur)
+                    .allowsHitTesting(false)
+                    .accessibilityHidden(true)
+            }
+        } else if viewModel.isLoadingTeaser {
+            ProgressView()
+                .frame(maxWidth: .infinity, minHeight: AuraSize.control)
+        } else if let errorMessage = viewModel.errorMessage {
+            StatusBanner(systemImage: "wifi.exclamationmark", message: errorMessage, actionTitle: "Retry") {
+                Task { await viewModel.loadTeaser() }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var unlockedContent: some View {
         if viewModel.isLoading && viewModel.messages.isEmpty {
             ProgressView()
                 .frame(maxWidth: .infinity, minHeight: AuraSize.control)
@@ -76,6 +127,12 @@ struct WallDetailView: View {
                 .buttonStyle(AuraPillButtonStyle())
                 .frame(maxWidth: .infinity)
             }
+        }
+    }
+
+    private func openSettings() {
+        if let url = URL(string: UIApplication.openSettingsURLString) {
+            openURL(url)
         }
     }
 }

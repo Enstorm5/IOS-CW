@@ -42,4 +42,5 @@ enum AuraSize {
     static let pin: CGFloat = 30
     static let pinBorder: CGFloat = 3
     static let messageSwatch: CGFloat = 32
+    static let teaserBlur: CGFloat = 6
 }

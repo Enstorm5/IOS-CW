@@ -15,8 +15,7 @@ final class WallMessageService {
     private let pageSize = 20
 
     func fetchMessages(wallID: String, after cursor: MessageCursor?) async throws -> MessagePage {
-        var query = database.collection("walls").document(wallID).collection("messages")
-            .whereField("moderationStatus", isEqualTo: "active")
+        var query = activeMessages(wallID: wallID)
             .order(by: "createdAt", descending: true)
             .limit(to: pageSize)
         if let cursor {
@@ -30,6 +29,23 @@ final class WallMessageService {
         let hasMorePages = snapshot.documents.count == pageSize
         let nextCursor = hasMorePages ? snapshot.documents.last.map { MessageCursor(lastDocument: $0) } : nil
         return MessagePage(messages: messages, nextCursor: nextCursor)
+    }
+
+    func fetchTeaser(wallID: String) async throws -> WallTeaser {
+        let countSnapshot = try await activeMessages(wallID: wallID).count.getAggregation(source: .server)
+        let latestSnapshot = try await activeMessages(wallID: wallID)
+            .order(by: "createdAt", descending: true)
+            .limit(to: 1)
+            .getDocuments()
+        let latest = latestSnapshot.documents.first.flatMap { document in
+            wallMessage(id: document.documentID, wallID: wallID, fields: fieldsWithDates(document.data()))
+        }
+        return WallTeaser(messageCount: countSnapshot.count.intValue, latestMessage: latest)
+    }
+
+    private func activeMessages(wallID: String) -> Query {
+        database.collection("walls").document(wallID).collection("messages")
+            .whereField("moderationStatus", isEqualTo: "active")
     }
 
     private func fieldsWithDates(_ fields: [String: Any]) -> [String: Any] {

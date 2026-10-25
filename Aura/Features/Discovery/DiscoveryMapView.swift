@@ -49,7 +49,7 @@ struct DiscoveryMapView: View {
         }
         .toolbar(.hidden, for: .navigationBar)
         .navigationDestination(item: $openedWall) { wall in
-            WallDetailView(wall: wall, currentUserID: currentUserID, messageService: messageService)
+            WallDetailView(wall: wall, currentUserID: currentUserID, messageService: messageService, locationService: viewModel.locationService)
         }
         .onAppear { viewModel.mapAppeared() }
         .onDisappear { viewModel.mapDisappeared() }

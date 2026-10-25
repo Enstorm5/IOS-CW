@@ -34,12 +34,13 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
     private(set) var latestLocation: CLLocation?
 
     private let manager = CLLocationManager()
+    private var activeUpdateRequests = 0
 
     override init() {
         super.init()
         manager.delegate = self
         manager.desiredAccuracy = kCLLocationAccuracyNearestTenMeters
-        manager.distanceFilter = 25
+        manager.distanceFilter = kCLDistanceFilterNone
     }
 
     func requestAccessIfNeeded() {
@@ -49,11 +50,17 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
     }
 
     func startUpdating() {
-        manager.startUpdatingLocation()
+        activeUpdateRequests += 1
+        if activeUpdateRequests == 1 {
+            manager.startUpdatingLocation()
+        }
     }
 
     func stopUpdating() {
-        manager.stopUpdatingLocation()
+        activeUpdateRequests = max(0, activeUpdateRequests - 1)
+        if activeUpdateRequests == 0 {
+            manager.stopUpdatingLocation()
+        }
     }
 
     nonisolated func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {

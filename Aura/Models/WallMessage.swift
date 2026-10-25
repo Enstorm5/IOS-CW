@@ -7,6 +7,11 @@ enum MessageColor: String, CaseIterable {
     case ink
 }
 
+struct WallTeaser: Equatable {
+    let messageCount: Int
+    let latestMessage: WallMessage?
+}
+
 struct WallMessage: Identifiable, Equatable {
     var id: String
     var wallID: String

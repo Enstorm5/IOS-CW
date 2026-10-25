@@ -1,26 +1,78 @@
 import Foundation
+import CoreLocation
 import Observation
 
 @MainActor @Observable
 final class WallDetailViewModel {
+    private(set) var proximity: WallProximity = .findingLocation
+    private(set) var teaser: WallTeaser?
+    private(set) var isLoadingTeaser = false
     private(set) var messages: [WallMessage] = []
     private(set) var isLoading = false
     private(set) var isLoadingMore = false
     private(set) var errorMessage: String?
     private(set) var hasLoaded = false
 
-    private let wallID: String
+    let locationService: LocationService
+    private let wall: Wall
     private let messageService: WallMessageService
     private var nextCursor: MessageCursor?
     private var latestLoadID = 0
 
-    init(wallID: String, messageService: WallMessageService) {
-        self.wallID = wallID
+    init(wall: Wall, messageService: WallMessageService, locationService: LocationService) {
+        self.wall = wall
         self.messageService = messageService
+        self.locationService = locationService
     }
+
+    var isUnlocked: Bool { proximity == .unlocked }
 
     var canLoadMore: Bool {
         nextCursor != nil && !isLoading && !isLoadingMore
+    }
+
+    func appeared() {
+        locationService.startUpdating()
+    }
+
+    func disappeared() {
+        locationService.stopUpdating()
+    }
+
+    func refreshProximity(now: Date) async {
+        guard !isUnlocked else { return }
+
+        let fix = locationService.latestLocation.map {
+            LocationFix(coordinate: Coordinate($0.coordinate), horizontalAccuracyMeters: $0.horizontalAccuracy, timestamp: $0.timestamp)
+        }
+        proximity = wallProximity(wallCoordinate: wall.coordinate, access: locationService.access, fix: fix, policy: wallReadingPolicy, now: now)
+
+        if isUnlocked {
+            if !hasLoaded {
+                await loadFirstPage()
+            }
+        } else if teaser == nil && !isLoadingTeaser {
+            await loadTeaser()
+        }
+    }
+
+    func refresh() async {
+        if isUnlocked {
+            await loadFirstPage()
+        } else {
+            await loadTeaser()
+        }
+    }
+
+    func loadTeaser() async {
+        isLoadingTeaser = true
+        errorMessage = nil
+        do {
+            teaser = try await messageService.fetchTeaser(wallID: wall.id)
+        } catch {
+            errorMessage = "We couldn't load this wall. Check your connection and try again."
+        }
+        isLoadingTeaser = false
     }
 
     func loadFirstPage() async {
@@ -30,7 +82,7 @@ final class WallDetailViewModel {
         errorMessage = nil
 
         do {
-            let page = try await messageService.fetchMessages(wallID: wallID, after: nil)
+            let page = try await messageService.fetchMessages(wallID: wall.id, after: nil)
             guard loadID == latestLoadID else { return }
             messages = page.messages
             nextCursor = page.nextCursor
@@ -49,7 +101,7 @@ final class WallDetailViewModel {
         errorMessage = nil
 
         do {
-            let page = try await messageService.fetchMessages(wallID: wallID, after: cursor)
+            let page = try await messageService.fetchMessages(wallID: wall.id, after: cursor)
             guard loadID == latestLoadID else { return }
             messages = appendingNewMessages(page.messages, to: messages)
             nextCursor = page.nextCursor
