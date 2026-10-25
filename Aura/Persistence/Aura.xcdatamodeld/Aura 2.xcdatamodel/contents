@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="1" systemVersion="1" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+    <entity name="CachedMessageEntity" representedClassName="CachedMessageEntity" syncable="YES" codeGenerationType="class">
+        <attribute name="accountID" attributeType="String"/>
+        <attribute name="authorID" attributeType="String"/>
+        <attribute name="authorName" attributeType="String"/>
+        <attribute name="colorRaw" attributeType="String"/>
+        <attribute name="contentTypeRaw" attributeType="String" defaultValueString="text"/>
+        <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="drawingPayload" optional="YES" attributeType="String"/>
+        <attribute name="fetchedAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="key" attributeType="String"/>
+        <attribute name="messageID" attributeType="String"/>
+        <attribute name="normalizedX" attributeType="Double" defaultValueString="0.5" usesScalarValueType="YES"/>
+        <attribute name="normalizedY" attributeType="Double" defaultValueString="0.5" usesScalarValueType="YES"/>
+        <attribute name="sparkCount" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="text" attributeType="String"/>
+        <attribute name="wallID" attributeType="String"/>
+        <uniquenessConstraints>
+            <uniquenessConstraint>
+                <constraint value="key"/>
+            </uniquenessConstraint>
+        </uniquenessConstraints>
+    </entity>
+    <entity name="CachedWallEntity" representedClassName="CachedWallEntity" syncable="YES" codeGenerationType="class">
+        <attribute name="accountID" attributeType="String"/>
+        <attribute name="fetchedAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="key" attributeType="String"/>
+        <attribute name="kindRaw" attributeType="String"/>
+        <attribute name="latitude" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="longitude" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="mapInfoData" optional="YES" attributeType="Binary"/>
+        <attribute name="title" attributeType="String"/>
+        <attribute name="wallID" attributeType="String"/>
+        <uniquenessConstraints>
+            <uniquenessConstraint>
+                <constraint value="key"/>
+            </uniquenessConstraint>
+        </uniquenessConstraints>
+    </entity>
+    <entity name="MessageDraftEntity" representedClassName="MessageDraftEntity" syncable="YES" codeGenerationType="class">
+        <attribute name="accountID" attributeType="String"/>
+        <attribute name="colorRaw" attributeType="String"/>
+        <attribute name="key" attributeType="String"/>
+        <attribute name="text" attributeType="String"/>
+        <attribute name="updatedAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="wallID" attributeType="String"/>
+        <uniquenessConstraints>
+            <uniquenessConstraint>
+                <constraint value="key"/>
+            </uniquenessConstraint>
+        </uniquenessConstraints>
+    </entity>
+</model>

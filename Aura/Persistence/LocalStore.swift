@@ -88,6 +88,8 @@ final class LocalStore {
             entity.createdAt = message.createdAt
             entity.normalizedX = message.normalizedX
             entity.normalizedY = message.normalizedY
+            entity.contentTypeRaw = message.contentType.rawValue
+            entity.drawingPayload = message.drawing.flatMap(encodeDrawing)
             entity.fetchedAt = fetchedAt
         }
         try context.save()
@@ -164,6 +166,9 @@ final class LocalStore {
               let authorID = entity.authorID,
               let text = entity.text,
               let createdAt = entity.createdAt else { return nil }
+        let contentType = MessageContentType(rawValue: entity.contentTypeRaw ?? "") ?? .text
+        let drawing = entity.drawingPayload.flatMap(decodeDrawing)
+        if contentType == .drawing && drawing == nil { return nil }
         return WallMessage(
             id: messageID,
             wallID: wallID,
@@ -174,7 +179,9 @@ final class LocalStore {
             sparkCount: Int(entity.sparkCount),
             createdAt: createdAt,
             normalizedX: entity.normalizedX,
-            normalizedY: entity.normalizedY
+            normalizedY: entity.normalizedY,
+            contentType: contentType,
+            drawing: drawing
         )
     }
 }

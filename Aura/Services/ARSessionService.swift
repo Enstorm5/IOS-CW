@@ -330,6 +330,44 @@ final class ARSessionService: NSObject, ARSessionDelegate {
     }
 
     private func makeMessageEntity(_ message: WallMessage) -> Entity {
+        let note = message.contentType == .drawing && message.drawing != nil
+            ? makeDrawingCard(message)
+            : makeTextCard(message)
+        note.orientation = simd_quatf(angle: -.pi / 2, axis: SIMD3<Float>(1, 0, 0))
+
+        let position = messageCanvasPosition(normalizedX: message.normalizedX, normalizedY: message.normalizedY, size: wallSize)
+        note.position = SIMD3<Float>(position.x, messageLiftMeters, position.z)
+        return note
+    }
+
+    private func makeDrawingCard(_ message: WallMessage) -> Entity {
+        let note = Entity()
+        guard let drawing = message.drawing, let texture = drawingTexture(drawing) else { return note }
+
+        let cardWidth = Float(wallSize.width * messageCardWidthFraction)
+        let cardHeight = cardWidth / Float(drawingAspectRatio)
+        var material = UnlitMaterial()
+        material.color = .init(tint: .white, texture: .init(texture))
+        let card = ModelEntity(
+            mesh: .generatePlane(width: cardWidth, height: cardHeight, cornerRadius: messageCardCornerRadiusMeters),
+            materials: [material]
+        )
+        note.addChild(card)
+        return note
+    }
+
+    private func drawingTexture(_ drawing: MessageDrawing) -> TextureResource? {
+        let pixelWidth = AuraSize.drawingTexturePixelWidth
+        let renderer = ImageRenderer(
+            content: DrawingView(drawing: drawing)
+                .frame(width: pixelWidth, height: pixelWidth / CGFloat(drawingAspectRatio))
+        )
+        renderer.scale = 1
+        guard let image = renderer.cgImage else { return nil }
+        return try? TextureResource(image: image, options: .init(semantic: .color))
+    }
+
+    private func makeTextCard(_ message: WallMessage) -> Entity {
         let textWidth = CGFloat(wallSize.width * messageCardWidthFraction)
         let textMesh = MeshResource.generateText(
             message.text,
@@ -354,10 +392,6 @@ final class ARSessionService: NSObject, ARSessionDelegate {
         let note = Entity()
         note.addChild(card)
         note.addChild(text)
-        note.orientation = simd_quatf(angle: -.pi / 2, axis: SIMD3<Float>(1, 0, 0))
-
-        let position = messageCanvasPosition(normalizedX: message.normalizedX, normalizedY: message.normalizedY, size: wallSize)
-        note.position = SIMD3<Float>(position.x, messageLiftMeters, position.z)
         return note
     }
 

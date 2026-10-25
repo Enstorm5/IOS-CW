@@ -16,15 +16,23 @@ service cloud.firestore {
       return wall.visibility == 'public' && wall.moderationStatus == 'active';
     }
 
+    function isValidMessageContent(data, fields) {
+      return data.contentType == 'text'
+        ? data.keys().hasOnly(fields)
+          && data.text is string && data.text.size() >= 1 && data.text.size() <= 280
+        : data.contentType == 'drawing'
+          && data.keys().hasOnly(fields.concat(['drawing']))
+          && data.text == ''
+          && data.drawing is string && data.drawing.size() >= 10 && data.drawing.size() <= 40000;
+    }
+
     function isValidNewMessage(data) {
       let fields = ['authorID', 'authorName', 'text', 'contentType', 'color', 'sparkCount',
                     'normalizedX', 'normalizedY', 'moderationStatus', 'createdAt', 'updatedAt'];
-      return data.keys().hasOnly(fields)
-        && data.keys().hasAll(fields)
+      return data.keys().hasAll(fields)
+        && isValidMessageContent(data, fields)
         && data.authorID == request.auth.uid
         && data.authorName == get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.displayName
-        && data.text is string && data.text.size() >= 1 && data.text.size() <= 280
-        && data.contentType == 'text'
         && data.color in ['magenta', 'mint', 'yellow', 'ink']
         && data.sparkCount == 0
         && data.normalizedX is number && data.normalizedX >= 0 && data.normalizedX <= 1
