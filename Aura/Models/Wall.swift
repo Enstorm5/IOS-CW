@@ -21,7 +21,7 @@ enum WallKind: String {
     case sponsored
 }
 
-struct WallMapInfo: Hashable {
+struct WallMapInfo: Hashable, Codable {
     var chunkCount: Int
     var version: Int
     var checksum: String
