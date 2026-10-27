@@ -10,6 +10,7 @@ struct AppServices {
     let publisher = WallPublishService()
     let economy = EconomyService()
     let deletion = AccountDeletionService()
+    let biometric = BiometricService()
     let location = LocationService()
 
     init() {

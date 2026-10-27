@@ -16,4 +16,5 @@ enum AppTheme: String, CaseIterable {
 
 struct UserSettings: Equatable {
     var theme: AppTheme = .system
+    var appLockEnabled = false
 }
