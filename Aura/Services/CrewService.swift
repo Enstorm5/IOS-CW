@@ -24,7 +24,7 @@ final class CrewService {
     func listenToMembers(crewID: String, onChange: @escaping ([CrewMember]?) -> Void) -> ListenerRegistration {
         crewDocument(crewID).collection("members").addSnapshotListener { snapshot, _ in
             let members = snapshot?.documents.compactMap { document in
-                crewMember(id: document.documentID, fields: fieldsWithDates(document.data(with: .estimate)))
+                crewMember(id: document.documentID, fields: crewFieldsWithDates(document.data(with: .estimate)))
             }
             onChange(members)
         }
@@ -88,7 +88,7 @@ final class CrewService {
             return
         }
         let members = try await crewReference.collection("members").getDocuments().documents.compactMap { document in
-            crewMember(id: document.documentID, fields: fieldsWithDates(document.data(with: .estimate)))
+            crewMember(id: document.documentID, fields: crewFieldsWithDates(document.data(with: .estimate)))
         }
 
         let batch = database.batch()
@@ -146,14 +146,14 @@ final class CrewService {
     private func membershipFields(crewID: String) -> [String: Any] {
         ["crewID": crewID, "joinedAt": FieldValue.serverTimestamp()]
     }
+}
 
-    private func fieldsWithDates(_ fields: [String: Any]) -> [String: Any] {
-        var converted = fields
-        for (key, value) in fields {
-            if let timestamp = value as? Timestamp {
-                converted[key] = timestamp.dateValue()
-            }
+private func crewFieldsWithDates(_ fields: [String: Any]) -> [String: Any] {
+    var converted = fields
+    for (key, value) in fields {
+        if let timestamp = value as? Timestamp {
+            converted[key] = timestamp.dateValue()
         }
-        return converted
     }
+    return converted
 }
