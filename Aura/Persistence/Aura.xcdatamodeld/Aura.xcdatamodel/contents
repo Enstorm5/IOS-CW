@@ -38,6 +38,15 @@
             </uniquenessConstraint>
         </uniquenessConstraints>
     </entity>
+    <entity name="UserSettingsEntity" representedClassName="UserSettingsEntity" syncable="YES" codeGenerationType="class">
+        <attribute name="accountID" attributeType="String"/>
+        <attribute name="themeRaw" attributeType="String" defaultValueString="system"/>
+        <uniquenessConstraints>
+            <uniquenessConstraint>
+                <constraint value="accountID"/>
+            </uniquenessConstraint>
+        </uniquenessConstraints>
+    </entity>
     <entity name="MessageDraftEntity" representedClassName="MessageDraftEntity" syncable="YES" codeGenerationType="class">
         <attribute name="accountID" attributeType="String"/>
         <attribute name="colorRaw" attributeType="String"/>

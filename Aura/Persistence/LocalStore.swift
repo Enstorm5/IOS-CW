@@ -106,8 +106,28 @@ final class LocalStore {
         )
     }
 
+    func settings(accountID: String) -> UserSettings {
+        guard let entity = fetchSettingsEntity(accountID: accountID) else { return UserSettings() }
+        return UserSettings(theme: AppTheme(rawValue: entity.themeRaw ?? "") ?? .system)
+    }
+
+    func saveSettings(_ settings: UserSettings, accountID: String) throws {
+        let entity = fetchSettingsEntity(accountID: accountID) ?? UserSettingsEntity(context: context)
+        entity.accountID = accountID
+        entity.themeRaw = settings.theme.rawValue
+        try context.save()
+    }
+
+    private func fetchSettingsEntity(accountID: String) -> UserSettingsEntity? {
+        let request = UserSettingsEntity.fetchRequest()
+        request.predicate = NSPredicate(format: "accountID == %@", accountID)
+        request.fetchLimit = 1
+        return try? context.fetch(request).first
+    }
+
     func deleteAccountData(accountID: String) throws {
         let predicate = NSPredicate(format: "accountID == %@", accountID)
+        try deleteObjects(UserSettingsEntity.fetchRequest(), matching: predicate)
         try deleteObjects(MessageDraftEntity.fetchRequest(), matching: predicate)
         try deleteObjects(CachedWallEntity.fetchRequest(), matching: predicate)
         try deleteObjects(CachedMessageEntity.fetchRequest(), matching: predicate)
@@ -115,6 +135,7 @@ final class LocalStore {
     }
 
     func deleteEverything() throws {
+        try deleteObjects(UserSettingsEntity.fetchRequest(), matching: nil)
         try deleteObjects(MessageDraftEntity.fetchRequest(), matching: nil)
         try deleteObjects(CachedWallEntity.fetchRequest(), matching: nil)
         try deleteObjects(CachedMessageEntity.fetchRequest(), matching: nil)

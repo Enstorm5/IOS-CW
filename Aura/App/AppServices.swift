@@ -9,6 +9,7 @@ struct AppServices {
     let messages = WallMessageService()
     let publisher = WallPublishService()
     let economy = EconomyService()
+    let deletion = AccountDeletionService()
     let location = LocationService()
 
     init() {

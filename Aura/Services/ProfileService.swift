@@ -15,6 +15,10 @@ final class ProfileService {
         fields["createdAt"] = FieldValue.serverTimestamp()
         try await profiles.document(profile.id).setData(fields)
     }
+
+    func updateProfile(_ profile: UserProfile) async throws {
+        try await profiles.document(profile.id).updateData(firestoreFields(for: profile))
+    }
 }
 
 func firestoreFields(for profile: UserProfile) -> [String: Any] {

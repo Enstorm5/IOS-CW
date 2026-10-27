@@ -6,6 +6,7 @@ final class AuthService {
 
     var currentUserID: String? { auth.currentUser?.uid }
     var currentDisplayName: String? { auth.currentUser?.displayName }
+    var currentEmail: String? { auth.currentUser?.email }
 
     func observeSignIn(_ onChange: @escaping (String?) -> Void) -> AuthStateDidChangeListenerHandle {
         auth.addStateDidChangeListener { _, user in
@@ -30,6 +31,19 @@ final class AuthService {
 
     func signOut() throws {
         try auth.signOut()
+    }
+
+    func reauthenticate(password: String) async throws {
+        guard let user = auth.currentUser, let email = user.email else {
+            throw UserFacingError(message: "You're not signed in.")
+        }
+        let credential = EmailAuthProvider.credential(withEmail: email, password: password)
+        _ = try await user.reauthenticate(with: credential)
+    }
+
+    func deleteCurrentUser() async throws {
+        guard let user = auth.currentUser else { return }
+        try await user.delete()
     }
 }
 

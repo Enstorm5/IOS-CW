@@ -10,7 +10,7 @@ struct AuraApp: App {
         FirebaseApp.configure()
         let services = AppServices()
         self.services = services
-        _session = State(initialValue: SessionStore(authService: services.auth, profileService: services.profiles))
+        _session = State(initialValue: SessionStore(authService: services.auth, profileService: services.profiles, deletionService: services.deletion))
     }
 
     var body: some Scene {

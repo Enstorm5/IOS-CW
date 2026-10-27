@@ -21,13 +21,47 @@ final class SessionStore {
 
     private let authService: AuthService
     private let profileService: ProfileService
+    private let deletionService: AccountDeletionService
     private var listenerHandle: AuthStateDidChangeListenerHandle?
 
     private var latestLoadID = 0
 
-    init(authService: AuthService, profileService: ProfileService) {
+    init(authService: AuthService, profileService: ProfileService, deletionService: AccountDeletionService) {
         self.authService = authService
         self.profileService = profileService
+        self.deletionService = deletionService
+    }
+
+    var currentEmail: String? { authService.currentEmail }
+
+    func updateProfile(_ profile: UserProfile) async throws {
+        do {
+            try await profileService.updateProfile(profile)
+        } catch {
+            throw UserFacingError(message: "Couldn't save your profile. Check your connection and try again.")
+        }
+        latestLoadID += 1
+        state = .signedIn(profile)
+    }
+
+    func deleteAccount(password: String, userID: String) async throws {
+        do {
+            try await authService.reauthenticate(password: password)
+        } catch {
+            throw UserFacingError(message: authErrorMessage(for: error))
+        }
+        do {
+            try await deletionService.deleteContent(userID: userID)
+        } catch {
+            throw UserFacingError(message: "Couldn't delete your messages and walls. Check your connection and try again. Nothing else was deleted yet.")
+        }
+        do {
+            try await authService.deleteCurrentUser()
+        } catch {
+            throw UserFacingError(message: "Your content was deleted, but deleting your login failed. Try again.")
+        }
+        latestLoadID += 1
+        state = .signedOut
     }
 
     func start() {
