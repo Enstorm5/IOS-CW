@@ -27,6 +27,9 @@ final class WallDetailViewModel {
     private var isDiscoveryHandled = false
     private var isClaimingDiscovery = false
     private(set) var discoveryBanner: String?
+    private(set) var sparkedMessageIDs: Set<String> = []
+    private(set) var sparkingMessageIDs: Set<String> = []
+    private(set) var actionError: String?
 
     init(wall: Wall, messageService: WallMessageService, locationService: LocationService, localStore: LocalStore, accountID: String, statsStore: StatsStore) {
         self.statsStore = statsStore
@@ -160,6 +163,64 @@ final class WallDetailViewModel {
         locationService.latestLocation.map(locationFix(from:))
     }
 
+    func loadMySparks() async {
+        if let sparked = try? await messageService.mySparkedMessageIDs(userID: accountID, wallID: wall.id) {
+            sparkedMessageIDs = sparked
+        }
+    }
+
+    func toggleSpark(_ message: WallMessage) async {
+        guard canSpark(message, userID: accountID), !sparkingMessageIDs.contains(message.id) else { return }
+        let isAddingSpark = !sparkedMessageIDs.contains(message.id)
+        sparkingMessageIDs.insert(message.id)
+        actionError = nil
+
+        do {
+            let newCount = try await messageService.setSpark(userID: accountID, wallID: wall.id, messageID: message.id, isAddingSpark: isAddingSpark)
+            if isAddingSpark {
+                sparkedMessageIDs.insert(message.id)
+            } else {
+                sparkedMessageIDs.remove(message.id)
+            }
+            updateMessage(id: message.id) { $0.sparkCount = newCount }
+        } catch {
+            actionError = "Couldn't update the spark. Check your connection and try again."
+        }
+        sparkingMessageIDs.remove(message.id)
+    }
+
+    func edit(_ message: WallMessage, newText: String) async throws {
+        guard canEdit(message, userID: accountID) else { return }
+        let cleaned = newText.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let validationError = messageValidationError(cleaned) {
+            throw UserFacingError(message: validationError)
+        }
+        do {
+            try await messageService.editMessage(wallID: wall.id, messageID: message.id, text: cleaned)
+        } catch {
+            throw UserFacingError(message: "Couldn't save your edit. Check your connection and try again.")
+        }
+        updateMessage(id: message.id) { $0.text = cleaned }
+    }
+
+    func delete(_ message: WallMessage) async {
+        guard canDelete(message, userID: accountID) else { return }
+        actionError = nil
+        do {
+            try await messageService.deleteMessage(wallID: wall.id, messageID: message.id)
+            messages.removeAll { $0.id == message.id }
+            try? localStore.replaceCachedMessages(messages, wallID: wall.id, accountID: accountID, fetchedAt: Date())
+        } catch {
+            actionError = "Couldn't delete the message. Check your connection and try again."
+        }
+    }
+
+    private func updateMessage(id: String, change: (inout WallMessage) -> Void) {
+        guard let index = messages.firstIndex(where: { $0.id == id }) else { return }
+        change(&messages[index])
+        try? localStore.replaceCachedMessages(messages, wallID: wall.id, accountID: accountID, fetchedAt: Date())
+    }
+
     func loadTeaser() async {
         isLoadingTeaser = true
         errorMessage = nil
@@ -186,6 +247,7 @@ final class WallDetailViewModel {
             isShowingSavedMessages = false
             showingSavedMessagesSince = nil
             try? localStore.replaceCachedMessages(page.messages, wallID: wall.id, accountID: accountID, fetchedAt: Date())
+            await loadMySparks()
         } catch {
             guard loadID == latestLoadID else { return }
             let saved = localStore.cachedMessages(wallID: wall.id, accountID: accountID)

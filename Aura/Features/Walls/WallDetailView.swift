@@ -10,6 +10,8 @@ struct WallDetailView: View {
     @State private var viewModel: WallDetailViewModel
     @State private var isWriting = false
     @State private var isViewingAR = false
+    @State private var editingMessage: WallMessage?
+    @State private var deletingMessage: WallMessage?
 
     private var canViewInAR: Bool {
         wall.map != nil && ARWorldTrackingConfiguration.isSupported
@@ -64,6 +66,23 @@ struct WallDetailView: View {
                 onSaveDraft: { text, color in viewModel.saveDraft(text: text, color: color) },
                 onDiscardDraft: { viewModel.discardDraft() }
             )
+        }
+        .sheet(item: $editingMessage) { message in
+            EditMessageSheet(originalText: message.text) { newText in
+                try await viewModel.edit(message, newText: newText)
+            }
+        }
+        .confirmationDialog(
+            "Delete this message?",
+            isPresented: Binding(get: { deletingMessage != nil }, set: { if !$0 { deletingMessage = nil } }),
+            titleVisibility: .visible,
+            presenting: deletingMessage
+        ) { message in
+            Button("Delete", role: .destructive) {
+                Task { await viewModel.delete(message) }
+            }
+        } message: { _ in
+            Text("It's removed from the wall for everyone.")
         }
         .fullScreenCover(isPresented: $isViewingAR) {
             WallARView(wall: wall, currentUser: currentUser, detailViewModel: viewModel, publisher: publisher)
@@ -144,6 +163,9 @@ struct WallDetailView: View {
         if let discoveryBanner = viewModel.discoveryBanner {
             StatusBanner(systemImage: "sparkles", message: discoveryBanner)
         }
+        if let actionError = viewModel.actionError {
+            StatusBanner(systemImage: "exclamationmark.circle", message: actionError)
+        }
         if viewModel.isLoading && viewModel.messages.isEmpty {
             ProgressView()
                 .frame(maxWidth: .infinity, minHeight: AuraSize.control)
@@ -160,7 +182,15 @@ struct WallDetailView: View {
                 }
             }
             ForEach(viewModel.messages) { message in
-                MessageRow(message: message, isMine: message.authorID == currentUser.id)
+                MessageRow(
+                    message: message,
+                    isMine: message.authorID == currentUser.id,
+                    isSparked: viewModel.sparkedMessageIDs.contains(message.id),
+                    isSparking: viewModel.sparkingMessageIDs.contains(message.id),
+                    onSpark: canSpark(message, userID: currentUser.id) ? { Task { await viewModel.toggleSpark(message) } } : nil,
+                    onEdit: canEdit(message, userID: currentUser.id) ? { editingMessage = message } : nil,
+                    onDelete: canDelete(message, userID: currentUser.id) ? { deletingMessage = message } : nil
+                )
             }
 
             if let errorMessage = viewModel.errorMessage {
@@ -190,6 +220,11 @@ struct WallDetailView: View {
 struct MessageRow: View {
     let message: WallMessage
     let isMine: Bool
+    var isSparked = false
+    var isSparking = false
+    var onSpark: (() -> Void)? = nil
+    var onEdit: (() -> Void)? = nil
+    var onDelete: (() -> Void)? = nil
 
     var body: some View {
         HStack(spacing: AuraSpacing.medium) {
@@ -212,17 +247,60 @@ struct MessageRow: View {
 
             Spacer(minLength: 0)
 
-            HStack(spacing: AuraSpacing.xxSmall) {
-                Image(systemName: "sparkle")
-                Text("\(message.sparkCount)")
+            sparkControl
+
+            if onEdit != nil || onDelete != nil {
+                Menu {
+                    if let onEdit {
+                        Button("Edit", systemImage: "pencil", action: onEdit)
+                    }
+                    if let onDelete {
+                        Button("Delete", systemImage: "trash", role: .destructive, action: onDelete)
+                    }
+                } label: {
+                    Image(systemName: "ellipsis")
+                        .font(.auraCardTitle)
+                        .foregroundStyle(Color.auraText)
+                        .frame(width: AuraSize.minTap, height: AuraSize.minTap)
+                }
             }
-            .font(.auraCardTitle)
-            .foregroundStyle(Color.auraText)
         }
         .padding(AuraSpacing.medium)
         .background(Color.auraCard, in: .rect(cornerRadius: AuraRadius.row))
         .padding(.horizontal, AuraSpacing.medium)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(Text(messageAccessibilityLabel(message, isMine: isMine)))
+        .accessibilityActions {
+            if let onSpark {
+                Button(isSparked ? "Remove spark" : "Give a spark", action: onSpark)
+            }
+            if let onEdit {
+                Button("Edit", action: onEdit)
+            }
+            if let onDelete {
+                Button("Delete", action: onDelete)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var sparkControl: some View {
+        let label = HStack(spacing: AuraSpacing.xxSmall) {
+            Image(systemName: isSparked ? "sparkles" : "sparkle")
+            Text("\(message.sparkCount)")
+        }
+        .font(.auraCardTitle)
+        .foregroundStyle(isSparked ? Color.auraInk : Color.auraText)
+        .padding(.horizontal, AuraSpacing.small)
+        .frame(minHeight: AuraSize.minTap)
+        .background(isSparked ? Color.auraYellow : Color.clear, in: .capsule)
+
+        if let onSpark {
+            Button(action: onSpark) { label }
+                .buttonStyle(.plain)
+                .disabled(isSparking)
+        } else {
+            label
+        }
     }
 }
