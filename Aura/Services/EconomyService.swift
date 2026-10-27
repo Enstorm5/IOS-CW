@@ -13,9 +13,9 @@ final class EconomyService {
         database.collection("users").document(userID)
     }
 
-    func listenToStats(userID: String, onChange: @escaping (UserStats?) -> Void) -> ListenerRegistration {
-        userDocument(userID).addSnapshotListener { snapshot, _ in
-            onChange(snapshot?.data().map(userStats(fields:)))
+    func listenToStats(userID: String, onChange: @escaping (UserStats?, Bool) -> Void) -> ListenerRegistration {
+        userDocument(userID).addSnapshotListener { snapshot, error in
+            onChange(snapshot?.data().map(userStats(fields:)), error != nil)
         }
     }
 

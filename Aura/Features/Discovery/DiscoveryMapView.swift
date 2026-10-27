@@ -19,6 +19,7 @@ struct DiscoveryMapView: View {
     )
     @State private var visibleCenter: Coordinate?
     @State private var openedWall: Wall?
+    @State private var isShowingHome = false
 
     var body: some View {
         Map(position: $cameraPosition, selection: $viewModel.selectedWallID) {
@@ -54,6 +55,14 @@ struct DiscoveryMapView: View {
         .navigationDestination(item: $openedWall) { wall in
             WallDetailView(wall: wall, currentUser: currentUser, messageService: messageService, locationService: viewModel.locationService, publisher: publisher, localStore: localStore, statsStore: statsStore)
         }
+        .sheet(isPresented: $isShowingHome) {
+            HomeView(currentUser: currentUser, discovery: viewModel, statsStore: statsStore, publisher: publisher, onSelectWall: showOnMap)
+        }
+        .onChange(of: statsStore.stats?.wallsPublished) { oldCount, newCount in
+            if shouldRefreshMapAfterPublish(oldCount: oldCount, newCount: newCount) {
+                Task { await viewModel.retry() }
+            }
+        }
         .onAppear { viewModel.mapAppeared() }
         .onDisappear { viewModel.mapDisappeared() }
         .task(id: viewModel.locationService.latestLocation) {
@@ -67,6 +76,15 @@ struct DiscoveryMapView: View {
     private var header: some View {
         VStack(spacing: AuraSpacing.small) {
             HStack {
+                Button {
+                    isShowingHome = true
+                } label: {
+                    Image(systemName: "house")
+                        .font(.auraCardTitle)
+                        .foregroundStyle(Color.auraText)
+                        .frame(width: AuraSize.minTap, height: AuraSize.minTap)
+                }
+                .accessibilityLabel("Home summary")
                 Text("Aura")
                     .font(.auraHeading)
                     .foregroundStyle(Color.auraText)
@@ -120,6 +138,16 @@ struct DiscoveryMapView: View {
         } else if viewModel.hasSearched && viewModel.nearbyWalls.isEmpty && !viewModel.isLoading {
             StatusBanner(systemImage: "mappin.slash", message: "No walls within 1 km of here yet.")
         }
+    }
+
+    private func showOnMap(_ wall: Wall) {
+        isShowingHome = false
+        viewModel.selectedWallID = wall.id
+        cameraPosition = .region(MKCoordinateRegion(
+            center: wall.coordinate.locationCoordinate,
+            latitudinalMeters: homeWallZoomMeters,
+            longitudinalMeters: homeWallZoomMeters
+        ))
     }
 
     private func openSettings() {

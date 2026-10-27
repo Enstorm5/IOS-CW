@@ -11,6 +11,7 @@ enum DiscoveryClaimResult {
 @MainActor @Observable
 final class StatsStore {
     private(set) var stats: UserStats?
+    private(set) var statsLoadFailed = false
     private(set) var isClaimingQuest = false
     private(set) var questMessage: String?
 
@@ -28,8 +29,12 @@ final class StatsStore {
 
     func start() {
         guard listener == nil else { return }
-        listener = economy.listenToStats(userID: userID) { [weak self] newStats in
-            self?.stats = newStats
+        listener = economy.listenToStats(userID: userID) { [weak self] newStats, failed in
+            guard let self else { return }
+            statsLoadFailed = failed
+            if !failed {
+                stats = newStats
+            }
         }
         Task { try? await economy.createStatsIfMissing(userID: userID) }
     }
@@ -37,6 +42,12 @@ final class StatsStore {
     func stop() {
         listener?.remove()
         listener = nil
+    }
+
+    func restart() {
+        stop()
+        statsLoadFailed = false
+        start()
     }
 
     func claimDiscovery(wallID: String) async -> DiscoveryClaimResult {
