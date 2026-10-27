@@ -52,8 +52,8 @@ final class ARSessionService: NSObject, ARSessionDelegate {
     @ObservationIgnored private var pinchStartSize = defaultWallSize
     @ObservationIgnored private var sessionGeneration = 0
 
-    init(store: LocalWorldMapStore = LocalWorldMapStore()) {
-        self.store = store
+    init(store: LocalWorldMapStore? = nil) {
+        self.store = store ?? LocalWorldMapStore()
         super.init()
         refreshSavedWall()
     }
