@@ -12,6 +12,8 @@ struct UserStats: Equatable {
     var questsClaimed = 0
     var lastDiscoveryWallID = ""
     var lastClaimID = ""
+    var wallsPublished = 0
+    var lastPublishedWallID = ""
 }
 
 struct Badge: Identifiable, Equatable {

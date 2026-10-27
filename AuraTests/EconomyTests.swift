@@ -70,8 +70,8 @@ struct EconomyTests {
     }
 
     @Test func affordAndFormat() {
-        #expect(canAfford(balance: 800, cost: publicWallCost))
-        #expect(!canAfford(balance: 799, cost: publicWallCost))
+        #expect(canAfford(balance: publicWallCost, cost: publicWallCost))
+        #expect(!canAfford(balance: publicWallCost - 1, cost: publicWallCost))
         #expect(!canAfford(balance: -5, cost: 0))
         #expect(formattedPoints(2_480) == "2,480 pts")
     }
@@ -84,8 +84,8 @@ struct EconomyTests {
     @Test func statsRoundTripThroughFirestoreFields() {
         let stats = UserStats(balance: 50, lifetimeXP: 90, discoveryCount: 5, streakDays: 2, longestStreak: 3,
                               lastQualifiedDay: today, dailyDay: today, dailyDiscoveries: 5, questsClaimed: 1,
-                              lastDiscoveryWallID: "w5", lastClaimID: "20400_readFive")
+                              lastDiscoveryWallID: "w5", lastClaimID: "20400_readFive", wallsPublished: 2, lastPublishedWallID: "w9")
         #expect(userStats(fields: firestoreFields(for: stats)) == stats)
-        #expect(firestoreFields(for: UserStats()).count == 11)
+        #expect(firestoreFields(for: UserStats()).count == 13)
     }
 }

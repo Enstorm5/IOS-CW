@@ -5,8 +5,7 @@ let dailyQuestRewardPoints = 40
 let dailyQuestTarget = 5
 let colomboUTCOffsetSeconds = 19_800
 let secondsPerDay = 86_400
-let publicWallCost = 800
-let privateWallCost = 500
+let publicWallCost = 50
 let levelThresholds = [0, 100, 250, 450, 700, 1_000, 1_400, 1_900, 2_500, 3_200, 4_000]
 
 func dayNumber(for date: Date, utcOffsetSeconds: Int = colomboUTCOffsetSeconds) -> Int {
@@ -62,6 +61,21 @@ func statsAfterDailyQuestClaim(_ stats: UserStats, today: Int) -> UserStats {
     return updated
 }
 
+func statsAfterWallPublish(_ stats: UserStats, wallID: String) -> UserStats {
+    var updated = stats
+    updated.balance -= publicWallCost
+    updated.wallsPublished += 1
+    updated.lastPublishedWallID = wallID
+    return updated
+}
+
+func publishCostMessage(balance: Int) -> String {
+    if canAfford(balance: balance, cost: publicWallCost) {
+        return "Publishing costs \(formattedPoints(publicWallCost)). You have \(formattedPoints(balance))."
+    }
+    return "Publishing costs \(formattedPoints(publicWallCost)). You have \(formattedPoints(balance)). Discover walls and claim quests to earn more."
+}
+
 func level(forXP xp: Int) -> Int {
     (levelThresholds.lastIndex { xp >= $0 } ?? 0) + 1
 }
@@ -91,6 +105,7 @@ func badges(for stats: UserStats) -> [Badge] {
         Badge(id: "on-a-roll", title: "On a roll", detail: "Reach a 3 day streak", progress: min(stats.longestStreak, 3), target: 3),
         Badge(id: "committed", title: "Committed", detail: "Reach a 7 day streak", progress: min(stats.longestStreak, 7), target: 7),
         Badge(id: "quest-starter", title: "Quest starter", detail: "Claim a daily quest", progress: min(stats.questsClaimed, 1), target: 1),
+        Badge(id: "first-wall", title: "First wall", detail: "Publish your own wall", progress: min(stats.wallsPublished, 1), target: 1),
     ]
 }
 
@@ -106,7 +121,9 @@ func userStats(fields: [String: Any]) -> UserStats {
         dailyDiscoveries: fields["dailyDiscoveries"] as? Int ?? 0,
         questsClaimed: fields["questsClaimed"] as? Int ?? 0,
         lastDiscoveryWallID: fields["lastDiscoveryWallID"] as? String ?? "",
-        lastClaimID: fields["lastClaimID"] as? String ?? ""
+        lastClaimID: fields["lastClaimID"] as? String ?? "",
+        wallsPublished: fields["wallsPublished"] as? Int ?? 0,
+        lastPublishedWallID: fields["lastPublishedWallID"] as? String ?? ""
     )
 }
 
@@ -123,5 +140,7 @@ func firestoreFields(for stats: UserStats) -> [String: Any] {
         "questsClaimed": stats.questsClaimed,
         "lastDiscoveryWallID": stats.lastDiscoveryWallID,
         "lastClaimID": stats.lastClaimID,
+        "wallsPublished": stats.wallsPublished,
+        "lastPublishedWallID": stats.lastPublishedWallID,
     ]
 }

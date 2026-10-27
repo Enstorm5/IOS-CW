@@ -52,7 +52,7 @@ struct EconomyExtraTests {
     }
 
     @Test func badgeProgressStopsAtTheTarget() {
-        let all = badges(for: UserStats(discoveryCount: 999, longestStreak: 99, questsClaimed: 9))
+        let all = badges(for: UserStats(discoveryCount: 999, longestStreak: 99, questsClaimed: 9, wallsPublished: 3))
         #expect(all.allSatisfy(\.isEarned))
         #expect(all.allSatisfy { $0.progress == $0.target })
         #expect(Set(all.map(\.id)).count == all.count)
@@ -61,5 +61,25 @@ struct EconomyExtraTests {
     @Test func levelCapsAtTheTopThreshold() {
         #expect(level(forXP: levelThresholds.last!) == levelThresholds.count)
         #expect(level(forXP: 1_000_000) == levelThresholds.count)
+    }
+
+    @Test func publishingSpendsPointsButKeepsXP() {
+        let before = UserStats(balance: 120, lifetimeXP: 300, discoveryCount: 12)
+        let after = statsAfterWallPublish(before, wallID: "w1")
+        #expect(after.balance == 120 - publicWallCost)
+        #expect(after.lifetimeXP == 300)
+        #expect(after.wallsPublished == 1)
+        #expect(after.lastPublishedWallID == "w1")
+        #expect(after.discoveryCount == 12)
+    }
+
+    @Test func costMessageExplainsAShortfall() {
+        #expect(publishCostMessage(balance: 120) == "Publishing costs 50 pts. You have 120 pts.")
+        #expect(publishCostMessage(balance: 20).hasSuffix("Discover walls and claim quests to earn more."))
+    }
+
+    @Test func firstWallBadge() {
+        #expect(badges(for: UserStats(wallsPublished: 1)).first { $0.id == "first-wall" }?.isEarned == true)
+        #expect(badges(for: UserStats()).first { $0.id == "first-wall" }?.isEarned == false)
     }
 }
