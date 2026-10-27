@@ -50,7 +50,7 @@ struct MainTabView: View {
             }
         }
         .tint(Color.auraText)
-        .preferredColorScheme(colorScheme(for: settings.theme))
+        .preferredColorScheme(preferredScheme(for: settings.theme))
         .task { statsStore.start() }
         .onDisappear { statsStore.stop() }
     }

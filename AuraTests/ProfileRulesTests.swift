@@ -36,9 +36,9 @@ struct ProfileRulesTests {
     }
 
     @Test func themeMapsToColorScheme() {
-        #expect(colorScheme(for: .system) == nil)
-        #expect(colorScheme(for: .light) == .light)
-        #expect(colorScheme(for: .dark) == .dark)
+        #expect(preferredScheme(for: .system) == nil)
+        #expect(preferredScheme(for: .light) == .light)
+        #expect(preferredScheme(for: .dark) == .dark)
         #expect(AppTheme.allCases.map(\.title) == ["System", "Light", "Dark"])
     }
 }
