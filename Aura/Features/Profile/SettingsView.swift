@@ -4,6 +4,7 @@ struct SettingsView: View {
     let session: SessionStore
     let profile: UserProfile
     let localStore: LocalStore
+    let appLock: AppLockStore
     @Binding var settings: UserSettings
 
     @Environment(\.openURL) private var openURL
@@ -35,6 +36,7 @@ struct SettingsView: View {
                 Text("Privacy")
                     .font(.auraSectionLabel)
                     .foregroundStyle(Color.auraMuted)
+                appLockRow
                 Button(action: openSystemSettings) {
                     ProfileLinkRow(systemImage: "location", title: "Location and camera", detail: "Change permissions in iOS Settings")
                 }
@@ -97,6 +99,39 @@ struct SettingsView: View {
             }
         } message: {
             Text("Deletes all drafts and saved walls and messages on this phone. Nothing online changes.")
+        }
+    }
+
+    @ViewBuilder
+    private var appLockRow: some View {
+        let unavailable = appLock.biometric.unavailableMessage()
+        VStack(alignment: .leading, spacing: AuraSpacing.xxSmall) {
+            Toggle(isOn: Binding(
+                get: { settings.appLockEnabled },
+                set: { newValue in Task { await changeAppLock(to: newValue) } }
+            )) {
+                Text("Lock with \(appLock.methodName)")
+                    .font(.auraCardTitle)
+                    .foregroundStyle(Color.auraText)
+            }
+            .disabled(unavailable != nil && !settings.appLockEnabled)
+
+            Text(unavailable ?? "Asks for \(appLock.methodName) when you open Aura or return after \(Int(appLockIntervalSeconds)) seconds away. It only protects this app on this phone.")
+                .font(.auraErrorText)
+                .foregroundStyle(Color.auraMuted)
+        }
+        .padding(AuraSpacing.medium)
+        .background(Color.auraCard, in: .rect(cornerRadius: AuraRadius.row))
+    }
+
+    private func changeAppLock(to enabled: Bool) async {
+        errorMessage = nil
+        let reason = enabled ? "Turn on app lock" : "Turn off app lock"
+        let outcome = await appLock.confirmIdentity(reason: reason)
+        if outcome == .success {
+            settings.appLockEnabled = enabled
+        } else {
+            errorMessage = lockScreenMessage(outcome: outcome)
         }
     }
 

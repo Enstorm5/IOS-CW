@@ -20,6 +20,16 @@ struct SettingsStoreTests {
         #expect(store.settings(accountID: "A").theme == .system)
     }
 
+    @Test func appLockIsOffByDefaultAndSavedPerAccount() throws {
+        #expect(store.settings(accountID: "A").appLockEnabled == false)
+        try store.saveSettings(UserSettings(theme: .dark, appLockEnabled: true), accountID: "A")
+        #expect(store.settings(accountID: "A") == UserSettings(theme: .dark, appLockEnabled: true))
+        #expect(store.settings(accountID: "B").appLockEnabled == false)
+
+        try store.deleteAccountData(accountID: "A")
+        #expect(store.settings(accountID: "A").appLockEnabled == false)
+    }
+
     @Test func signOutAndResetClearSettings() throws {
         try store.saveSettings(UserSettings(theme: .dark), accountID: "A")
         try store.saveSettings(UserSettings(theme: .dark), accountID: "B")

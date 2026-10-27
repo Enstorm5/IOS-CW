@@ -5,6 +5,7 @@ struct ProfileView: View {
     let profile: UserProfile
     let statsStore: StatsStore
     let localStore: LocalStore
+    let appLock: AppLockStore
     @Binding var settings: UserSettings
 
     var body: some View {
@@ -47,9 +48,9 @@ struct ProfileView: View {
                             ProfileLinkRow(systemImage: "rosette", title: "Badges", detail: "\(badges(for: statsStore.stats ?? UserStats()).filter(\.isEarned).count) earned")
                         }
                         NavigationLink {
-                            SettingsView(session: session, profile: profile, localStore: localStore, settings: $settings)
+                            SettingsView(session: session, profile: profile, localStore: localStore, appLock: appLock, settings: $settings)
                         } label: {
-                            ProfileLinkRow(systemImage: "gearshape", title: "Settings", detail: "Theme, location, account")
+                            ProfileLinkRow(systemImage: "gearshape", title: "Settings", detail: "Theme, app lock, location, account")
                         }
                     }
                     .buttonStyle(.plain)

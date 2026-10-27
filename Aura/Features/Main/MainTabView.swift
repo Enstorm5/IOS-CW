@@ -7,6 +7,8 @@ struct MainTabView: View {
     @State private var discovery: DiscoveryViewModel
     @State private var statsStore: StatsStore
     @State private var settings: UserSettings
+    @State private var appLock: AppLockStore
+    @Environment(\.scenePhase) private var scenePhase
     private let messageService: WallMessageService
     private let publisher: WallPublishService
     private let locationService: LocationService
@@ -21,6 +23,7 @@ struct MainTabView: View {
         self.localStore = services.localStore
         _statsStore = State(initialValue: StatsStore(economy: services.economy, userID: profile.id))
         _settings = State(initialValue: services.localStore.settings(accountID: profile.id))
+        _appLock = State(initialValue: AppLockStore(biometric: services.biometric))
         _discovery = State(initialValue: DiscoveryViewModel(
             wallService: services.walls,
             locationService: services.location,
@@ -46,13 +49,34 @@ struct MainTabView: View {
                 PlaceholderTabView(title: "Crew")
             }
             Tab("Me", systemImage: "person.crop.circle") {
-                ProfileView(session: session, profile: profile, statsStore: statsStore, localStore: localStore, settings: $settings)
+                ProfileView(session: session, profile: profile, statsStore: statsStore, localStore: localStore, appLock: appLock, settings: $settings)
             }
         }
         .tint(Color.auraText)
         .preferredColorScheme(preferredScheme(for: settings.theme))
-        .task { statsStore.start() }
+        .overlay {
+            if appLock.isLocked {
+                AppLockView(lock: appLock, onSignOut: signOutFromLock)
+            } else if appLock.isCovered {
+                PrivacyCoverView()
+            }
+        }
+        .task {
+            appLock.configure(enabled: settings.appLockEnabled, lockNow: true)
+            statsStore.start()
+        }
+        .onChange(of: settings.appLockEnabled) {
+            appLock.configure(enabled: settings.appLockEnabled, lockNow: false)
+        }
+        .onChange(of: scenePhase) {
+            appLock.scenePhaseChanged(to: scenePhase, now: Date())
+        }
         .onDisappear { statsStore.stop() }
+    }
+
+    private func signOutFromLock() {
+        try? localStore.deleteAccountData(accountID: profile.id)
+        try? session.signOut()
     }
 }
 
