@@ -4,6 +4,8 @@ struct RootView: View {
     let session: SessionStore
     let services: AppServices
 
+    @State private var requestedTab: AppTab?
+
     var body: some View {
         Group {
             switch session.state {
@@ -14,13 +16,26 @@ struct RootView: View {
             case .needsOnboarding(let userID, let suggestedName):
                 OnboardingFlowView(session: session, userID: userID, suggestedName: suggestedName, locationService: services.location)
             case .signedIn(let profile):
-                MainTabView(session: session, profile: profile, services: services)
+                MainTabView(session: session, profile: profile, services: services, requestedTab: $requestedTab)
             case .failed(let message):
                 SessionErrorView(session: session, message: message)
             }
         }
         .animation(.default, value: session.state)
         .task { session.start() }
+        .onOpenURL { url in
+            requestedTab = appTab(forDeepLink: url)
+        }
+        .onChange(of: session.state) {
+            switch session.state {
+            case .signedIn(let profile):
+                services.widgetSnapshots.keepOnly(accountID: profile.id)
+            case .signedOut, .needsOnboarding:
+                services.widgetSnapshots.keepOnly(accountID: nil)
+            case .loading, .failed:
+                break
+            }
+        }
     }
 }
 

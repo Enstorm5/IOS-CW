@@ -3,7 +3,9 @@ import SwiftUI
 struct MainTabView: View {
     let session: SessionStore
     let profile: UserProfile
+    @Binding var requestedTab: AppTab?
 
+    @State private var selectedTab: AppTab = .map
     @State private var discovery: DiscoveryViewModel
     @State private var statsStore: StatsStore
     @State private var crewStore: CrewStore
@@ -14,10 +16,13 @@ struct MainTabView: View {
     private let publisher: WallPublishService
     private let locationService: LocationService
     private let localStore: LocalStore
+    private let widgetSnapshots: WidgetSnapshotService
 
-    init(session: SessionStore, profile: UserProfile, services: AppServices) {
+    init(session: SessionStore, profile: UserProfile, services: AppServices, requestedTab: Binding<AppTab?>) {
         self.session = session
         self.profile = profile
+        _requestedTab = requestedTab
+        self.widgetSnapshots = services.widgetSnapshots
         self.messageService = services.messages
         self.publisher = services.publisher
         self.locationService = services.location
@@ -35,22 +40,22 @@ struct MainTabView: View {
     }
 
     var body: some View {
-        TabView {
-            Tab("Map", systemImage: "map") {
+        TabView(selection: $selectedTab) {
+            Tab("Map", systemImage: "map", value: .map) {
                 NavigationStack {
                     DiscoveryMapView(viewModel: discovery, currentUser: profile, messageService: messageService, publisher: publisher, localStore: localStore, statsStore: statsStore)
                 }
             }
-            Tab("Quests", systemImage: "flag.checkered") {
+            Tab("Quests", systemImage: "flag.checkered", value: .quests) {
                 QuestsView(statsStore: statsStore)
             }
-            Tab("Camera", systemImage: "camera.viewfinder") {
+            Tab("Camera", systemImage: "camera.viewfinder", value: .camera) {
                 ARSpikeView(publisher: publisher, locationService: locationService, currentUser: profile, statsStore: statsStore)
             }
-            Tab("Crew", systemImage: "person.3") {
+            Tab("Crew", systemImage: "person.3", value: .crew) {
                 CrewView(store: crewStore, profile: profile)
             }
-            Tab("Me", systemImage: "person.crop.circle") {
+            Tab("Me", systemImage: "person.crop.circle", value: .me) {
                 ProfileView(session: session, profile: profile, statsStore: statsStore, localStore: localStore, appLock: appLock, publisher: publisher, settings: $settings)
             }
         }
@@ -70,6 +75,17 @@ struct MainTabView: View {
         }
         .onChange(of: settings.appLockEnabled) {
             appLock.configure(enabled: settings.appLockEnabled, lockNow: false)
+        }
+        .onChange(of: requestedTab, initial: true) {
+            if let requestedTab {
+                selectedTab = requestedTab
+                self.requestedTab = nil
+            }
+        }
+        .onChange(of: statsStore.stats) {
+            if let stats = statsStore.stats {
+                widgetSnapshots.save(widgetSnapshot(from: stats, accountID: profile.id, now: Date()))
+            }
         }
         .onChange(of: scenePhase) {
             appLock.scenePhaseChanged(to: scenePhase, now: Date())

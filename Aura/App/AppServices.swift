@@ -13,6 +13,7 @@ struct AppServices {
     let deletion: AccountDeletionService
     let biometric = BiometricService()
     let location = LocationService()
+    let widgetSnapshots = WidgetSnapshotService()
 
     init() {
         persistence = PersistenceController()
