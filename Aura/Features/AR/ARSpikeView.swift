@@ -7,8 +7,8 @@ struct ARSpikeView: View {
 
     private let isARSupported = ARWorldTrackingConfiguration.isSupported
 
-    init(publisher: WallPublishService, locationService: LocationService, currentUser: UserProfile) {
-        _viewModel = State(initialValue: PlaceWallViewModel(publisher: publisher, locationService: locationService, currentUser: currentUser))
+    init(publisher: WallPublishService, locationService: LocationService, currentUser: UserProfile, statsStore: StatsStore) {
+        _viewModel = State(initialValue: PlaceWallViewModel(publisher: publisher, locationService: locationService, currentUser: currentUser, statsStore: statsStore))
     }
 
     private var arSession: ARSessionService { viewModel.arSession }
@@ -49,7 +49,7 @@ struct ARSpikeView: View {
             .padding(AuraSpacing.screen)
         }
         .sheet(isPresented: $isNaming) {
-            NameWallSheet(isPublishing: viewModel.isPublishing, errorMessage: viewModel.publishError) { title in
+            NameWallSheet(isPublishing: viewModel.isPublishing, costMessage: viewModel.costMessage, errorMessage: viewModel.publishError) { title in
                 Task { await viewModel.publish(title: title) }
             }
         }

@@ -13,9 +13,11 @@ final class PlaceWallViewModel {
     private let publisher: WallPublishService
     private let locationService: LocationService
     private let currentUser: UserProfile
+    private let statsStore: StatsStore
     private var exportedWall: ExportedWall?
 
-    init(publisher: WallPublishService, locationService: LocationService, currentUser: UserProfile) {
+    init(publisher: WallPublishService, locationService: LocationService, currentUser: UserProfile, statsStore: StatsStore) {
+        self.statsStore = statsStore
         self.publisher = publisher
         self.locationService = locationService
         self.currentUser = currentUser
@@ -26,6 +28,10 @@ final class PlaceWallViewModel {
         publishError = nil
         exportedWall = nil
         arSession.startPlacing()
+    }
+
+    var costMessage: String {
+        publishCostMessage(balance: statsStore.stats?.balance ?? 0)
     }
 
     func clearPublishError() {
@@ -43,6 +49,12 @@ final class PlaceWallViewModel {
         let cleanedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
         if let titleError = wallTitleValidationError(cleanedTitle) {
             publishError = titleError
+            return
+        }
+
+        let balance = statsStore.stats?.balance ?? 0
+        guard canAfford(balance: balance, cost: publicWallCost) else {
+            publishError = publishCostMessage(balance: balance)
             return
         }
 

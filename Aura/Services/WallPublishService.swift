@@ -23,7 +23,60 @@ final class WallPublishService {
         var fields = newWallFields(for: draft)
         fields["createdAt"] = FieldValue.serverTimestamp()
         fields["updatedAt"] = FieldValue.serverTimestamp()
-        try await createOwnedDocument(wallDocument, fields: fields, ownerID: draft.ownerID)
+        let userDocument = database.collection("users").document(draft.ownerID)
+
+        do {
+            let result = try await database.runTransaction { transaction, errorPointer -> Any? in
+                do {
+                    let current = userStats(fields: try transaction.getDocument(userDocument).data() ?? [:])
+                    guard canAfford(balance: current.balance, cost: publicWallCost) else {
+                        return publishCostMessage(balance: current.balance)
+                    }
+                    let updated = statsAfterWallPublish(current, wallID: draft.wallID)
+                    transaction.setData(fields, forDocument: wallDocument)
+                    transaction.setData(firestoreFields(for: updated), forDocument: userDocument)
+                    return nil
+                } catch {
+                    errorPointer?.pointee = error as NSError
+                    return nil
+                }
+            }
+            if let shortfall = result as? String {
+                throw UserFacingError(message: shortfall)
+            }
+        } catch let error as UserFacingError {
+            throw error
+        } catch {
+            let existing = try? await wallDocument.getDocument()
+            guard existing?.data()?["ownerID"] as? String == draft.ownerID else { throw error }
+        }
+    }
+
+    func fetchMyWalls(ownerID: String) async throws -> [Wall] {
+        let snapshot = try await database.collection("walls")
+            .whereField("ownerID", isEqualTo: ownerID)
+            .whereField("visibility", isEqualTo: "public")
+            .whereField("moderationStatus", isEqualTo: "active")
+            .getDocuments()
+        return snapshot.documents
+            .compactMap { wall(id: $0.documentID, fields: $0.data()) }
+            .sorted { $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending }
+    }
+
+    func renameWall(wallID: String, title: String) async throws {
+        try await database.collection("walls").document(wallID).updateData([
+            "title": title,
+            "updatedAt": FieldValue.serverTimestamp(),
+        ])
+    }
+
+    func deleteWall(wallID: String) async throws {
+        let wallDocument = database.collection("walls").document(wallID)
+        let chunks = try await wallDocument.collection("mapChunks").getDocuments()
+        for chunk in chunks.documents {
+            try await chunk.reference.delete()
+        }
+        try await wallDocument.delete()
     }
 
     func downloadMap(wallID: String, map: WallMapInfo) async throws -> Data {

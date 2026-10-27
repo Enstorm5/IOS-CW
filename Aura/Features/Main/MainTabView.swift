@@ -43,7 +43,7 @@ struct MainTabView: View {
                 QuestsView(statsStore: statsStore)
             }
             Tab("Camera", systemImage: "camera.viewfinder") {
-                ARSpikeView(publisher: publisher, locationService: locationService, currentUser: profile)
+                ARSpikeView(publisher: publisher, locationService: locationService, currentUser: profile, statsStore: statsStore)
             }
             Tab("Crew", systemImage: "person.3") {
                 PlaceholderTabView(title: "Crew")

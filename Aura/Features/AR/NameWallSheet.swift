@@ -2,6 +2,7 @@ import SwiftUI
 
 struct NameWallSheet: View {
     let isPublishing: Bool
+    let costMessage: String
     let errorMessage: String?
     let onPublish: (String) -> Void
 
@@ -18,6 +19,10 @@ struct NameWallSheet: View {
                     Text("The wall appears on the map at your current location. Anyone signed in can find it, and people within 50 m can read and write on it.")
                         .font(.auraNotice)
                         .foregroundStyle(Color.auraMuted)
+
+                    Label(costMessage, systemImage: "sparkles")
+                        .font(.auraNotice)
+                        .foregroundStyle(Color.auraText)
 
                     if let errorMessage {
                         ErrorMessage(text: errorMessage)
