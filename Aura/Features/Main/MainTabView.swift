@@ -77,7 +77,7 @@ struct DevelopmentPill: View {
     }
 }
 
-func colorScheme(for theme: AppTheme) -> ColorScheme? {
+func preferredScheme(for theme: AppTheme) -> ColorScheme? {
     switch theme {
     case .system: nil
     case .light: .light
