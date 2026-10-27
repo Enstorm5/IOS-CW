@@ -93,6 +93,107 @@ service cloud.firestore {
         && data.interests.size() >= 1 && data.interests.size() <= 8;
     }
 
+    function today() {
+      return math.floor((request.time.toMillis() + 19800000) / 86400000);
+    }
+
+    function statsFields() {
+      return ['balance', 'lifetimeXP', 'discoveryCount', 'streakDays', 'longestStreak', 'lastQualifiedDay',
+              'dailyDay', 'dailyDiscoveries', 'questsClaimed', 'lastDiscoveryWallID', 'lastClaimID'];
+    }
+
+    function userPath(userID) {
+      return /databases/$(database)/documents/users/$(userID);
+    }
+
+    function isFreshStats(data) {
+      return data.keys().hasOnly(statsFields()) && data.keys().hasAll(statsFields())
+        && data.balance == 0 && data.lifetimeXP == 0 && data.discoveryCount == 0
+        && data.streakDays == 0 && data.longestStreak == 0 && data.lastQualifiedDay == 0
+        && data.dailyDay == 0 && data.dailyDiscoveries == 0 && data.questsClaimed == 0
+        && data.lastDiscoveryWallID == '' && data.lastClaimID == '';
+    }
+
+    function expectedStreak(before, day) {
+      return before.lastQualifiedDay == day ? before.streakDays
+        : (before.lastQualifiedDay == day - 1 ? before.streakDays + 1 : 1);
+    }
+
+    function isDiscoveryUpdate(userID, before, after) {
+      let day = today();
+      let wallID = after.lastDiscoveryWallID;
+      let streak = expectedStreak(before, day);
+      return wallID is string && wallID.size() > 0
+        && !exists(/databases/$(database)/documents/users/$(userID)/discoveries/$(wallID))
+        && existsAfter(/databases/$(database)/documents/users/$(userID)/discoveries/$(wallID))
+        && after.balance == before.balance + 10
+        && after.lifetimeXP == before.lifetimeXP + 10
+        && after.discoveryCount == before.discoveryCount + 1
+        && after.dailyDay == day
+        && after.dailyDiscoveries == (before.dailyDay == day ? before.dailyDiscoveries + 1 : 1)
+        && after.streakDays == streak
+        && after.longestStreak == (before.longestStreak > streak ? before.longestStreak : streak)
+        && after.lastQualifiedDay == day
+        && after.questsClaimed == before.questsClaimed
+        && after.lastClaimID == before.lastClaimID;
+    }
+
+    function isQuestClaimUpdate(userID, before, after) {
+      let day = today();
+      let claimID = string(day) + '_readFive';
+      return after.lastClaimID == claimID
+        && before.lastClaimID != claimID
+        && existsAfter(/databases/$(database)/documents/users/$(userID)/questClaims/$(claimID))
+        && before.dailyDay == day && before.dailyDiscoveries >= 5
+        && after.balance == before.balance + 40
+        && after.lifetimeXP == before.lifetimeXP + 40
+        && after.questsClaimed == before.questsClaimed + 1
+        && after.discoveryCount == before.discoveryCount
+        && after.dailyDay == before.dailyDay
+        && after.dailyDiscoveries == before.dailyDiscoveries
+        && after.streakDays == before.streakDays
+        && after.longestStreak == before.longestStreak
+        && after.lastQualifiedDay == before.lastQualifiedDay
+        && after.lastDiscoveryWallID == before.lastDiscoveryWallID;
+    }
+
+    function isAwardRecord(data) {
+      return data.keys().hasOnly(['day', 'createdAt']) && data.keys().hasAll(['day', 'createdAt'])
+        && data.day == today()
+        && data.createdAt == request.time;
+    }
+
+    match /users/{userID} {
+      allow read: if isOwner(userID);
+      allow create: if isOwner(userID) && isFreshStats(request.resource.data);
+      allow update: if isOwner(userID)
+        && request.resource.data.keys().hasOnly(statsFields())
+        && request.resource.data.keys().hasAll(statsFields())
+        && (isDiscoveryUpdate(userID, resource.data, request.resource.data)
+            || isQuestClaimUpdate(userID, resource.data, request.resource.data));
+      allow delete: if false;
+
+      match /discoveries/{wallID} {
+        allow read: if isOwner(userID);
+        allow create: if isOwner(userID)
+          && isAwardRecord(request.resource.data)
+          && isReadableWall(wallID)
+          && getAfter(userPath(userID)).data.lastDiscoveryWallID == wallID
+          && getAfter(userPath(userID)).data.discoveryCount == get(userPath(userID)).data.discoveryCount + 1;
+        allow update, delete: if false;
+      }
+
+      match /questClaims/{claimID} {
+        allow read: if isOwner(userID);
+        allow create: if isOwner(userID)
+          && isAwardRecord(request.resource.data)
+          && claimID == string(today()) + '_readFive'
+          && getAfter(userPath(userID)).data.lastClaimID == claimID
+          && getAfter(userPath(userID)).data.questsClaimed == get(userPath(userID)).data.questsClaimed + 1;
+        allow update, delete: if false;
+      }
+    }
+
     match /profiles/{userID} {
       allow read: if isSignedIn();
       allow create: if isOwner(userID)

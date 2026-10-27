@@ -8,6 +8,7 @@ struct AppServices {
     let walls = WallService()
     let messages = WallMessageService()
     let publisher = WallPublishService()
+    let economy = EconomyService()
     let location = LocationService()
 
     init() {
