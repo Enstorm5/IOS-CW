@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "seed": "node seed-walls.mjs",
-    "rules": "node deploy-rules.mjs"
+    "rules": "node deploy-rules.mjs",
+    "indexes": "node deploy-indexes.mjs"
   },
   "dependencies": {
     "firebase-admin": "^14.5.0"
