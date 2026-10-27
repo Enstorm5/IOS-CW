@@ -49,7 +49,7 @@ struct MainTabView: View {
                 PlaceholderTabView(title: "Crew")
             }
             Tab("Me", systemImage: "person.crop.circle") {
-                ProfileView(session: session, profile: profile, statsStore: statsStore, localStore: localStore, appLock: appLock, settings: $settings)
+                ProfileView(session: session, profile: profile, statsStore: statsStore, localStore: localStore, appLock: appLock, publisher: publisher, settings: $settings)
             }
         }
         .tint(Color.auraText)

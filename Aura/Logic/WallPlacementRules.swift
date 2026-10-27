@@ -95,3 +95,17 @@ func messageCanvasPosition(normalizedX: Double, normalizedY: Double, size: WallS
     let y = min(1, max(0, normalizedY))
     return (Float((x - 0.5) * size.width), Float((y - 0.5) * size.height))
 }
+
+func renamedWalls(_ walls: [Wall], wallID: String, title: String) -> [Wall] {
+    walls.map { wall in
+        guard wall.id == wallID else { return wall }
+        var renamed = wall
+        renamed.title = title
+        return renamed
+    }
+}
+
+func myWallDetail(_ wall: Wall) -> String {
+    guard let map = wall.map else { return "No AR map" }
+    return "\(wallSizeText(map.size)) · \(formattedByteCount(map.byteCount)) map"
+}

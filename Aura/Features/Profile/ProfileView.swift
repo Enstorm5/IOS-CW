@@ -6,6 +6,7 @@ struct ProfileView: View {
     let statsStore: StatsStore
     let localStore: LocalStore
     let appLock: AppLockStore
+    let publisher: WallPublishService
     @Binding var settings: UserSettings
 
     var body: some View {
@@ -41,6 +42,11 @@ struct ProfileView: View {
                             EditProfileView(session: session, profile: profile)
                         } label: {
                             ProfileLinkRow(systemImage: "person.crop.circle", title: "Edit profile", detail: "Name, look, bio, interests")
+                        }
+                        NavigationLink {
+                            MyWallsView(publisher: publisher, ownerID: profile.id)
+                        } label: {
+                            ProfileLinkRow(systemImage: "square.on.square.dashed", title: "My walls", detail: "\(statsStore.stats?.wallsPublished ?? 0) published")
                         }
                         NavigationLink {
                             BadgesView(stats: statsStore.stats ?? UserStats())
