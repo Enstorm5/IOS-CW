@@ -23,8 +23,13 @@ final class WallDetailViewModel {
     private var nextCursor: MessageCursor?
     private var latestLoadID = 0
     private var pendingPost: PendingPost?
+    private let statsStore: StatsStore
+    private var isDiscoveryHandled = false
+    private var isClaimingDiscovery = false
+    private(set) var discoveryBanner: String?
 
-    init(wall: Wall, messageService: WallMessageService, locationService: LocationService, localStore: LocalStore, accountID: String) {
+    init(wall: Wall, messageService: WallMessageService, locationService: LocationService, localStore: LocalStore, accountID: String, statsStore: StatsStore) {
+        self.statsStore = statsStore
         self.wall = wall
         self.messageService = messageService
         self.locationService = locationService
@@ -64,16 +69,40 @@ final class WallDetailViewModel {
     }
 
     func refreshProximity(now: Date) async {
-        guard !isUnlocked else { return }
+        if !isUnlocked {
+            proximity = wallProximity(wallCoordinate: wall.coordinate, access: locationService.access, fix: currentFix(), policy: wallReadingPolicy, now: now)
 
-        proximity = wallProximity(wallCoordinate: wall.coordinate, access: locationService.access, fix: currentFix(), policy: wallReadingPolicy, now: now)
+            if isUnlocked {
+                if !hasLoaded {
+                    await loadFirstPage()
+                }
+            } else if teaser == nil && !isLoadingTeaser {
+                await loadTeaser()
+            }
+        }
 
         if isUnlocked {
-            if !hasLoaded {
-                await loadFirstPage()
-            }
-        } else if teaser == nil && !isLoadingTeaser {
-            await loadTeaser()
+            await claimDiscoveryIfEligible(now: now)
+        }
+    }
+
+    private func claimDiscoveryIfEligible(now: Date) async {
+        guard !isDiscoveryHandled, !isClaimingDiscovery else { return }
+        let rewardCheck = wallProximity(wallCoordinate: wall.coordinate, access: locationService.access, fix: currentFix(), policy: wallPostingPolicy, now: now)
+        guard rewardCheck == .unlocked else { return }
+
+        isClaimingDiscovery = true
+        let result = await statsStore.claimDiscovery(wallID: wall.id)
+        isClaimingDiscovery = false
+
+        switch result {
+        case .awarded:
+            isDiscoveryHandled = true
+            discoveryBanner = "+\(discoveryRewardPoints) points · New wall discovered"
+        case .alreadyDiscovered:
+            isDiscoveryHandled = true
+        case .failed:
+            break
         }
     }
 

@@ -7,6 +7,7 @@ struct DiscoveryMapView: View {
     let messageService: WallMessageService
     let publisher: WallPublishService
     let localStore: LocalStore
+    let statsStore: StatsStore
 
     @Environment(\.openURL) private var openURL
     @State private var cameraPosition: MapCameraPosition = .userLocation(
@@ -51,7 +52,7 @@ struct DiscoveryMapView: View {
         }
         .toolbar(.hidden, for: .navigationBar)
         .navigationDestination(item: $openedWall) { wall in
-            WallDetailView(wall: wall, currentUser: currentUser, messageService: messageService, locationService: viewModel.locationService, publisher: publisher, localStore: localStore)
+            WallDetailView(wall: wall, currentUser: currentUser, messageService: messageService, locationService: viewModel.locationService, publisher: publisher, localStore: localStore, statsStore: statsStore)
         }
         .onAppear { viewModel.mapAppeared() }
         .onDisappear { viewModel.mapDisappeared() }
@@ -70,6 +71,9 @@ struct DiscoveryMapView: View {
                     .font(.auraHeading)
                     .foregroundStyle(Color.auraText)
                 Spacer()
+                if let stats = statsStore.stats {
+                    AuraPill(text: formattedPoints(stats.balance))
+                }
                 if viewModel.isLoading {
                     ProgressView()
                 }

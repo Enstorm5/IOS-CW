@@ -5,6 +5,7 @@ struct MainTabView: View {
     let profile: UserProfile
 
     @State private var discovery: DiscoveryViewModel
+    @State private var statsStore: StatsStore
     private let messageService: WallMessageService
     private let publisher: WallPublishService
     private let locationService: LocationService
@@ -17,6 +18,7 @@ struct MainTabView: View {
         self.publisher = services.publisher
         self.locationService = services.location
         self.localStore = services.localStore
+        _statsStore = State(initialValue: StatsStore(economy: services.economy, userID: profile.id))
         _discovery = State(initialValue: DiscoveryViewModel(
             wallService: services.walls,
             locationService: services.location,
@@ -29,11 +31,11 @@ struct MainTabView: View {
         TabView {
             Tab("Map", systemImage: "map") {
                 NavigationStack {
-                    DiscoveryMapView(viewModel: discovery, currentUser: profile, messageService: messageService, publisher: publisher, localStore: localStore)
+                    DiscoveryMapView(viewModel: discovery, currentUser: profile, messageService: messageService, publisher: publisher, localStore: localStore, statsStore: statsStore)
                 }
             }
             Tab("Quests", systemImage: "flag.checkered") {
-                PlaceholderTabView(title: "Quests")
+                QuestsView(statsStore: statsStore)
             }
             Tab("Camera", systemImage: "camera.viewfinder") {
                 ARSpikeView(publisher: publisher, locationService: locationService, currentUser: profile)
@@ -42,10 +44,12 @@ struct MainTabView: View {
                 PlaceholderTabView(title: "Crew")
             }
             Tab("Me", systemImage: "person.crop.circle") {
-                MePlaceholderView(session: session, profile: profile, localStore: localStore)
+                MePlaceholderView(session: session, profile: profile, localStore: localStore, statsStore: statsStore)
             }
         }
         .tint(Color.auraText)
+        .task { statsStore.start() }
+        .onDisappear { statsStore.stop() }
     }
 }
 
@@ -68,6 +72,7 @@ struct MePlaceholderView: View {
     let session: SessionStore
     let profile: UserProfile
     let localStore: LocalStore
+    let statsStore: StatsStore
 
     @State private var isConfirmingSignOut = false
     @State private var isConfirmingReset = false
@@ -81,7 +86,9 @@ struct MePlaceholderView: View {
             Text(profile.displayName)
                 .font(.auraHeading)
                 .foregroundStyle(Color.auraText)
-            DevelopmentPill()
+            if let stats = statsStore.stats {
+                PointsSummaryCard(stats: stats)
+            }
             if let errorMessage {
                 ErrorMessage(text: errorMessage)
             }

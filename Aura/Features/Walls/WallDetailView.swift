@@ -15,11 +15,11 @@ struct WallDetailView: View {
         wall.map != nil && ARWorldTrackingConfiguration.isSupported
     }
 
-    init(wall: Wall, currentUser: UserProfile, messageService: WallMessageService, locationService: LocationService, publisher: WallPublishService, localStore: LocalStore) {
+    init(wall: Wall, currentUser: UserProfile, messageService: WallMessageService, locationService: LocationService, publisher: WallPublishService, localStore: LocalStore, statsStore: StatsStore) {
         self.wall = wall
         self.currentUser = currentUser
         self.publisher = publisher
-        _viewModel = State(initialValue: WallDetailViewModel(wall: wall, messageService: messageService, locationService: locationService, localStore: localStore, accountID: currentUser.id))
+        _viewModel = State(initialValue: WallDetailViewModel(wall: wall, messageService: messageService, locationService: locationService, localStore: localStore, accountID: currentUser.id, statsStore: statsStore))
     }
 
     var body: some View {
@@ -141,6 +141,9 @@ struct WallDetailView: View {
 
     @ViewBuilder
     private var unlockedContent: some View {
+        if let discoveryBanner = viewModel.discoveryBanner {
+            StatusBanner(systemImage: "sparkles", message: discoveryBanner)
+        }
         if viewModel.isLoading && viewModel.messages.isEmpty {
             ProgressView()
                 .frame(maxWidth: .infinity, minHeight: AuraSize.control)

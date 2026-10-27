@@ -47,4 +47,5 @@ enum AuraSize {
     static let guidancePhotoWidth: CGFloat = 120
     static let drawingThumbnailHeight: CGFloat = 90
     static let drawingTexturePixelWidth: CGFloat = 640
+    static let badgeTileHeight: CGFloat = 96
 }
