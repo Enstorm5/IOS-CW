@@ -6,6 +6,7 @@ struct MainTabView: View {
 
     @State private var discovery: DiscoveryViewModel
     @State private var statsStore: StatsStore
+    @State private var settings: UserSettings
     private let messageService: WallMessageService
     private let publisher: WallPublishService
     private let locationService: LocationService
@@ -19,6 +20,7 @@ struct MainTabView: View {
         self.locationService = services.location
         self.localStore = services.localStore
         _statsStore = State(initialValue: StatsStore(economy: services.economy, userID: profile.id))
+        _settings = State(initialValue: services.localStore.settings(accountID: profile.id))
         _discovery = State(initialValue: DiscoveryViewModel(
             wallService: services.walls,
             locationService: services.location,
@@ -44,10 +46,11 @@ struct MainTabView: View {
                 PlaceholderTabView(title: "Crew")
             }
             Tab("Me", systemImage: "person.crop.circle") {
-                MePlaceholderView(session: session, profile: profile, localStore: localStore, statsStore: statsStore)
+                ProfileView(session: session, profile: profile, statsStore: statsStore, localStore: localStore, settings: $settings)
             }
         }
         .tint(Color.auraText)
+        .preferredColorScheme(colorScheme(for: settings.theme))
         .task { statsStore.start() }
         .onDisappear { statsStore.stop() }
     }
@@ -68,79 +71,16 @@ struct PlaceholderTabView: View {
     }
 }
 
-struct MePlaceholderView: View {
-    let session: SessionStore
-    let profile: UserProfile
-    let localStore: LocalStore
-    let statsStore: StatsStore
-
-    @State private var isConfirmingSignOut = false
-    @State private var isConfirmingReset = false
-    @State private var unsentDraftCount = 0
-    @State private var errorMessage: String?
-
-    var body: some View {
-        VStack(spacing: AuraSpacing.medium) {
-            Spacer()
-            AvatarView(preset: profile.avatarPreset)
-            Text(profile.displayName)
-                .font(.auraHeading)
-                .foregroundStyle(Color.auraText)
-            if let stats = statsStore.stats {
-                PointsSummaryCard(stats: stats)
-            }
-            if let errorMessage {
-                ErrorMessage(text: errorMessage)
-            }
-            Spacer()
-            Button("Sign out") {
-                unsentDraftCount = localStore.draftCount(accountID: profile.id)
-                isConfirmingSignOut = true
-            }
-            .buttonStyle(AuraButtonStyle(kind: .outline))
-
-            Button("Development: reset local data") {
-                isConfirmingReset = true
-            }
-            .font(.auraLink)
-            .foregroundStyle(Color.auraMuted)
-            .frame(minHeight: AuraSize.minTap)
-        }
-        .padding(AuraSpacing.screen)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.auraBackground)
-        .confirmationDialog("Sign out of Aura?", isPresented: $isConfirmingSignOut, titleVisibility: .visible) {
-            Button(unsentDraftCount > 0 ? "Delete drafts and sign out" : "Sign out", role: .destructive) {
-                signOut()
-            }
-        } message: {
-            Text(signOutMessage(unsentDraftCount: unsentDraftCount))
-        }
-        .confirmationDialog("Reset local data?", isPresented: $isConfirmingReset, titleVisibility: .visible) {
-            Button("Reset", role: .destructive) {
-                do {
-                    try localStore.deleteEverything()
-                } catch {
-                    errorMessage = "Couldn't reset local data."
-                }
-            }
-        } message: {
-            Text("Deletes all drafts and saved walls and messages on this phone. Nothing online changes.")
-        }
-    }
-
-    private func signOut() {
-        do {
-            try localStore.deleteAccountData(accountID: profile.id)
-            try session.signOut()
-        } catch {
-            errorMessage = error.localizedDescription
-        }
-    }
-}
-
 struct DevelopmentPill: View {
     var body: some View {
         AuraPill(text: "Placeholder: not built yet")
+    }
+}
+
+func colorScheme(for theme: AppTheme) -> ColorScheme? {
+    switch theme {
+    case .system: nil
+    case .light: .light
+    case .dark: .dark
     }
 }

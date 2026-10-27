@@ -48,4 +48,6 @@ enum AuraSize {
     static let drawingThumbnailHeight: CGFloat = 90
     static let drawingTexturePixelWidth: CGFloat = 640
     static let badgeTileHeight: CGFloat = 96
+    static let profileAvatar: CGFloat = 88
+    static let avatarChoice: CGFloat = 56
 }
