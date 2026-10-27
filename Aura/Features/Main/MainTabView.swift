@@ -6,6 +6,7 @@ struct MainTabView: View {
 
     @State private var discovery: DiscoveryViewModel
     @State private var statsStore: StatsStore
+    @State private var crewStore: CrewStore
     @State private var settings: UserSettings
     @State private var appLock: AppLockStore
     @Environment(\.scenePhase) private var scenePhase
@@ -22,6 +23,7 @@ struct MainTabView: View {
         self.locationService = services.location
         self.localStore = services.localStore
         _statsStore = State(initialValue: StatsStore(economy: services.economy, userID: profile.id))
+        _crewStore = State(initialValue: CrewStore(service: services.crews, userID: profile.id))
         _settings = State(initialValue: services.localStore.settings(accountID: profile.id))
         _appLock = State(initialValue: AppLockStore(biometric: services.biometric))
         _discovery = State(initialValue: DiscoveryViewModel(
@@ -46,7 +48,7 @@ struct MainTabView: View {
                 ARSpikeView(publisher: publisher, locationService: locationService, currentUser: profile, statsStore: statsStore)
             }
             Tab("Crew", systemImage: "person.3") {
-                PlaceholderTabView(title: "Crew")
+                CrewView(store: crewStore, profile: profile)
             }
             Tab("Me", systemImage: "person.crop.circle") {
                 ProfileView(session: session, profile: profile, statsStore: statsStore, localStore: localStore, appLock: appLock, publisher: publisher, settings: $settings)
@@ -64,6 +66,7 @@ struct MainTabView: View {
         .task {
             appLock.configure(enabled: settings.appLockEnabled, lockNow: true)
             statsStore.start()
+            crewStore.start()
         }
         .onChange(of: settings.appLockEnabled) {
             appLock.configure(enabled: settings.appLockEnabled, lockNow: false)
@@ -71,33 +74,15 @@ struct MainTabView: View {
         .onChange(of: scenePhase) {
             appLock.scenePhaseChanged(to: scenePhase, now: Date())
         }
-        .onDisappear { statsStore.stop() }
+        .onDisappear {
+            statsStore.stop()
+            crewStore.stop()
+        }
     }
 
     private func signOutFromLock() {
         try? localStore.deleteAccountData(accountID: profile.id)
         try? session.signOut()
-    }
-}
-
-struct PlaceholderTabView: View {
-    let title: String
-
-    var body: some View {
-        VStack(spacing: AuraSpacing.medium) {
-            Text(title)
-                .font(.auraScreenTitle)
-                .foregroundStyle(Color.auraText)
-            DevelopmentPill()
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.auraBackground)
-    }
-}
-
-struct DevelopmentPill: View {
-    var body: some View {
-        AuraPill(text: "Placeholder: not built yet")
     }
 }
 

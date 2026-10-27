@@ -227,6 +227,76 @@ service cloud.firestore {
         && data.createdAt == request.time;
     }
 
+    function crewPath(crewID) {
+      return /databases/$(database)/documents/crews/$(crewID);
+    }
+
+    function crewMemberPath(crewID, userID) {
+      return /databases/$(database)/documents/crews/$(crewID)/members/$(userID);
+    }
+
+    function crewMembershipPath(userID) {
+      return /databases/$(database)/documents/crewMemberships/$(userID);
+    }
+
+    function isCrewMember(crewID) {
+      return isSignedIn() && exists(crewMemberPath(crewID, request.auth.uid));
+    }
+
+    function isValidNewCrew(data, crewID) {
+      let fields = ['name', 'inviteCode', 'ownerID', 'memberCount', 'lastMemberID', 'createdAt'];
+      return data.keys().hasOnly(fields) && data.keys().hasAll(fields)
+        && data.name is string && data.name.size() >= 2 && data.name.size() <= 30
+        && data.inviteCode is string && data.inviteCode.matches('^[A-HJ-NP-Z2-9]{6}$')
+        && data.ownerID == request.auth.uid
+        && data.memberCount == 1
+        && data.lastMemberID == request.auth.uid
+        && data.createdAt == request.time
+        && existsAfter(crewMemberPath(crewID, request.auth.uid))
+        && getAfter(/databases/$(database)/documents/crewInvites/$(data.inviteCode)).data.crewID == crewID;
+    }
+
+    function isCrewJoin(crewID, before, after) {
+      return after.diff(before).affectedKeys().hasOnly(['memberCount', 'lastMemberID'])
+        && after.memberCount == before.memberCount + 1
+        && after.memberCount <= 20
+        && after.lastMemberID == request.auth.uid
+        && !exists(crewMemberPath(crewID, request.auth.uid))
+        && existsAfter(crewMemberPath(crewID, request.auth.uid));
+    }
+
+    function isCrewLeave(crewID, before, after) {
+      return after.diff(before).affectedKeys().hasOnly(['memberCount', 'lastMemberID', 'ownerID'])
+        && after.memberCount == before.memberCount - 1
+        && after.lastMemberID == request.auth.uid
+        && exists(crewMemberPath(crewID, request.auth.uid))
+        && !existsAfter(crewMemberPath(crewID, request.auth.uid))
+        && (before.ownerID == request.auth.uid
+            ? after.ownerID != request.auth.uid && existsAfter(crewMemberPath(crewID, after.ownerID))
+            : after.ownerID == before.ownerID);
+    }
+
+    function isCrewRemoval(crewID, before, after) {
+      return after.diff(before).affectedKeys().hasOnly(['memberCount', 'lastMemberID'])
+        && before.ownerID == request.auth.uid
+        && after.memberCount == before.memberCount - 1
+        && after.lastMemberID != request.auth.uid
+        && exists(crewMemberPath(crewID, after.lastMemberID))
+        && !existsAfter(crewMemberPath(crewID, after.lastMemberID));
+    }
+
+    function isValidNewCrewMember(crewID, data) {
+      let fields = ['displayName', 'avatarPreset', 'inviteCode', 'joinedAt'];
+      let profile = get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data;
+      return data.keys().hasOnly(fields) && data.keys().hasAll(fields)
+        && data.displayName == profile.displayName
+        && data.avatarPreset == profile.avatarPreset
+        && data.inviteCode == getAfter(crewPath(crewID)).data.inviteCode
+        && data.joinedAt == request.time
+        && getAfter(crewPath(crewID)).data.lastMemberID == request.auth.uid
+        && getAfter(crewMembershipPath(request.auth.uid)).data.crewID == crewID;
+    }
+
     match /users/{userID} {
       allow read: if isOwner(userID);
       allow create: if isOwner(userID) && isFreshStats(request.resource.data);
@@ -287,6 +357,57 @@ service cloud.firestore {
         && isValidProfile(request.resource.data)
         && request.resource.data.createdAt == resource.data.createdAt;
       allow delete: if isOwner(userID);
+    }
+
+    match /crewInvites/{code} {
+      allow get: if isSignedIn();
+      allow list: if false;
+      allow create: if isSignedIn()
+        && request.resource.data.keys().hasOnly(['crewID', 'crewName'])
+        && request.resource.data.keys().hasAll(['crewID', 'crewName'])
+        && !exists(crewPath(request.resource.data.crewID))
+        && getAfter(crewPath(request.resource.data.crewID)).data.ownerID == request.auth.uid
+        && getAfter(crewPath(request.resource.data.crewID)).data.inviteCode == code
+        && getAfter(crewPath(request.resource.data.crewID)).data.name == request.resource.data.crewName;
+      allow update: if false;
+      allow delete: if isCrewMember(resource.data.crewID)
+        && !existsAfter(crewPath(resource.data.crewID));
+    }
+
+    match /crewMemberships/{userID} {
+      allow read: if isOwner(userID);
+      allow create: if isOwner(userID)
+        && request.resource.data.keys().hasOnly(['crewID', 'joinedAt'])
+        && request.resource.data.keys().hasAll(['crewID', 'joinedAt'])
+        && request.resource.data.joinedAt == request.time
+        && existsAfter(crewMemberPath(request.resource.data.crewID, userID));
+      allow update: if false;
+      allow delete: if isOwner(userID)
+        && !existsAfter(crewMemberPath(resource.data.crewID, userID));
+    }
+
+    match /crews/{crewID} {
+      allow read: if isCrewMember(crewID);
+      allow create: if isSignedIn() && isValidNewCrew(request.resource.data, crewID);
+      allow update: if isSignedIn()
+        && (isCrewJoin(crewID, resource.data, request.resource.data)
+            || isCrewLeave(crewID, resource.data, request.resource.data)
+            || isCrewRemoval(crewID, resource.data, request.resource.data));
+      allow delete: if isCrewMember(crewID)
+        && resource.data.memberCount == 1
+        && !existsAfter(crewMemberPath(crewID, request.auth.uid));
+
+      match /members/{memberID} {
+        allow read: if isCrewMember(crewID);
+        allow create: if isOwner(memberID) && isValidNewCrewMember(crewID, request.resource.data);
+        allow update: if false;
+        allow delete: if isSignedIn()
+          && (memberID == request.auth.uid
+                ? !existsAfter(crewMembershipPath(memberID))
+                : get(crewPath(crewID)).data.ownerID == request.auth.uid)
+          && (!existsAfter(crewPath(crewID))
+              || getAfter(crewPath(crewID)).data.lastMemberID == memberID);
+      }
     }
 
     match /walls/{wallID} {

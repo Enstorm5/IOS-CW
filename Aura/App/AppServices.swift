@@ -9,12 +9,14 @@ struct AppServices {
     let messages = WallMessageService()
     let publisher = WallPublishService()
     let economy = EconomyService()
-    let deletion = AccountDeletionService()
+    let crews = CrewService()
+    let deletion: AccountDeletionService
     let biometric = BiometricService()
     let location = LocationService()
 
     init() {
         persistence = PersistenceController()
         localStore = LocalStore(persistence: persistence)
+        deletion = AccountDeletionService(crews: crews)
     }
 }

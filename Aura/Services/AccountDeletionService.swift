@@ -3,8 +3,15 @@ import FirebaseFirestore
 
 final class AccountDeletionService {
     private let database = Firestore.firestore()
+    private let crews: CrewService
+
+    init(crews: CrewService) {
+        self.crews = crews
+    }
 
     func deleteContent(userID: String) async throws {
+        try await crews.leaveCurrentCrew(userID: userID)
+
         let messages = try await database.collectionGroup("messages")
             .whereField("authorID", isEqualTo: userID)
             .getDocuments()
