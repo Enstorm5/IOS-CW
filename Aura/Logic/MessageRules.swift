@@ -47,3 +47,23 @@ struct PendingPost: Equatable {
     let text: String
     let color: MessageColor
 }
+
+func sparkDocumentID(wallID: String, messageID: String) -> String {
+    "\(wallID)_\(messageID)"
+}
+
+func canSpark(_ message: WallMessage, userID: String) -> Bool {
+    message.authorID != userID
+}
+
+func canEdit(_ message: WallMessage, userID: String) -> Bool {
+    message.authorID == userID && message.contentType == .text
+}
+
+func canDelete(_ message: WallMessage, userID: String) -> Bool {
+    message.authorID == userID
+}
+
+func sparkCountAfterToggle(_ count: Int, isAddingSpark: Bool) -> Int {
+    isAddingSpark ? count + 1 : max(0, count - 1)
+}

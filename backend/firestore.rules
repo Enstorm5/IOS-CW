@@ -106,6 +106,33 @@ service cloud.firestore {
       return /databases/$(database)/documents/users/$(userID);
     }
 
+    function messagePath(wallID, messageID) {
+      return /databases/$(database)/documents/walls/$(wallID)/messages/$(messageID);
+    }
+
+    function mySparkPath(wallID, messageID) {
+      return /databases/$(database)/documents/users/$(request.auth.uid)/sparks/$(wallID + '_' + messageID);
+    }
+
+    function isAuthorTextEdit(before, after) {
+      return before.authorID == request.auth.uid
+        && before.contentType == 'text'
+        && after.diff(before).affectedKeys().hasOnly(['text', 'updatedAt'])
+        && after.text is string && after.text.size() >= 1 && after.text.size() <= 280
+        && after.updatedAt == request.time;
+    }
+
+    function isSparkChange(wallID, messageID, before, after) {
+      return before.authorID != request.auth.uid
+        && after.diff(before).affectedKeys().hasOnly(['sparkCount'])
+        && ((after.sparkCount == before.sparkCount + 1
+              && !exists(mySparkPath(wallID, messageID))
+              && existsAfter(mySparkPath(wallID, messageID)))
+            || (after.sparkCount == before.sparkCount - 1
+              && exists(mySparkPath(wallID, messageID))
+              && !existsAfter(mySparkPath(wallID, messageID))));
+    }
+
     function isFreshStats(data) {
       return data.keys().hasOnly(statsFields()) && data.keys().hasAll(statsFields())
         && data.balance == 0 && data.lifetimeXP == 0 && data.discoveryCount == 0
@@ -183,6 +210,21 @@ service cloud.firestore {
         allow update, delete: if false;
       }
 
+      match /sparks/{sparkID} {
+        allow read: if isOwner(userID);
+        allow create: if isOwner(userID)
+          && request.resource.data.keys().hasOnly(['wallID', 'messageID', 'createdAt'])
+          && request.resource.data.keys().hasAll(['wallID', 'messageID', 'createdAt'])
+          && sparkID == request.resource.data.wallID + '_' + request.resource.data.messageID
+          && request.resource.data.createdAt == request.time
+          && getAfter(messagePath(request.resource.data.wallID, request.resource.data.messageID)).data.sparkCount
+             == get(messagePath(request.resource.data.wallID, request.resource.data.messageID)).data.sparkCount + 1;
+        allow delete: if isOwner(userID)
+          && getAfter(messagePath(resource.data.wallID, resource.data.messageID)).data.sparkCount
+             == get(messagePath(resource.data.wallID, resource.data.messageID)).data.sparkCount - 1;
+        allow update: if false;
+      }
+
       match /questClaims/{claimID} {
         allow read: if isOwner(userID);
         allow create: if isOwner(userID)
@@ -228,7 +270,12 @@ service cloud.firestore {
         allow create: if isSignedIn()
           && isReadableWall(wallID)
           && isValidNewMessage(request.resource.data);
-        allow update, delete: if false;
+        allow update: if isSignedIn()
+          && isReadableWall(wallID)
+          && resource.data.moderationStatus == 'active'
+          && (isAuthorTextEdit(resource.data, request.resource.data)
+              || isSparkChange(wallID, messageID, resource.data, request.resource.data));
+        allow delete: if isSignedIn() && resource.data.authorID == request.auth.uid;
       }
     }
   }

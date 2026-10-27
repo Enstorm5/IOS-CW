@@ -72,6 +72,60 @@ final class WallMessageService {
         )
     }
 
+    func editMessage(wallID: String, messageID: String, text: String) async throws {
+        try await messageDocument(wallID: wallID, messageID: messageID).updateData([
+            "text": text,
+            "updatedAt": FieldValue.serverTimestamp(),
+        ])
+    }
+
+    func deleteMessage(wallID: String, messageID: String) async throws {
+        try await messageDocument(wallID: wallID, messageID: messageID).delete()
+    }
+
+    func mySparkedMessageIDs(userID: String, wallID: String) async throws -> Set<String> {
+        let snapshot = try await database.collection("users").document(userID).collection("sparks")
+            .whereField("wallID", isEqualTo: wallID)
+            .getDocuments()
+        return Set(snapshot.documents.compactMap { $0.data()["messageID"] as? String })
+    }
+
+    func setSpark(userID: String, wallID: String, messageID: String, isAddingSpark: Bool) async throws -> Int {
+        let messageReference = messageDocument(wallID: wallID, messageID: messageID)
+        let sparkReference = database.collection("users").document(userID).collection("sparks")
+            .document(sparkDocumentID(wallID: wallID, messageID: messageID))
+
+        let result = try await database.runTransaction { transaction, errorPointer -> Any? in
+            do {
+                let message = try transaction.getDocument(messageReference)
+                let currentCount = message.data()?["sparkCount"] as? Int ?? 0
+                let alreadySparked = try transaction.getDocument(sparkReference).exists
+                guard alreadySparked != isAddingSpark else { return currentCount }
+
+                let newCount = sparkCountAfterToggle(currentCount, isAddingSpark: isAddingSpark)
+                transaction.updateData(["sparkCount": newCount], forDocument: messageReference)
+                if isAddingSpark {
+                    transaction.setData([
+                        "wallID": wallID,
+                        "messageID": messageID,
+                        "createdAt": FieldValue.serverTimestamp(),
+                    ], forDocument: sparkReference)
+                } else {
+                    transaction.deleteDocument(sparkReference)
+                }
+                return newCount
+            } catch {
+                errorPointer?.pointee = error as NSError
+                return nil
+            }
+        }
+        return result as? Int ?? 0
+    }
+
+    private func messageDocument(wallID: String, messageID: String) -> DocumentReference {
+        database.collection("walls").document(wallID).collection("messages").document(messageID)
+    }
+
     private func activeMessages(wallID: String) -> Query {
         database.collection("walls").document(wallID).collection("messages")
             .whereField("moderationStatus", isEqualTo: "active")
