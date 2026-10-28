@@ -53,10 +53,10 @@ struct MainTabView: View {
                 ARSpikeView(publisher: publisher, locationService: locationService, currentUser: profile, statsStore: statsStore)
             }
             Tab("Crew", systemImage: "person.3", value: .crew) {
-                CrewView(store: crewStore, profile: profile, statsStore: statsStore)
+                CrewView(store: crewStore, profile: profile)
             }
             Tab("Me", systemImage: "person.crop.circle", value: .me) {
-                ProfileView(session: session, profile: profile, statsStore: statsStore, localStore: localStore, appLock: appLock, publisher: publisher, settings: $settings)
+                ProfileView(session: session, profile: profile, statsStore: statsStore, localStore: localStore, appLock: appLock, publisher: publisher, crewStore: crewStore, settings: $settings)
             }
         }
         .tint(Color.auraText)

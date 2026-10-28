@@ -194,4 +194,10 @@ func needsScoreSync(member: CrewMember, stats: UserStats) -> Bool {
         || member.weekDiscoveries != wanted.weekDiscoveries
 }
 
+let rankingsOffHint = "You're not on the rankings. Turn on \"Show me on crew rankings\" in Me, Settings."
+
+func rankingSettingDetail(isInCrew: Bool) -> String {
+    isInCrew ? rankingsExplanation : "Join a crew in the Crew tab to use rankings."
+}
+
 let rankingsExplanation = "Shows your XP and walls found this week to this crew only. Turn it off any time and your score disappears."

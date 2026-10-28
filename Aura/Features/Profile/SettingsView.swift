@@ -5,6 +5,8 @@ struct SettingsView: View {
     let profile: UserProfile
     let localStore: LocalStore
     let appLock: AppLockStore
+    let crewStore: CrewStore
+    let statsStore: StatsStore
     @Binding var settings: UserSettings
 
     @Environment(\.openURL) private var openURL
@@ -37,6 +39,7 @@ struct SettingsView: View {
                     .font(.auraSectionLabel)
                     .foregroundStyle(Color.auraMuted)
                 appLockRow
+                rankingsRow
                 Button(action: openSystemSettings) {
                     ProfileLinkRow(systemImage: "location", title: "Location and camera", detail: "Change permissions in iOS Settings")
                 }
@@ -119,6 +122,34 @@ struct SettingsView: View {
             Text(unavailable ?? "Asks for \(appLock.methodName) when you open Aura or return after \(Int(appLockIntervalSeconds)) seconds away. It only protects this app on this phone.")
                 .font(.auraErrorText)
                 .foregroundStyle(Color.auraMuted)
+        }
+        .padding(AuraSpacing.medium)
+        .background(Color.auraCard, in: .rect(cornerRadius: AuraRadius.row))
+    }
+
+    private var rankingsRow: some View {
+        let isInCrew = crewStore.crew != nil
+        return VStack(alignment: .leading, spacing: AuraSpacing.xxSmall) {
+            Toggle(isOn: Binding(
+                get: { crewStore.me?.showOnRankings ?? false },
+                set: { newValue in
+                    Task { await crewStore.setRankingOptIn(newValue, stats: statsStore.stats) }
+                }
+            )) {
+                Text("Show me on crew rankings")
+                    .font(.auraCardTitle)
+                    .foregroundStyle(Color.auraText)
+            }
+            .tint(Color.auraMint)
+            .disabled(!isInCrew || crewStore.me == nil || crewStore.isWorking)
+
+            Text(rankingSettingDetail(isInCrew: isInCrew))
+                .font(.auraErrorText)
+                .foregroundStyle(Color.auraMuted)
+
+            if let rankingError = crewStore.actionError {
+                ErrorMessage(text: rankingError)
+            }
         }
         .padding(AuraSpacing.medium)
         .background(Color.auraCard, in: .rect(cornerRadius: AuraRadius.row))

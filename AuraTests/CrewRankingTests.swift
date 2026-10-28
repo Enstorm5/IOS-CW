@@ -104,6 +104,12 @@ struct CrewRankingTests {
         #expect(!needsScoreSync(member: member("a", on: false, xp: 0), stats: stats))
     }
 
+    @Test func settingsTextDependsOnBeingInACrew() {
+        #expect(rankingSettingDetail(isInCrew: true) == rankingsExplanation)
+        #expect(rankingSettingDetail(isInCrew: false) == "Join a crew in the Crew tab to use rankings.")
+        #expect(rankingsOffHint.contains("Settings"))
+    }
+
     @Test func memberMappingReadsRankingFieldsWithDefaults() {
         let mapped = crewMember(id: "a", fields: ["displayName": "A", "showOnRankings": true, "lifetimeXP": 40, "weekStartDay": monday, "weekDiscoveries": 3])
         #expect(mapped?.showOnRankings == true && mapped?.lifetimeXP == 40 && mapped?.weekDiscoveries == 3)

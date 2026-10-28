@@ -4,7 +4,6 @@ import UIKit
 struct CrewView: View {
     let store: CrewStore
     let profile: UserProfile
-    let statsStore: StatsStore
 
     var body: some View {
         NavigationStack {
@@ -25,7 +24,7 @@ struct CrewView: View {
                         ProgressView()
                             .frame(maxWidth: .infinity, minHeight: AuraSize.control)
                     } else if let crew = store.crew {
-                        CrewDetailContent(store: store, crew: crew, statsStore: statsStore)
+                        CrewDetailContent(store: store, crew: crew)
                     } else {
                         NoCrewContent(store: store, profile: profile)
                     }
@@ -136,7 +135,6 @@ private struct NoCrewContent: View {
 private struct CrewDetailContent: View {
     let store: CrewStore
     let crew: Crew
-    let statsStore: StatsStore
 
     @State private var isConfirmingLeave = false
     @State private var removingMember: CrewMember?
@@ -247,18 +245,11 @@ extension CrewDetailContent {
                 .font(.auraSectionLabel)
                 .foregroundStyle(Color.auraMuted)
 
-            VStack(alignment: .leading, spacing: AuraSpacing.xSmall) {
-                Toggle("Show me on crew rankings", isOn: rankingBinding)
-                    .font(.auraCardTitle)
-                    .foregroundStyle(Color.auraText)
-                    .tint(Color.auraMint)
-                    .disabled(store.isWorking || store.me == nil)
-                Text(rankingsExplanation)
-                    .font(.auraErrorText)
+            if store.me?.showOnRankings != true {
+                Text(rankingsOffHint)
+                    .font(.auraNotice)
                     .foregroundStyle(Color.auraMuted)
             }
-            .padding(AuraSpacing.medium)
-            .background(Color.auraCard, in: .rect(cornerRadius: AuraRadius.card))
 
             if store.rankings.isEmpty {
                 Text("Nobody has joined the rankings yet.")
@@ -274,15 +265,6 @@ extension CrewDetailContent {
                 )
             }
         }
-    }
-
-    private var rankingBinding: Binding<Bool> {
-        Binding(
-            get: { store.me?.showOnRankings ?? false },
-            set: { newValue in
-                Task { await store.setRankingOptIn(newValue, stats: statsStore.stats) }
-            }
-        )
     }
 }
 
