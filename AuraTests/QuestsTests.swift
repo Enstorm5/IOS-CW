@@ -6,7 +6,7 @@ import Foundation
 struct QuestsTests {
     let today = 20_400
 
-    func quest(_ id: String) -> Quest { quest(withID: id)! }
+    func questNamed(_ id: String) -> Quest { quest(withID: id)! }
 
     @Test func catalogHasFiveQuestsWithTheRulesNumbers() {
         #expect(questCatalog.map(\.id) == ["readThree", "readFive", "readEight", "postOne", "drawOne"])
@@ -45,22 +45,22 @@ struct QuestsTests {
 
     @Test func readingQuestsUseTodaysDiscoveries() {
         let stats = UserStats(dailyDay: today, dailyDiscoveries: 4)
-        #expect(questProgress(quest("readFive"), stats: stats, counters: DailyCounters(), today: today) == 4)
-        #expect(questProgress(quest("readThree"), stats: stats, counters: DailyCounters(), today: today) == 3)
-        #expect(questProgress(quest("readFive"), stats: stats, counters: DailyCounters(), today: today + 1) == 0)
+        #expect(questProgress(questNamed("readFive"), stats: stats, counters: DailyCounters(), today: today) == 4)
+        #expect(questProgress(questNamed("readThree"), stats: stats, counters: DailyCounters(), today: today) == 3)
+        #expect(questProgress(questNamed("readFive"), stats: stats, counters: DailyCounters(), today: today + 1) == 0)
     }
 
     @Test func writingQuestsUseTodaysCounters() {
         let counters = DailyCounters(day: today, posts: 3, drawings: 0)
-        #expect(questProgress(quest("postOne"), stats: UserStats(), counters: counters, today: today) == 1)
-        #expect(questProgress(quest("drawOne"), stats: UserStats(), counters: counters, today: today) == 0)
-        #expect(questProgress(quest("postOne"), stats: UserStats(), counters: counters, today: today + 1) == 0)
+        #expect(questProgress(questNamed("postOne"), stats: UserStats(), counters: counters, today: today) == 1)
+        #expect(questProgress(questNamed("drawOne"), stats: UserStats(), counters: counters, today: today) == 0)
+        #expect(questProgress(questNamed("postOne"), stats: UserStats(), counters: counters, today: today + 1) == 0)
         #expect(countersForToday([counters], today: today + 1) == DailyCounters(day: today + 1))
         #expect(countersForToday([counters], today: today) == counters)
     }
 
     @Test func stateMovesFromProgressToReadyToClaimed() {
-        let readFive = quest("readFive")
+        let readFive = questNamed("readFive")
         let stats = UserStats(dailyDay: today, dailyDiscoveries: 2)
         #expect(questState(readFive, stats: stats, counters: DailyCounters(), claimedQuestIDs: [], today: today) == .inProgress(2))
 
@@ -72,7 +72,7 @@ struct QuestsTests {
 
     @Test func claimPaysTheQuestRewardAndLeavesOtherCountersAlone() {
         let before = UserStats(balance: 10, lifetimeXP: 10, discoveryCount: 6, dailyDay: today, dailyDiscoveries: 6, weekStartDay: 20_395, weekDiscoveries: 4)
-        let after = statsAfterQuestClaim(before, quest: quest("readEight"), today: today)
+        let after = statsAfterQuestClaim(before, quest: questNamed("readEight"), today: today)
         #expect(after.balance == 80 && after.lifetimeXP == 80)
         #expect(after.questsClaimed == 1)
         #expect(after.lastClaimID == "20400_readEight")
@@ -80,7 +80,7 @@ struct QuestsTests {
     }
 
     @Test func textsDescribeEachState() {
-        let readThree = quest("readThree")
+        let readThree = questNamed("readThree")
         #expect(questStatusText(readThree, state: .inProgress(1)) == "1 of 3 · +25 pts")
         #expect(questStatusText(readThree, state: .readyToClaim) == "Ready to claim · +25 pts")
         #expect(questStatusText(readThree, state: .claimed) == "Claimed today · +25 pts")
