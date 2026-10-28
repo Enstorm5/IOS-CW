@@ -5,6 +5,8 @@ struct CrewView: View {
     let store: CrewStore
     let profile: UserProfile
 
+    @State private var isShowingInvite = false
+
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -33,7 +35,73 @@ struct CrewView: View {
             }
             .background(Color.auraBackground)
             .toolbar(.hidden, for: .navigationBar)
+            .safeAreaInset(edge: .bottom) {
+                if store.crew != nil {
+                    Button("Invite friends") {
+                        isShowingInvite = true
+                    }
+                    .buttonStyle(AuraButtonStyle(kind: .highlight))
+                    .padding(.horizontal, AuraSpacing.screen)
+                    .padding(.vertical, AuraSpacing.small)
+                    .background(Color.auraBackground)
+                }
+            }
+            .sheet(isPresented: $isShowingInvite) {
+                if let crew = store.crew {
+                    InviteFriendsSheet(crew: crew)
+                }
+            }
         }
+    }
+}
+
+private struct InviteFriendsSheet: View {
+    let crew: Crew
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var didCopyCode = false
+
+    var body: some View {
+        NavigationStack {
+            VStack(alignment: .leading, spacing: AuraSpacing.medium) {
+                Text("Friends join \(crew.name) with this code. They open the Crew tab and tap Join a crew.")
+                    .font(.auraNotice)
+                    .foregroundStyle(Color.auraMuted)
+
+                Text(crew.inviteCode)
+                    .font(.auraScreenTitle)
+                    .monospaced()
+                    .foregroundStyle(Color.auraText)
+                    .frame(maxWidth: .infinity)
+                    .padding(AuraSpacing.large)
+                    .background(Color.auraCard, in: .rect(cornerRadius: AuraRadius.card))
+                    .accessibilityLabel(Text("Invite code \(crew.inviteCode.map(String.init).joined(separator: " "))"))
+
+                ShareLink(item: crewInviteShareText(crew)) {
+                    Text("Share invite")
+                }
+                .buttonStyle(AuraButtonStyle(kind: .highlight))
+
+                Button(didCopyCode ? "Copied" : "Copy code") {
+                    UIPasteboard.general.string = crew.inviteCode
+                    didCopyCode = true
+                }
+                .buttonStyle(AuraButtonStyle(kind: .outline))
+
+                Spacer()
+            }
+            .padding(AuraSpacing.screen)
+            .background(Color.auraBackground)
+            .navigationTitle("Invite friends")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") { dismiss() }
+                }
+            }
+        }
+        .tint(Color.auraText)
+        .presentationDetents([.medium])
     }
 }
 
@@ -138,7 +206,6 @@ private struct CrewDetailContent: View {
 
     @State private var isConfirmingLeave = false
     @State private var removingMember: CrewMember?
-    @State private var didCopyCode = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: AuraSpacing.medium) {
@@ -152,25 +219,6 @@ private struct CrewDetailContent: View {
 
             if let actionError = store.actionError {
                 ErrorMessage(text: actionError)
-            }
-
-            CrewCard(title: "Invite code") {
-                Text(crew.inviteCode)
-                    .font(.auraHeading)
-                    .monospaced()
-                    .foregroundStyle(Color.auraText)
-                    .accessibilityLabel(Text(crew.inviteCode.map(String.init).joined(separator: " ")))
-                HStack(spacing: AuraSpacing.small) {
-                    ShareLink(item: crewInviteShareText(crew)) {
-                        Text("Share invite")
-                    }
-                    .buttonStyle(AuraButtonStyle(kind: .highlight))
-                    Button(didCopyCode ? "Copied" : "Copy code") {
-                        UIPasteboard.general.string = crew.inviteCode
-                        didCopyCode = true
-                    }
-                    .buttonStyle(AuraButtonStyle(kind: .outline))
-                }
             }
 
             weeklyGoalCard
