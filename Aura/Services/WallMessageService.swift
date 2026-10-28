@@ -50,10 +50,14 @@ final class WallMessageService {
         fields["updatedAt"] = FieldValue.serverTimestamp()
 
         do {
-            try await document.setData(fields)
+            try await postCountingTowardsQuests(message, document: document, fields: fields)
         } catch {
-            let existing = try? await document.getDocument()
-            guard existing?.data()?["authorID"] as? String == message.authorID else { throw error }
+            do {
+                try await document.setData(fields)
+            } catch {
+                let existing = try? await document.getDocument()
+                guard existing?.data()?["authorID"] as? String == message.authorID else { throw error }
+            }
         }
 
         return WallMessage(
@@ -70,6 +74,30 @@ final class WallMessageService {
             contentType: message.contentType,
             drawing: message.drawingPayload.flatMap(decodeDrawing)
         )
+    }
+
+    private func postCountingTowardsQuests(_ message: NewWallMessage, document: DocumentReference, fields: [String: Any]) async throws {
+        let day = dayNumber(for: Date())
+        let countersReference = database.collection("users").document(message.authorID).collection("days").document(String(day))
+        let isDrawing = message.contentType == .drawing
+
+        _ = try await database.runTransaction { transaction, errorPointer -> Any? in
+            do {
+                if try transaction.getDocument(document).exists {
+                    return nil
+                }
+                let counters = dailyCounters(fields: try transaction.getDocument(countersReference).data() ?? [:])
+                transaction.setData(fields, forDocument: document)
+                transaction.setData(
+                    counterFields(after: counters, day: day, wallID: message.wallID, messageID: message.id, isDrawing: isDrawing),
+                    forDocument: countersReference
+                )
+                return nil
+            } catch {
+                errorPointer?.pointee = error as NSError
+                return nil
+            }
+        }
     }
 
     func editMessage(wallID: String, messageID: String, text: String) async throws {

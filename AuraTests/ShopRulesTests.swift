@@ -95,7 +95,7 @@ struct ShopRulesTests {
     }
 
     @Test func widgetKeepsAFrozenStreak() {
-        let snapshot = WidgetSnapshot(accountID: "u", balance: 0, streakDays: 4, lastQualifiedDay: today - 2, questDay: 0, questProgress: 0, questTarget: 5, questClaimedDay: 0, updatedAt: Date(), streakFreezes: 1)
+        let snapshot = WidgetSnapshot(accountID: "u", balance: 0, streakDays: 4, lastQualifiedDay: today - 2, questsDay: 0, questsDone: 0, questsTotal: 2, updatedAt: Date(), streakFreezes: 1)
         #expect(widgetStreak(snapshot, today: today) == 4)
         var noFreeze = snapshot
         noFreeze.streakFreezes = nil

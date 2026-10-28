@@ -24,7 +24,7 @@ struct QuestsView: View {
 
                     PointsSummaryCard(stats: stats)
 
-                    dailyQuestCard
+                    todaysQuestsSection
 
                     QuestRow(
                         systemImage: "mappin.and.ellipse",
@@ -61,33 +61,20 @@ struct QuestsView: View {
         }
     }
 
-    private var dailyQuestCard: some View {
-        let progress = dailyQuestProgress(stats, today: today)
-        let claimed = isDailyQuestClaimed(stats, today: today)
-
-        return VStack(alignment: .leading, spacing: AuraSpacing.small) {
-            Text("Read \(dailyQuestTarget) walls today")
-                .font(.auraCardTitle)
-                .foregroundStyle(Color.auraText)
-            Text(claimed ? "Claimed today · +\(dailyQuestRewardPoints) pts" : "\(progress) of \(dailyQuestTarget) · +\(dailyQuestRewardPoints) pts")
-                .font(.auraNotice)
+    private var todaysQuestsSection: some View {
+        VStack(alignment: .leading, spacing: AuraSpacing.small) {
+            Text("Today's quests")
+                .font(.auraSectionLabel)
                 .foregroundStyle(Color.auraMuted)
-            ProgressView(value: Double(progress), total: Double(dailyQuestTarget))
-                .tint(Color.auraMint)
-                .accessibilityLabel("Daily quest progress")
 
-            if canClaimDailyQuest(stats, today: today) {
-                Button {
-                    Task { await statsStore.claimDailyQuest() }
-                } label: {
-                    if statsStore.isClaimingQuest {
-                        ProgressView().tint(Color.auraInk)
-                    } else {
-                        Text("Claim +\(dailyQuestRewardPoints) pts")
-                    }
-                }
-                .buttonStyle(AuraButtonStyle(kind: .highlight))
-                .disabled(statsStore.isClaimingQuest)
+            ForEach(statsStore.todaysQuests) { quest in
+                QuestCard(
+                    quest: quest,
+                    state: statsStore.state(of: quest),
+                    isClaiming: statsStore.claimingQuestID == quest.id,
+                    isBusy: statsStore.claimingQuestID != nil,
+                    onClaim: { Task { await statsStore.claimQuest(quest) } }
+                )
             }
 
             if let message = statsStore.questMessage {
@@ -95,10 +82,72 @@ struct QuestsView: View {
                     .font(.auraNotice)
                     .foregroundStyle(Color.auraText)
             }
+
+            Text("New quests appear every day at midnight, Colombo time.")
+                .font(.auraErrorText)
+                .foregroundStyle(Color.auraMuted)
+        }
+    }
+}
+
+private struct QuestCard: View {
+    let quest: Quest
+    let state: QuestState
+    let isClaiming: Bool
+    let isBusy: Bool
+    let onClaim: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: AuraSpacing.small) {
+            HStack(spacing: AuraSpacing.medium) {
+                Image(systemName: quest.systemImage)
+                    .foregroundStyle(Color.auraInk)
+                    .frame(width: AuraSize.messageSwatch, height: AuraSize.messageSwatch)
+                    .background(state == .claimed ? Color.auraMint : Color.auraYellow, in: .rect(cornerRadius: AuraRadius.swatch))
+                    .accessibilityHidden(true)
+                VStack(alignment: .leading, spacing: AuraSpacing.xxSmall) {
+                    Text(quest.title)
+                        .font(.auraCardTitle)
+                        .foregroundStyle(Color.auraText)
+                    Text(questStatusText(quest, state: state))
+                        .font(.auraNotice)
+                        .foregroundStyle(Color.auraMuted)
+                }
+                Spacer(minLength: 0)
+            }
+
+            Text(quest.detail)
+                .font(.auraErrorText)
+                .foregroundStyle(Color.auraMuted)
+
+            ProgressView(value: Double(progress), total: Double(quest.target))
+                .tint(Color.auraMint)
+                .accessibilityLabel("\(quest.title) progress")
+
+            if state == .readyToClaim {
+                Button {
+                    onClaim()
+                } label: {
+                    if isClaiming {
+                        ProgressView().tint(Color.auraInk)
+                    } else {
+                        Text("Claim +\(quest.reward) pts")
+                    }
+                }
+                .buttonStyle(AuraButtonStyle(kind: .highlight))
+                .disabled(isBusy)
+            }
         }
         .padding(AuraSpacing.medium)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color.auraCard, in: .rect(cornerRadius: AuraRadius.card))
+    }
+
+    private var progress: Int {
+        switch state {
+        case .inProgress(let value): value
+        case .readyToClaim, .claimed: quest.target
+        }
     }
 }
 

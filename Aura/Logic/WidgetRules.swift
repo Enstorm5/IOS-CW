@@ -8,25 +8,18 @@ enum AppTab: Hashable {
     case me
 }
 
-func widgetSnapshot(from stats: UserStats, accountID: String, now: Date) -> WidgetSnapshot {
+func widgetSnapshot(from stats: UserStats, questStates: [QuestState], accountID: String, now: Date) -> WidgetSnapshot {
     WidgetSnapshot(
         accountID: accountID,
         balance: stats.balance,
         streakDays: stats.streakDays,
         lastQualifiedDay: stats.lastQualifiedDay,
-        questDay: stats.dailyDay,
-        questProgress: stats.dailyDiscoveries,
-        questTarget: dailyQuestTarget,
-        questClaimedDay: claimedQuestDay(lastClaimID: stats.lastClaimID),
+        questsDay: dayNumber(for: now),
+        questsDone: questStates.filter { $0 == .claimed }.count,
+        questsTotal: questStates.count,
         updatedAt: now,
         streakFreezes: stats.streakFreezes
     )
-}
-
-func claimedQuestDay(lastClaimID: String) -> Int {
-    guard lastClaimID.hasSuffix("_readFive"),
-          let dayText = lastClaimID.split(separator: "_").first else { return 0 }
-    return Int(dayText) ?? 0
 }
 
 func appTab(forDeepLink url: URL) -> AppTab? {

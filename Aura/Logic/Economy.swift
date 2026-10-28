@@ -1,8 +1,6 @@
 import Foundation
 
 let discoveryRewardPoints = 10
-let dailyQuestRewardPoints = 40
-let dailyQuestTarget = 5
 let colomboUTCOffsetSeconds = 19_800
 let secondsPerDay = 86_400
 let publicWallCost = 50
@@ -58,31 +56,6 @@ func statsAfterDiscovery(_ stats: UserStats, wallID: String, today: Int) -> User
     updated.longestStreak = max(stats.longestStreak, updated.streakDays)
     updated.lastQualifiedDay = today
     updated.lastDiscoveryWallID = wallID
-    return updated
-}
-
-func dailyQuestClaimID(today: Int) -> String {
-    "\(today)_readFive"
-}
-
-func dailyQuestProgress(_ stats: UserStats, today: Int) -> Int {
-    stats.dailyDay == today ? min(stats.dailyDiscoveries, dailyQuestTarget) : 0
-}
-
-func isDailyQuestClaimed(_ stats: UserStats, today: Int) -> Bool {
-    stats.lastClaimID == dailyQuestClaimID(today: today)
-}
-
-func canClaimDailyQuest(_ stats: UserStats, today: Int) -> Bool {
-    stats.dailyDay == today && stats.dailyDiscoveries >= dailyQuestTarget && !isDailyQuestClaimed(stats, today: today)
-}
-
-func statsAfterDailyQuestClaim(_ stats: UserStats, today: Int) -> UserStats {
-    var updated = stats
-    updated.balance += dailyQuestRewardPoints
-    updated.lifetimeXP += dailyQuestRewardPoints
-    updated.questsClaimed += 1
-    updated.lastClaimID = dailyQuestClaimID(today: today)
     return updated
 }
 

@@ -12,10 +12,9 @@ let sampleWidgetSnapshot = WidgetSnapshot(
     balance: 2480,
     streakDays: 6,
     lastQualifiedDay: widgetDayNumber(for: Date()),
-    questDay: widgetDayNumber(for: Date()),
-    questProgress: 3,
-    questTarget: 5,
-    questClaimedDay: 0,
+    questsDay: widgetDayNumber(for: Date()),
+    questsDone: 1,
+    questsTotal: 2,
     updatedAt: Date()
 )
 
@@ -96,7 +95,7 @@ struct AuraWidgetView: View {
             Text(widgetQuestText(snapshot, today: today))
                 .font(.auraChipSelected)
                 .foregroundStyle(Color.auraText)
-            ProgressView(value: Double(progress), total: Double(max(1, snapshot.questTarget)))
+            ProgressView(value: Double(progress), total: Double(max(1, snapshot.questsTotal)))
                 .tint(Color.auraMint)
                 .accessibilityHidden(true)
             Text("Updated \(snapshot.updatedAt, style: .relative) ago")

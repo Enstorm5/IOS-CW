@@ -31,7 +31,7 @@ struct CrewRankingTests {
 
     @Test func questClaimAndPublishLeaveTheWeekAlone() {
         let stats = UserStats(dailyDay: 20_400, dailyDiscoveries: 5, weekStartDay: 20_395, weekDiscoveries: 3)
-        let claimed = statsAfterDailyQuestClaim(stats, today: 20_400)
+        let claimed = statsAfterQuestClaim(stats, quest: readingQuestPool[1], today: 20_400)
         #expect(claimed.weekStartDay == 20_395 && claimed.weekDiscoveries == 3)
         let published = statsAfterWallPublish(UserStats(balance: 60, weekStartDay: 20_395, weekDiscoveries: 3), wallID: "w")
         #expect(published.weekStartDay == 20_395 && published.weekDiscoveries == 3)

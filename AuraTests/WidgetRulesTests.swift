@@ -6,8 +6,8 @@ import Foundation
 struct WidgetRulesTests {
     let today = 20_400
 
-    func snapshot(streak: Int = 3, lastQualified: Int, questDay: Int, progress: Int, claimedDay: Int = 0) -> WidgetSnapshot {
-        WidgetSnapshot(accountID: "u1", balance: 120, streakDays: streak, lastQualifiedDay: lastQualified, questDay: questDay, questProgress: progress, questTarget: 5, questClaimedDay: claimedDay, updatedAt: Date(timeIntervalSince1970: 0))
+    func snapshot(streak: Int = 3, lastQualified: Int, questsDay: Int, done: Int, total: Int = 2) -> WidgetSnapshot {
+        WidgetSnapshot(accountID: "u1", balance: 120, streakDays: streak, lastQualifiedDay: lastQualified, questsDay: questsDay, questsDone: done, questsTotal: total, updatedAt: Date(timeIntervalSince1970: 0))
     }
 
     @Test func widgetDayMatchesTheAppDay() {
@@ -23,44 +23,38 @@ struct WidgetRulesTests {
         #expect(startOfNextWidgetDay(after: midnight) == midnight.addingTimeInterval(Double(secondsPerDay)))
     }
 
-    @Test func snapshotComesFromConfirmedStats() {
-        let stats = UserStats(balance: 120, streakDays: 3, lastQualifiedDay: today, dailyDay: today, dailyDiscoveries: 2, lastClaimID: "\(today - 1)_readFive")
-        let now = Date(timeIntervalSince1970: 50)
-        let made = widgetSnapshot(from: stats, accountID: "u1", now: now)
-        #expect(made == WidgetSnapshot(accountID: "u1", balance: 120, streakDays: 3, lastQualifiedDay: today, questDay: today, questProgress: 2, questTarget: 5, questClaimedDay: today - 1, updatedAt: now, streakFreezes: 0))
-    }
-
-    @Test func claimedDayIsReadFromTheClaimID() {
-        #expect(claimedQuestDay(lastClaimID: "20400_readFive") == 20_400)
-        #expect(claimedQuestDay(lastClaimID: "") == 0)
-        #expect(claimedQuestDay(lastClaimID: "abc_readFive") == 0)
-        #expect(claimedQuestDay(lastClaimID: "20400_other") == 0)
+    @Test func snapshotComesFromConfirmedStatsAndQuestStates() {
+        let stats = UserStats(balance: 120, streakDays: 3, lastQualifiedDay: today)
+        let now = Date(timeIntervalSince1970: Double(today * secondsPerDay))
+        let made = widgetSnapshot(from: stats, questStates: [.claimed, .inProgress(0)], accountID: "u1", now: now)
+        #expect(made == WidgetSnapshot(accountID: "u1", balance: 120, streakDays: 3, lastQualifiedDay: today, questsDay: dayNumber(for: now), questsDone: 1, questsTotal: 2, updatedAt: now, streakFreezes: 0))
     }
 
     @Test func oldSnapshotsResetForANewDay() {
-        let fresh = snapshot(lastQualified: today, questDay: today, progress: 3)
+        let fresh = snapshot(lastQualified: today, questsDay: today, done: 1)
         #expect(widgetStreak(fresh, today: today) == 3)
-        #expect(widgetQuestText(fresh, today: today) == "3 of 5 walls")
+        #expect(widgetQuestText(fresh, today: today) == "1 of 2 quests done")
 
         #expect(widgetStreak(fresh, today: today + 1) == 3)
-        #expect(widgetQuestText(fresh, today: today + 1) == "0 of 5 walls")
+        #expect(widgetQuestText(fresh, today: today + 1) == "0 of 2 quests done")
         #expect(widgetStreak(fresh, today: today + 2) == 0)
     }
 
-    @Test func questTextShowsReadyAndDone() {
-        #expect(widgetQuestText(snapshot(lastQualified: today, questDay: today, progress: 7), today: today) == "Claim your quest")
-        #expect(widgetQuestText(snapshot(lastQualified: today, questDay: today, progress: 5, claimedDay: today), today: today) == "Quest done")
+    @Test func questTextShowsAllDone() {
+        #expect(widgetQuestText(snapshot(lastQualified: today, questsDay: today, done: 2), today: today) == "All quests done")
+        #expect(widgetQuestText(snapshot(lastQualified: today, questsDay: today, done: 5), today: today) == "All quests done")
+        #expect(widgetQuestText(snapshot(lastQualified: today, questsDay: today, done: 0, total: 0), today: today) == "0 of 0 quests done")
     }
 
     @Test func snapshotRoundTripsAndRejectsJunk() {
-        let original = snapshot(lastQualified: today, questDay: today, progress: 1)
+        let original = snapshot(lastQualified: today, questsDay: today, done: 1)
         #expect(decodeWidgetSnapshot(encodeWidgetSnapshot(original)) == original)
         #expect(decodeWidgetSnapshot(Data("nope".utf8)) == nil)
         #expect(decodeWidgetSnapshot(nil) == nil)
     }
 
     @Test func onlyTheSignedInAccountKeepsItsSnapshot() {
-        let stored = snapshot(lastQualified: today, questDay: today, progress: 1)
+        let stored = snapshot(lastQualified: today, questsDay: today, done: 1)
         #expect(shouldKeepWidgetSnapshot(stored, signedInAccountID: "u1"))
         #expect(!shouldKeepWidgetSnapshot(stored, signedInAccountID: "u2"))
         #expect(!shouldKeepWidgetSnapshot(stored, signedInAccountID: nil))

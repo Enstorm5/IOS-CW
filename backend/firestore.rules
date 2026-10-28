@@ -256,15 +256,40 @@ service cloud.firestore {
         && after.updatedAt == request.time;
     }
 
+    function questReward(questID) {
+      return {'readThree': 25, 'readFive': 40, 'readEight': 70, 'postOne': 20, 'drawOne': 30}.get(questID, 0);
+    }
+
+    function questTarget(questID) {
+      return {'readThree': 3, 'readFive': 5, 'readEight': 8, 'postOne': 1, 'drawOne': 1}.get(questID, 0);
+    }
+
+    function questsForDay(day) {
+      return [['readThree', 'readFive', 'readEight'][day % 3], ['postOne', 'drawOne'][day % 2]];
+    }
+
+    function questProgress(userID, questID, before, day) {
+      let countersPath = /databases/$(database)/documents/users/$(userID)/days/$(string(day));
+      return questID in ['readThree', 'readFive', 'readEight']
+        ? (before.dailyDay == day ? before.dailyDiscoveries : 0)
+        : (exists(countersPath)
+            ? get(countersPath).data.get(questID == 'drawOne' ? 'drawings' : 'posts', 0)
+            : 0);
+    }
+
     function isQuestClaimUpdate(userID, before, after) {
       let day = today();
-      let claimID = string(day) + '_readFive';
-      return after.lastClaimID == claimID
-        && before.lastClaimID != claimID
-        && existsAfter(/databases/$(database)/documents/users/$(userID)/questClaims/$(claimID))
-        && before.dailyDay == day && before.dailyDiscoveries >= 5
-        && after.balance == before.balance + 40
-        && after.lifetimeXP == before.lifetimeXP + 40
+      let claimID = after.lastClaimID;
+      let claimPath = /databases/$(database)/documents/users/$(userID)/questClaims/$(claimID);
+      let questID = getAfter(claimPath).data.questID;
+      let reward = questReward(questID);
+      return reward > 0
+        && claimID == string(day) + '_' + questID
+        && questID in questsForDay(day)
+        && !exists(claimPath) && existsAfter(claimPath)
+        && questProgress(userID, questID, before, day) >= questTarget(questID)
+        && after.balance == before.balance + reward
+        && after.lifetimeXP == before.lifetimeXP + reward
         && after.questsClaimed == before.questsClaimed + 1
         && after.discoveryCount == before.discoveryCount
         && after.dailyDay == before.dailyDay
@@ -276,6 +301,18 @@ service cloud.firestore {
         && publishFieldsUnchanged(before, after)
         && weekFieldsUnchanged(before, after)
         && shopFieldsUnchanged(before, after);
+    }
+
+    function isPostCounterWrite(userID, dayID, before, after) {
+      let fields = ['day', 'posts', 'drawings', 'lastPostWallID', 'lastPostMessageID'];
+      let messagePath = /databases/$(database)/documents/walls/$(after.lastPostWallID)/messages/$(after.lastPostMessageID);
+      return after.keys().hasOnly(fields) && after.keys().hasAll(fields)
+        && after.day == today()
+        && dayID == string(today())
+        && after.posts == before.posts + 1
+        && after.drawings == before.drawings + (getAfter(messagePath).data.contentType == 'drawing' ? 1 : 0)
+        && !exists(messagePath) && existsAfter(messagePath)
+        && getAfter(messagePath).data.authorID == userID;
     }
 
     function isAwardRecord(data) {
@@ -432,11 +469,24 @@ service cloud.firestore {
       match /questClaims/{claimID} {
         allow read: if isOwner(userID);
         allow create: if isOwner(userID)
-          && isAwardRecord(request.resource.data)
-          && claimID == string(today()) + '_readFive'
+          && request.resource.data.keys().hasOnly(['day', 'questID', 'createdAt'])
+          && request.resource.data.keys().hasAll(['day', 'questID', 'createdAt'])
+          && request.resource.data.day == today()
+          && request.resource.data.questID in questsForDay(today())
+          && claimID == string(today()) + '_' + request.resource.data.questID
+          && request.resource.data.createdAt == request.time
           && getAfter(userPath(userID)).data.lastClaimID == claimID
           && getAfter(userPath(userID)).data.questsClaimed == get(userPath(userID)).data.questsClaimed + 1;
         allow update, delete: if false;
+      }
+
+      match /days/{dayID} {
+        allow read: if isOwner(userID);
+        allow create: if isOwner(userID)
+          && isPostCounterWrite(userID, dayID, {'posts': 0, 'drawings': 0}, request.resource.data);
+        allow update: if isOwner(userID)
+          && isPostCounterWrite(userID, dayID, resource.data, request.resource.data);
+        allow delete: if false;
       }
     }
 

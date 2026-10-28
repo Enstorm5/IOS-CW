@@ -6,11 +6,6 @@ import Foundation
 struct EconomyExtraTests {
     let today = 20_400
 
-    @Test func claimIDsIncludeTheDay() {
-        #expect(dailyQuestClaimID(today: today) == "20400_readFive")
-        #expect(dailyQuestClaimID(today: today) != dailyQuestClaimID(today: today + 1))
-    }
-
     @Test func discoveryAfterAGapRestartsTheStreakButKeepsTheLongest() {
         var stats = UserStats()
         for offset in 0..<3 {
@@ -23,16 +18,9 @@ struct EconomyExtraTests {
         #expect(stats.longestStreak == 3)
     }
 
-    @Test func questProgressResetsOnANewDay() {
-        let stats = UserStats(dailyDay: today, dailyDiscoveries: 3)
-        #expect(dailyQuestProgress(stats, today: today) == 3)
-        #expect(dailyQuestProgress(stats, today: today + 1) == 0)
-        #expect(!canClaimDailyQuest(UserStats(dailyDay: today + 1, dailyDiscoveries: 9), today: today))
-    }
-
     @Test func claimNeverChangesDiscoveryCounters() {
         let before = UserStats(balance: 20, lifetimeXP: 20, discoveryCount: 5, streakDays: 2, longestStreak: 2, lastQualifiedDay: today, dailyDay: today, dailyDiscoveries: 5)
-        let after = statsAfterDailyQuestClaim(before, today: today)
+        let after = statsAfterQuestClaim(before, quest: readingQuestPool[1], today: today)
         #expect(after.discoveryCount == before.discoveryCount)
         #expect(after.streakDays == before.streakDays)
         #expect(after.dailyDiscoveries == before.dailyDiscoveries)

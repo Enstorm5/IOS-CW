@@ -5,10 +5,9 @@ nonisolated struct WidgetSnapshot: Codable, Equatable {
     var balance: Int
     var streakDays: Int
     var lastQualifiedDay: Int
-    var questDay: Int
-    var questProgress: Int
-    var questTarget: Int
-    var questClaimedDay: Int
+    var questsDay: Int
+    var questsDone: Int
+    var questsTotal: Int
     var updatedAt: Date
     var streakFreezes: Int? = nil
 }
@@ -36,18 +35,16 @@ nonisolated func widgetStreak(_ snapshot: WidgetSnapshot, today: Int) -> Int {
 }
 
 nonisolated func widgetQuestProgress(_ snapshot: WidgetSnapshot, today: Int) -> Int {
-    snapshot.questDay == today ? min(snapshot.questProgress, snapshot.questTarget) : 0
+    snapshot.questsDay == today ? min(snapshot.questsDone, snapshot.questsTotal) : 0
 }
 
-nonisolated func isWidgetQuestClaimed(_ snapshot: WidgetSnapshot, today: Int) -> Bool {
-    snapshot.questClaimedDay == today
+nonisolated func widgetQuestsAllDone(_ snapshot: WidgetSnapshot, today: Int) -> Bool {
+    snapshot.questsTotal > 0 && widgetQuestProgress(snapshot, today: today) >= snapshot.questsTotal
 }
 
 nonisolated func widgetQuestText(_ snapshot: WidgetSnapshot, today: Int) -> String {
-    if isWidgetQuestClaimed(snapshot, today: today) { return "Quest done" }
-    let progress = widgetQuestProgress(snapshot, today: today)
-    if progress >= snapshot.questTarget { return "Claim your quest" }
-    return "\(progress) of \(snapshot.questTarget) walls"
+    if widgetQuestsAllDone(snapshot, today: today) { return "All quests done" }
+    return "\(widgetQuestProgress(snapshot, today: today)) of \(snapshot.questsTotal) quests done"
 }
 
 nonisolated func encodeWidgetSnapshot(_ snapshot: WidgetSnapshot) -> Data? {

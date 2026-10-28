@@ -59,7 +59,7 @@ struct HomeView: View {
     private var todayCard: some View {
         if let stats = statsStore.stats {
             HomeCard(systemImage: "flag.checkered", title: "Today") {
-                HomeDetailText(text: dailyQuestSummary(stats, today: statsStore.today))
+                HomeDetailText(text: questsSummary(statsStore.todaysQuestStates))
                 HomeDetailText(text: streakSummary(stats, today: statsStore.today))
             }
         }

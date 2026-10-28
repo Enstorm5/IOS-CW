@@ -13,18 +13,12 @@ struct HomeRulesTests {
         #expect(greetingText(name: "Mira", hour: 2) == "Good evening, Mira")
     }
 
-    @Test func questSummaryCoversProgressReadyAndClaimed() {
-        let started = UserStats(dailyDay: today, dailyDiscoveries: 2)
-        #expect(dailyQuestSummary(started, today: today) == "Read 5 walls today: 2 of 5.")
-
-        let yesterday = UserStats(dailyDay: today - 1, dailyDiscoveries: 4)
-        #expect(dailyQuestSummary(yesterday, today: today) == "Read 5 walls today: 0 of 5.")
-
-        let ready = UserStats(dailyDay: today, dailyDiscoveries: 5)
-        #expect(dailyQuestSummary(ready, today: today) == "Quest complete. Claim +40 pts in Quests.")
-
-        let claimed = UserStats(dailyDay: today, dailyDiscoveries: 5, lastClaimID: dailyQuestClaimID(today: today))
-        #expect(dailyQuestSummary(claimed, today: today) == "Today's quest is done. +40 pts claimed.")
+    @Test func questsSummaryCoversProgressReadyAndDone() {
+        #expect(questsSummary([.inProgress(1), .inProgress(0)]) == "0 of 2 quests done today.")
+        #expect(questsSummary([.readyToClaim, .inProgress(0)]) == "1 quest is ready to claim in Quests.")
+        #expect(questsSummary([.readyToClaim, .readyToClaim]) == "2 quests are ready to claim in Quests.")
+        #expect(questsSummary([.claimed, .inProgress(0)]) == "1 of 2 quests done today.")
+        #expect(questsSummary([.claimed, .claimed]) == "All of today's quests are done.")
     }
 
     @Test func streakSummaryHandlesNoneOneAndMany() {

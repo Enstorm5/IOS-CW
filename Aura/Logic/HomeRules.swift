@@ -12,17 +12,6 @@ func greetingText(name: String, hour: Int) -> String {
     }
 }
 
-func dailyQuestSummary(_ stats: UserStats, today: Int) -> String {
-    if isDailyQuestClaimed(stats, today: today) {
-        return "Today's quest is done. +\(dailyQuestRewardPoints) pts claimed."
-    }
-    if canClaimDailyQuest(stats, today: today) {
-        return "Quest complete. Claim +\(dailyQuestRewardPoints) pts in Quests."
-    }
-    let progress = dailyQuestProgress(stats, today: today)
-    return "Read \(dailyQuestTarget) walls today: \(progress) of \(dailyQuestTarget)."
-}
-
 func streakSummary(_ stats: UserStats, today: Int) -> String {
     let streak = displayedStreak(stats, today: today)
     if streak == 0 { return "No streak yet. Discover a wall to start one." }

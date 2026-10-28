@@ -43,23 +43,6 @@ struct EconomyTests {
         #expect(nextDay.longestStreak == 2)
     }
 
-    @Test func dailyQuestNeedsFiveAndPaysOncePerDay() {
-        var stats = UserStats(dailyDay: today, dailyDiscoveries: 4)
-        #expect(!canClaimDailyQuest(stats, today: today))
-        #expect(dailyQuestProgress(stats, today: today) == 4)
-
-        stats.dailyDiscoveries = 7
-        #expect(dailyQuestProgress(stats, today: today) == 5)
-        #expect(canClaimDailyQuest(stats, today: today))
-
-        let claimed = statsAfterDailyQuestClaim(stats, today: today)
-        #expect(claimed.balance == 40)
-        #expect(claimed.questsClaimed == 1)
-        #expect(!canClaimDailyQuest(claimed, today: today))
-        #expect(!canClaimDailyQuest(claimed, today: today + 1))
-        #expect(dailyQuestProgress(claimed, today: today + 1) == 0)
-    }
-
     @Test func levelsFollowTheThresholds() {
         #expect(level(forXP: 0) == 1)
         #expect(level(forXP: 99) == 1)

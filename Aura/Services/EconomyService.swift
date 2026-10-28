@@ -107,23 +107,48 @@ final class EconomyService {
         return .awarded(updated)
     }
 
-    func claimDailyQuest(userID: String, now: Date) async throws -> QuestClaimOutcome {
+    func listenToQuestClaims(userID: String, sinceDay: Int, onChange: @escaping (Set<String>) -> Void) -> ListenerRegistration {
+        userDocument(userID).collection("questClaims")
+            .whereField("day", isGreaterThanOrEqualTo: sinceDay)
+            .addSnapshotListener { snapshot, _ in
+                guard let snapshot else { return }
+                onChange(Set(snapshot.documents.map(\.documentID)))
+            }
+    }
+
+    func listenToDailyCounters(userID: String, sinceDay: Int, onChange: @escaping ([DailyCounters]) -> Void) -> ListenerRegistration {
+        userDocument(userID).collection("days")
+            .whereField("day", isGreaterThanOrEqualTo: sinceDay)
+            .addSnapshotListener { snapshot, _ in
+                guard let snapshot else { return }
+                onChange(snapshot.documents.map { dailyCounters(fields: $0.data()) })
+            }
+    }
+
+    func claimQuest(userID: String, quest: Quest, now: Date) async throws -> QuestClaimOutcome {
         let userReference = userDocument(userID)
         let today = dayNumber(for: now)
-        let claimReference = userReference.collection("questClaims").document(dailyQuestClaimID(today: today))
+        let claimReference = userReference.collection("questClaims").document(questClaimID(day: today, questID: quest.id))
+        let countersReference = userReference.collection("days").document(String(today))
 
         let result = try await database.runTransaction { transaction, errorPointer -> Any? in
             do {
+                if try transaction.getDocument(claimReference).exists {
+                    return "You've already claimed this quest today."
+                }
                 let current = userStats(fields: try transaction.getDocument(userReference).data() ?? [:])
-                if isDailyQuestClaimed(current, today: today) {
-                    return "You've already claimed today's quest."
+                let counters = dailyCounters(fields: try transaction.getDocument(countersReference).data() ?? [:])
+                let state = questState(quest, stats: current, counters: counters, claimedQuestIDs: [], today: today)
+                guard state == .readyToClaim else {
+                    return "Finish the quest first, then claim it."
                 }
-                guard canClaimDailyQuest(current, today: today) else {
-                    return "Discover \(dailyQuestTarget) walls today to claim this quest."
-                }
-                let updated = statsAfterDailyQuestClaim(current, today: today)
+                let updated = statsAfterQuestClaim(current, quest: quest, today: today)
                 transaction.setData(firestoreFields(for: updated), forDocument: userReference)
-                transaction.setData(["day": today, "createdAt": FieldValue.serverTimestamp()], forDocument: claimReference)
+                transaction.setData([
+                    "day": today,
+                    "questID": quest.id,
+                    "createdAt": FieldValue.serverTimestamp(),
+                ], forDocument: claimReference)
                 return updated
             } catch {
                 errorPointer?.pointee = error as NSError

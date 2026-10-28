@@ -88,8 +88,13 @@ struct MainTabView: View {
         }
         .onChange(of: statsStore.stats) {
             if let stats = statsStore.stats {
-                widgetSnapshots.save(widgetSnapshot(from: stats, accountID: profile.id, now: Date()))
+                saveWidgetSnapshot(stats)
                 Task { await crewStore.syncScore(stats: stats) }
+            }
+        }
+        .onChange(of: statsStore.claimIDs) {
+            if let stats = statsStore.stats {
+                saveWidgetSnapshot(stats)
             }
         }
         .onChange(of: crewStore.members) {
@@ -105,6 +110,10 @@ struct MainTabView: View {
             crewStore.stop()
             shopStore.stop()
         }
+    }
+
+    private func saveWidgetSnapshot(_ stats: UserStats) {
+        widgetSnapshots.save(widgetSnapshot(from: stats, questStates: statsStore.todaysQuestStates, accountID: profile.id, now: Date()))
     }
 
     private func signOutFromLock() {
