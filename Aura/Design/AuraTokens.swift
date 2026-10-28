@@ -1,17 +1,27 @@
 import SwiftUI
+import CoreText
+
+nonisolated func registerAuraFonts() {
+    guard let url = Bundle.main.url(forResource: "BricolageGrotesque", withExtension: "ttf") else { return }
+    CTFontManagerRegisterFontsForURL(url as CFURL, .process, nil)
+}
+
+private func bricolage(_ weight: String, size: CGFloat, relativeTo style: Font.TextStyle) -> Font {
+    .custom("BricolageGrotesque-96ptExtraBold_\(weight)", size: size, relativeTo: style)
+}
 
 extension Font {
-    static let auraScreenTitle = Font.largeTitle.weight(.heavy)
-    static let auraHeading = Font.title.weight(.heavy)
-    static let auraButton = Font.headline.weight(.heavy)
-    static let auraCardTitle = Font.headline.weight(.heavy)
-    static let auraLink = Font.subheadline.weight(.bold)
-    static let auraSectionLabel = Font.subheadline.weight(.bold)
-    static let auraNotice = Font.subheadline.weight(.semibold)
-    static let auraChip = Font.subheadline.weight(.semibold)
-    static let auraChipSelected = Font.subheadline.weight(.heavy)
-    static let auraPill = Font.footnote.weight(.heavy)
-    static let auraErrorText = Font.footnote.weight(.semibold)
+    static let auraScreenTitle = bricolage("ExtraBold", size: 34, relativeTo: .largeTitle)
+    static let auraHeading = bricolage("ExtraBold", size: 28, relativeTo: .title)
+    static let auraButton = bricolage("ExtraBold", size: 17, relativeTo: .headline)
+    static let auraCardTitle = bricolage("ExtraBold", size: 17, relativeTo: .headline)
+    static let auraLink = bricolage("Bold", size: 15, relativeTo: .subheadline)
+    static let auraSectionLabel = bricolage("Bold", size: 15, relativeTo: .subheadline)
+    static let auraNotice = bricolage("SemiBold", size: 15, relativeTo: .subheadline)
+    static let auraChip = bricolage("SemiBold", size: 15, relativeTo: .subheadline)
+    static let auraChipSelected = bricolage("ExtraBold", size: 15, relativeTo: .subheadline)
+    static let auraPill = bricolage("ExtraBold", size: 13, relativeTo: .footnote)
+    static let auraErrorText = bricolage("SemiBold", size: 13, relativeTo: .footnote)
     static let auraIcon = Font.largeTitle
     static let auraLogo = Font.system(size: 34, weight: .heavy)
     static let auraPinIcon = Font.caption2.weight(.heavy)

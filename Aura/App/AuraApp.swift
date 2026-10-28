@@ -7,6 +7,7 @@ struct AuraApp: App {
     @State private var session: SessionStore
 
     init() {
+        registerAuraFonts()
         FirebaseApp.configure()
         let services = AppServices()
         self.services = services

@@ -75,6 +75,7 @@
 			membershipExceptions = (
 				Design/AuraColors.swift,
 				Design/AuraTokens.swift,
+				Design/Fonts/BricolageGrotesque.ttf,
 				Shared/WidgetSnapshot.swift,
 			);
 			target = C0CC541B3091333D00ADF00C /* AuraWidgetExtension */;
