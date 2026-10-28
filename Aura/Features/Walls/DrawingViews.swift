@@ -8,11 +8,28 @@ struct DrawingView: View {
         Canvas { context, size in
             let strokes = drawing.strokes + (currentStroke.map { [$0] } ?? [])
             for stroke in strokes {
-                context.stroke(
-                    drawingPath(for: stroke, in: size),
-                    with: .color(stroke.color.swatchColor),
-                    style: StrokeStyle(lineWidth: stroke.width.fractionOfWidth * size.width, lineCap: .round, lineJoin: .round)
-                )
+                let path = drawingPath(for: stroke, in: size)
+                let lineWidth = stroke.width.fractionOfWidth * size.width
+                if stroke.brush == .neon {
+                    for layer in neonGlowLayers {
+                        context.stroke(
+                            path,
+                            with: .color(stroke.color.swatchColor.opacity(layer.opacity)),
+                            style: StrokeStyle(lineWidth: lineWidth * layer.widthScale, lineCap: .round, lineJoin: .round)
+                        )
+                    }
+                    context.stroke(
+                        path,
+                        with: .color(.white),
+                        style: StrokeStyle(lineWidth: lineWidth * neonCoreWidthScale, lineCap: .round, lineJoin: .round)
+                    )
+                } else {
+                    context.stroke(
+                        path,
+                        with: .color(stroke.color.swatchColor),
+                        style: StrokeStyle(lineWidth: lineWidth, lineCap: .round, lineJoin: .round)
+                    )
+                }
             }
         }
         .background(Color.auraLilac)
@@ -37,6 +54,7 @@ struct DrawingPad: View {
     @Binding var drawing: MessageDrawing
     let color: MessageColor
     let width: StrokeWidth
+    var brush: StrokeBrush = .marker
 
     @State private var currentStroke: DrawingStroke?
 
@@ -51,7 +69,7 @@ struct DrawingPad: View {
                             if let stroke = currentStroke {
                                 currentStroke = addingPoint(point, to: stroke)
                             } else {
-                                currentStroke = DrawingStroke(color: color, width: width, points: [point])
+                                currentStroke = DrawingStroke(color: color, width: width, brush: brush, points: [point])
                             }
                         }
                         .onEnded { _ in

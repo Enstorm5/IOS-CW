@@ -23,6 +23,8 @@ struct WriteMessageView: View {
     @State private var color: MessageColor
     @State private var drawing = MessageDrawing()
     @State private var strokeWidth: StrokeWidth = .medium
+    @State private var brush: StrokeBrush = .marker
+    @Environment(\.ownedShopItems) private var ownedShopItems
     @State private var isPosting = false
     @State private var didPost = false
     @State private var restoredDraft: Bool
@@ -144,7 +146,7 @@ struct WriteMessageView: View {
 
     @ViewBuilder
     private var drawSection: some View {
-        DrawingPad(drawing: $drawing, color: color, width: strokeWidth)
+        DrawingPad(drawing: $drawing, color: color, width: strokeWidth, brush: brush)
 
         HStack(spacing: AuraSpacing.small) {
             ForEach(StrokeWidth.allCases, id: \.self) { option in
@@ -152,6 +154,20 @@ struct WriteMessageView: View {
                     strokeWidth = option
                 }
             }
+        }
+
+        if ownedShopItems.contains(ShopItemID.neonBrush.rawValue) {
+            HStack(spacing: AuraSpacing.small) {
+                ForEach(StrokeBrush.allCases, id: \.self) { option in
+                    ChipToggle(title: option.title, isSelected: option == brush) {
+                        brush = option
+                    }
+                }
+            }
+        } else {
+            Text("Get the Neon brush in Quests, Rewards shop.")
+                .font(.auraErrorText)
+                .foregroundStyle(Color.auraMuted)
         }
 
         HStack {

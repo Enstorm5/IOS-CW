@@ -2,6 +2,7 @@ import SwiftUI
 
 struct QuestsView: View {
     let statsStore: StatsStore
+    let shop: ShopStore
 
     private var stats: UserStats { statsStore.stats ?? UserStats() }
     private var today: Int { statsStore.today }
@@ -30,6 +31,17 @@ struct QuestsView: View {
                         title: "Discover new walls",
                         detail: "+\(discoveryRewardPoints) pts for each wall you open for the first time within 50 m. \(stats.discoveryCount) found so far."
                     )
+
+                    NavigationLink {
+                        RewardsView(shop: shop, statsStore: statsStore)
+                    } label: {
+                        QuestRow(
+                            systemImage: "gift",
+                            title: "Rewards shop",
+                            detail: "Spend points on the Neon brush and streak freezes."
+                        )
+                    }
+                    .buttonStyle(.plain)
 
                     NavigationLink {
                         BadgesView(stats: stats)

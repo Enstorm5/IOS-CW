@@ -9,6 +9,7 @@ struct MainTabView: View {
     @State private var discovery: DiscoveryViewModel
     @State private var statsStore: StatsStore
     @State private var crewStore: CrewStore
+    @State private var shopStore: ShopStore
     @State private var settings: UserSettings
     @State private var appLock: AppLockStore
     @Environment(\.scenePhase) private var scenePhase
@@ -29,6 +30,7 @@ struct MainTabView: View {
         self.localStore = services.localStore
         _statsStore = State(initialValue: StatsStore(economy: services.economy, userID: profile.id))
         _crewStore = State(initialValue: CrewStore(service: services.crews, userID: profile.id))
+        _shopStore = State(initialValue: ShopStore(economy: services.economy, userID: profile.id))
         _settings = State(initialValue: services.localStore.settings(accountID: profile.id))
         _appLock = State(initialValue: AppLockStore(biometric: services.biometric))
         _discovery = State(initialValue: DiscoveryViewModel(
@@ -47,7 +49,7 @@ struct MainTabView: View {
                 }
             }
             Tab("Quests", systemImage: "flag.checkered", value: .quests) {
-                QuestsView(statsStore: statsStore)
+                QuestsView(statsStore: statsStore, shop: shopStore)
             }
             Tab("Camera", systemImage: "camera.viewfinder", value: .camera) {
                 ARSpikeView(publisher: publisher, locationService: locationService, currentUser: profile, statsStore: statsStore)
@@ -60,6 +62,7 @@ struct MainTabView: View {
             }
         }
         .tint(Color.auraText)
+        .environment(\.ownedShopItems, shopStore.ownedItemIDs)
         .preferredColorScheme(preferredScheme(for: settings.theme))
         .overlay {
             if appLock.isLocked {
@@ -72,6 +75,7 @@ struct MainTabView: View {
             appLock.configure(enabled: settings.appLockEnabled, lockNow: true)
             statsStore.start()
             crewStore.start()
+            shopStore.start()
         }
         .onChange(of: settings.appLockEnabled) {
             appLock.configure(enabled: settings.appLockEnabled, lockNow: false)
@@ -99,6 +103,7 @@ struct MainTabView: View {
         .onDisappear {
             statsStore.stop()
             crewStore.stop()
+            shopStore.stop()
         }
     }
 
