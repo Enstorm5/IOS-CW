@@ -84,8 +84,8 @@ struct EconomyTests {
     @Test func statsRoundTripThroughFirestoreFields() {
         let stats = UserStats(balance: 50, lifetimeXP: 90, discoveryCount: 5, streakDays: 2, longestStreak: 3,
                               lastQualifiedDay: today, dailyDay: today, dailyDiscoveries: 5, questsClaimed: 1,
-                              lastDiscoveryWallID: "w5", lastClaimID: "20400_readFive", wallsPublished: 2, lastPublishedWallID: "w9")
+                              lastDiscoveryWallID: "w5", lastClaimID: "20400_readFive", wallsPublished: 2, lastPublishedWallID: "w9", weekStartDay: 20395, weekDiscoveries: 4)
         #expect(userStats(fields: firestoreFields(for: stats)) == stats)
-        #expect(firestoreFields(for: UserStats()).count == 13)
+        #expect(firestoreFields(for: UserStats()).count == 15)
     }
 }

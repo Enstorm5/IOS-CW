@@ -13,6 +13,17 @@ struct CrewMember: Equatable, Identifiable {
     var displayName: String
     var avatarPreset: AvatarPreset
     var joinedAt: Date
+    var showOnRankings = false
+    var lifetimeXP = 0
+    var weekStartDay = 0
+    var weekDiscoveries = 0
+}
+
+struct CrewRanking: Equatable, Identifiable {
+    var rank: Int
+    var member: CrewMember
+
+    var id: String { member.id }
 }
 
 struct CrewInvite: Equatable, Identifiable {

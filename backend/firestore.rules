@@ -100,7 +100,7 @@ service cloud.firestore {
     function statsFields() {
       return ['balance', 'lifetimeXP', 'discoveryCount', 'streakDays', 'longestStreak', 'lastQualifiedDay',
               'dailyDay', 'dailyDiscoveries', 'questsClaimed', 'lastDiscoveryWallID', 'lastClaimID',
-              'wallsPublished', 'lastPublishedWallID'];
+              'wallsPublished', 'lastPublishedWallID', 'weekStartDay', 'weekDiscoveries'];
     }
 
     function userPath(userID) {
@@ -140,7 +140,8 @@ service cloud.firestore {
         && data.streakDays == 0 && data.longestStreak == 0 && data.lastQualifiedDay == 0
         && data.dailyDay == 0 && data.dailyDiscoveries == 0 && data.questsClaimed == 0
         && data.lastDiscoveryWallID == '' && data.lastClaimID == ''
-        && data.wallsPublished == 0 && data.lastPublishedWallID == '';
+        && data.wallsPublished == 0 && data.lastPublishedWallID == ''
+        && data.weekStartDay == 0 && data.weekDiscoveries == 0;
     }
 
     function expectedStreak(before, day) {
@@ -152,6 +153,7 @@ service cloud.firestore {
       let day = today();
       let wallID = after.lastDiscoveryWallID;
       let streak = expectedStreak(before, day);
+      let weekStart = day - ((day + 3) % 7);
       return wallID is string && wallID.size() > 0
         && !exists(/databases/$(database)/documents/users/$(userID)/discoveries/$(wallID))
         && existsAfter(/databases/$(database)/documents/users/$(userID)/discoveries/$(wallID))
@@ -165,7 +167,14 @@ service cloud.firestore {
         && after.lastQualifiedDay == day
         && after.questsClaimed == before.questsClaimed
         && after.lastClaimID == before.lastClaimID
+        && after.weekStartDay == weekStart
+        && after.weekDiscoveries == (before.get('weekStartDay', 0) == weekStart ? before.get('weekDiscoveries', 0) + 1 : 1)
         && publishFieldsUnchanged(before, after);
+    }
+
+    function weekFieldsUnchanged(before, after) {
+      return after.weekStartDay == before.get('weekStartDay', 0)
+        && after.weekDiscoveries == before.get('weekDiscoveries', 0);
     }
 
     function publishFieldsUnchanged(before, after) {
@@ -191,7 +200,8 @@ service cloud.firestore {
         && after.dailyDiscoveries == before.dailyDiscoveries
         && after.questsClaimed == before.questsClaimed
         && after.lastDiscoveryWallID == before.lastDiscoveryWallID
-        && after.lastClaimID == before.lastClaimID;
+        && after.lastClaimID == before.lastClaimID
+        && weekFieldsUnchanged(before, after);
     }
 
     function isOwnerRename(before, after) {
@@ -218,7 +228,8 @@ service cloud.firestore {
         && after.longestStreak == before.longestStreak
         && after.lastQualifiedDay == before.lastQualifiedDay
         && after.lastDiscoveryWallID == before.lastDiscoveryWallID
-        && publishFieldsUnchanged(before, after);
+        && publishFieldsUnchanged(before, after)
+        && weekFieldsUnchanged(before, after);
     }
 
     function isAwardRecord(data) {
@@ -283,6 +294,19 @@ service cloud.firestore {
         && after.lastMemberID != request.auth.uid
         && exists(crewMemberPath(crewID, after.lastMemberID))
         && !existsAfter(crewMemberPath(crewID, after.lastMemberID));
+    }
+
+    function isRankingUpdate(before, after) {
+      let fields = ['showOnRankings', 'lifetimeXP', 'weekStartDay', 'weekDiscoveries'];
+      let stats = get(userPath(request.auth.uid)).data;
+      return after.diff(before).affectedKeys().hasOnly(fields)
+        && after.keys().hasAll(fields)
+        && after.showOnRankings is bool
+        && (after.showOnRankings
+            ? after.lifetimeXP == stats.lifetimeXP
+              && after.weekStartDay == stats.get('weekStartDay', 0)
+              && after.weekDiscoveries == stats.get('weekDiscoveries', 0)
+            : after.lifetimeXP == 0 && after.weekStartDay == 0 && after.weekDiscoveries == 0);
     }
 
     function isValidNewCrewMember(crewID, data) {
@@ -400,7 +424,7 @@ service cloud.firestore {
       match /members/{memberID} {
         allow read: if isCrewMember(crewID);
         allow create: if isOwner(memberID) && isValidNewCrewMember(crewID, request.resource.data);
-        allow update: if false;
+        allow update: if isOwner(memberID) && isRankingUpdate(resource.data, request.resource.data);
         allow delete: if isSignedIn()
           && (memberID == request.auth.uid
                 ? !existsAfter(crewMembershipPath(memberID))

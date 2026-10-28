@@ -2,6 +2,7 @@ import Foundation
 
 let crewNameLengthRange = 2...30
 let maximumCrewMembers = 20
+let weeklyWallsPerParticipant = 5
 let inviteCodeLength = 6
 let inviteCodeAlphabet = Array("ABCDEFGHJKLMNPQRSTUVWXYZ23456789")
 
@@ -104,7 +105,16 @@ func crewMember(id: String, fields: [String: Any]) -> CrewMember? {
     guard let displayName = fields["displayName"] as? String else { return nil }
     let avatar = AvatarPreset(rawValue: fields["avatarPreset"] as? String ?? "") ?? .magenta
     let joinedAt = fields["joinedAt"] as? Date ?? .distantPast
-    return CrewMember(id: id, displayName: displayName, avatarPreset: avatar, joinedAt: joinedAt)
+    return CrewMember(
+        id: id,
+        displayName: displayName,
+        avatarPreset: avatar,
+        joinedAt: joinedAt,
+        showOnRankings: fields["showOnRankings"] as? Bool ?? false,
+        lifetimeXP: (fields["lifetimeXP"] as? NSNumber)?.intValue ?? 0,
+        weekStartDay: (fields["weekStartDay"] as? NSNumber)?.intValue ?? 0,
+        weekDiscoveries: (fields["weekDiscoveries"] as? NSNumber)?.intValue ?? 0
+    )
 }
 
 func crewInvite(code: String, fields: [String: Any]) -> CrewInvite? {
@@ -112,3 +122,76 @@ func crewInvite(code: String, fields: [String: Any]) -> CrewInvite? {
           let crewName = fields["crewName"] as? String else { return nil }
     return CrewInvite(code: code, crewID: crewID, crewName: crewName)
 }
+
+func currentWeekStart(now: Date) -> Int {
+    weekStartDay(forDay: dayNumber(for: now))
+}
+
+func weeklyWalls(of member: CrewMember, weekStart: Int) -> Int {
+    guard member.showOnRankings, member.weekStartDay == weekStart else { return 0 }
+    return max(0, member.weekDiscoveries)
+}
+
+func rankedCrewMembers(_ members: [CrewMember]) -> [CrewRanking] {
+    let sorted = members.filter(\.showOnRankings).sorted { first, second in
+        if first.lifetimeXP != second.lifetimeXP { return first.lifetimeXP > second.lifetimeXP }
+        if first.joinedAt != second.joinedAt { return first.joinedAt < second.joinedAt }
+        return first.id < second.id
+    }
+    return sorted.enumerated().map { CrewRanking(rank: $0.offset + 1, member: $0.element) }
+}
+
+func crewWeeklyGoal(members: [CrewMember]) -> Int {
+    members.filter(\.showOnRankings).count * weeklyWallsPerParticipant
+}
+
+func crewWeeklyProgress(members: [CrewMember], weekStart: Int) -> Int {
+    members.reduce(0) { $0 + weeklyWalls(of: $1, weekStart: weekStart) }
+}
+
+func weeklyGoalText(progress: Int, goal: Int) -> String {
+    if goal == 0 { return "Turn on rankings to count towards the weekly goal." }
+    return "\(progress) of \(goal) walls this week"
+}
+
+func weekEndsText(now: Date) -> String {
+    let today = dayNumber(for: now)
+    let daysLeft = currentWeekStart(now: now) + 7 - today
+    if daysLeft <= 1 { return "Ends tonight at midnight" }
+    return "\(daysLeft) days left · Monday to Sunday"
+}
+
+func rankingScoreText(_ member: CrewMember, weekStart: Int) -> String {
+    let walls = weeklyWalls(of: member, weekStart: weekStart)
+    let wallsText = walls == 1 ? "1 wall this week" : "\(walls) walls this week"
+    return "\(member.lifetimeXP) XP · \(wallsText)"
+}
+
+struct RankingScore: Equatable {
+    var showOnRankings: Bool
+    var lifetimeXP: Int
+    var weekStartDay: Int
+    var weekDiscoveries: Int
+}
+
+func rankingScore(from stats: UserStats, showOnRankings: Bool) -> RankingScore {
+    guard showOnRankings else {
+        return RankingScore(showOnRankings: false, lifetimeXP: 0, weekStartDay: 0, weekDiscoveries: 0)
+    }
+    return RankingScore(
+        showOnRankings: true,
+        lifetimeXP: stats.lifetimeXP,
+        weekStartDay: stats.weekStartDay,
+        weekDiscoveries: stats.weekDiscoveries
+    )
+}
+
+func needsScoreSync(member: CrewMember, stats: UserStats) -> Bool {
+    guard member.showOnRankings else { return false }
+    let wanted = rankingScore(from: stats, showOnRankings: true)
+    return member.lifetimeXP != wanted.lifetimeXP
+        || member.weekStartDay != wanted.weekStartDay
+        || member.weekDiscoveries != wanted.weekDiscoveries
+}
+
+let rankingsExplanation = "Shows your XP and walls found this week to this crew only. Turn it off any time and your score disappears."

@@ -22,6 +22,10 @@ func displayedStreak(_ stats: UserStats, today: Int) -> Int {
     stats.lastQualifiedDay >= today - 1 ? stats.streakDays : 0
 }
 
+func weekStartDay(forDay day: Int) -> Int {
+    day - ((day + 3) % 7)
+}
+
 func statsAfterDiscovery(_ stats: UserStats, wallID: String, today: Int) -> UserStats {
     var updated = stats
     updated.balance += discoveryRewardPoints
@@ -29,6 +33,9 @@ func statsAfterDiscovery(_ stats: UserStats, wallID: String, today: Int) -> User
     updated.discoveryCount += 1
     updated.dailyDiscoveries = stats.dailyDay == today ? stats.dailyDiscoveries + 1 : 1
     updated.dailyDay = today
+    let weekStart = weekStartDay(forDay: today)
+    updated.weekDiscoveries = stats.weekStartDay == weekStart ? stats.weekDiscoveries + 1 : 1
+    updated.weekStartDay = weekStart
     updated.streakDays = streakAfterQualifying(streakDays: stats.streakDays, lastQualifiedDay: stats.lastQualifiedDay, today: today)
     updated.longestStreak = max(stats.longestStreak, updated.streakDays)
     updated.lastQualifiedDay = today
@@ -123,7 +130,9 @@ func userStats(fields: [String: Any]) -> UserStats {
         lastDiscoveryWallID: fields["lastDiscoveryWallID"] as? String ?? "",
         lastClaimID: fields["lastClaimID"] as? String ?? "",
         wallsPublished: fields["wallsPublished"] as? Int ?? 0,
-        lastPublishedWallID: fields["lastPublishedWallID"] as? String ?? ""
+        lastPublishedWallID: fields["lastPublishedWallID"] as? String ?? "",
+        weekStartDay: fields["weekStartDay"] as? Int ?? 0,
+        weekDiscoveries: fields["weekDiscoveries"] as? Int ?? 0
     )
 }
 
@@ -142,5 +151,7 @@ func firestoreFields(for stats: UserStats) -> [String: Any] {
         "lastClaimID": stats.lastClaimID,
         "wallsPublished": stats.wallsPublished,
         "lastPublishedWallID": stats.lastPublishedWallID,
+        "weekStartDay": stats.weekStartDay,
+        "weekDiscoveries": stats.weekDiscoveries,
     ]
 }
