@@ -6,6 +6,12 @@ enum QuestClaimOutcome {
     case notReady(String)
 }
 
+enum PurchaseOutcome {
+    case purchased
+    case alreadyPurchased
+    case refused(String)
+}
+
 final class EconomyService {
     private let database = Firestore.firestore()
 
@@ -17,6 +23,54 @@ final class EconomyService {
         userDocument(userID).addSnapshotListener { snapshot, error in
             onChange(snapshot?.data().map(userStats(fields:)), error != nil)
         }
+    }
+
+    func listenToInventory(userID: String, onChange: @escaping (Set<String>) -> Void) -> ListenerRegistration {
+        userDocument(userID).collection("inventory").addSnapshotListener { snapshot, _ in
+            guard let snapshot else { return }
+            onChange(Set(snapshot.documents.map(\.documentID)))
+        }
+    }
+
+    func purchase(userID: String, item: ShopItem, purchaseID: String) async throws -> PurchaseOutcome {
+        try await createStatsIfMissing(userID: userID)
+        let userReference = userDocument(userID)
+        let purchaseReference = userReference.collection("purchases").document(purchaseID)
+        let inventoryReference = userReference.collection("inventory").document(item.id.rawValue)
+
+        let result = try await database.runTransaction { transaction, errorPointer -> Any? in
+            do {
+                if try transaction.getDocument(purchaseReference).exists {
+                    return PurchaseOutcome.alreadyPurchased
+                }
+                let current = userStats(fields: try transaction.getDocument(userReference).data() ?? [:])
+                let isOwned = try transaction.getDocument(inventoryReference).exists
+                let availability = shopAvailability(for: item, stats: current, ownedItemIDs: isOwned ? [item.id.rawValue] : [])
+                guard availability == .available else {
+                    return PurchaseOutcome.refused(shopRefusalMessage(for: availability, item: item))
+                }
+                let updated = statsAfterPurchase(current, item: item, purchaseID: purchaseID)
+                transaction.setData(firestoreFields(for: updated), forDocument: userReference)
+                transaction.setData([
+                    "itemID": item.id.rawValue,
+                    "price": item.price,
+                    "createdAt": FieldValue.serverTimestamp(),
+                ], forDocument: purchaseReference)
+                if item.kind == .permanent {
+                    transaction.setData([
+                        "itemID": item.id.rawValue,
+                        "purchaseID": purchaseID,
+                        "createdAt": FieldValue.serverTimestamp(),
+                    ], forDocument: inventoryReference)
+                }
+                return PurchaseOutcome.purchased
+            } catch {
+                errorPointer?.pointee = error as NSError
+                return nil
+            }
+        }
+
+        return result as? PurchaseOutcome ?? .refused("Couldn't complete the purchase.")
     }
 
     func createStatsIfMissing(userID: String) async throws {

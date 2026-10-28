@@ -10,6 +10,7 @@ nonisolated struct WidgetSnapshot: Codable, Equatable {
     var questTarget: Int
     var questClaimedDay: Int
     var updatedAt: Date
+    var streakFreezes: Int? = nil
 }
 
 nonisolated enum WidgetConfig {
@@ -30,7 +31,8 @@ nonisolated func startOfNextWidgetDay(after date: Date) -> Date {
 }
 
 nonisolated func widgetStreak(_ snapshot: WidgetSnapshot, today: Int) -> Int {
-    snapshot.lastQualifiedDay >= today - 1 ? snapshot.streakDays : 0
+    let isFrozen = snapshot.lastQualifiedDay == today - 2 && (snapshot.streakFreezes ?? 0) > 0 && snapshot.streakDays > 0
+    return snapshot.lastQualifiedDay >= today - 1 || isFrozen ? snapshot.streakDays : 0
 }
 
 nonisolated func widgetQuestProgress(_ snapshot: WidgetSnapshot, today: Int) -> Int {

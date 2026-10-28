@@ -16,6 +16,8 @@ struct UserStats: Equatable {
     var lastPublishedWallID = ""
     var weekStartDay = 0
     var weekDiscoveries = 0
+    var streakFreezes = 0
+    var lastPurchaseID = ""
 }
 
 struct Badge: Identifiable, Equatable {

@@ -100,7 +100,8 @@ service cloud.firestore {
     function statsFields() {
       return ['balance', 'lifetimeXP', 'discoveryCount', 'streakDays', 'longestStreak', 'lastQualifiedDay',
               'dailyDay', 'dailyDiscoveries', 'questsClaimed', 'lastDiscoveryWallID', 'lastClaimID',
-              'wallsPublished', 'lastPublishedWallID', 'weekStartDay', 'weekDiscoveries'];
+              'wallsPublished', 'lastPublishedWallID', 'weekStartDay', 'weekDiscoveries',
+              'streakFreezes', 'lastPurchaseID'];
     }
 
     function userPath(userID) {
@@ -141,7 +142,8 @@ service cloud.firestore {
         && data.dailyDay == 0 && data.dailyDiscoveries == 0 && data.questsClaimed == 0
         && data.lastDiscoveryWallID == '' && data.lastClaimID == ''
         && data.wallsPublished == 0 && data.lastPublishedWallID == ''
-        && data.weekStartDay == 0 && data.weekDiscoveries == 0;
+        && data.weekStartDay == 0 && data.weekDiscoveries == 0
+        && data.streakFreezes == 0 && data.lastPurchaseID == '';
     }
 
     function expectedStreak(before, day) {
@@ -152,7 +154,9 @@ service cloud.firestore {
     function isDiscoveryUpdate(userID, before, after) {
       let day = today();
       let wallID = after.lastDiscoveryWallID;
-      let streak = expectedStreak(before, day);
+      let freezes = before.get('streakFreezes', 0);
+      let usesFreeze = before.lastQualifiedDay == day - 2 && freezes > 0 && before.streakDays > 0;
+      let streak = usesFreeze ? before.streakDays + 1 : expectedStreak(before, day);
       let weekStart = day - ((day + 3) % 7);
       return wallID is string && wallID.size() > 0
         && !exists(/databases/$(database)/documents/users/$(userID)/discoveries/$(wallID))
@@ -169,7 +173,47 @@ service cloud.firestore {
         && after.lastClaimID == before.lastClaimID
         && after.weekStartDay == weekStart
         && after.weekDiscoveries == (before.get('weekStartDay', 0) == weekStart ? before.get('weekDiscoveries', 0) + 1 : 1)
+        && after.streakFreezes == (usesFreeze ? freezes - 1 : freezes)
+        && after.lastPurchaseID == before.get('lastPurchaseID', '')
         && publishFieldsUnchanged(before, after);
+    }
+
+    function shopFieldsUnchanged(before, after) {
+      return after.streakFreezes == before.get('streakFreezes', 0)
+        && after.lastPurchaseID == before.get('lastPurchaseID', '');
+    }
+
+    function shopPrice(itemID) {
+      return itemID == 'neonBrush' ? 300 : (itemID == 'streakFreeze' ? 150 : 0);
+    }
+
+    function isShopPurchase(userID, before, after) {
+      let purchaseID = after.lastPurchaseID;
+      let purchasePath = /databases/$(database)/documents/users/$(userID)/purchases/$(purchaseID);
+      let freezes = before.get('streakFreezes', 0);
+      return purchaseID is string && purchaseID.size() > 0 && purchaseID.size() <= 64
+        && purchaseID != before.get('lastPurchaseID', '')
+        && !exists(purchasePath) && existsAfter(purchasePath)
+        && shopPrice(getAfter(purchasePath).data.itemID) > 0
+        && before.balance >= shopPrice(getAfter(purchasePath).data.itemID)
+        && after.balance == before.balance - shopPrice(getAfter(purchasePath).data.itemID)
+        && (getAfter(purchasePath).data.itemID == 'streakFreeze'
+            ? freezes < 2 && after.streakFreezes == freezes + 1
+            : after.streakFreezes == freezes
+              && !exists(/databases/$(database)/documents/users/$(userID)/inventory/$(getAfter(purchasePath).data.itemID))
+              && existsAfter(/databases/$(database)/documents/users/$(userID)/inventory/$(getAfter(purchasePath).data.itemID)))
+        && after.lifetimeXP == before.lifetimeXP
+        && after.discoveryCount == before.discoveryCount
+        && after.streakDays == before.streakDays
+        && after.longestStreak == before.longestStreak
+        && after.lastQualifiedDay == before.lastQualifiedDay
+        && after.dailyDay == before.dailyDay
+        && after.dailyDiscoveries == before.dailyDiscoveries
+        && after.questsClaimed == before.questsClaimed
+        && after.lastDiscoveryWallID == before.lastDiscoveryWallID
+        && after.lastClaimID == before.lastClaimID
+        && publishFieldsUnchanged(before, after)
+        && weekFieldsUnchanged(before, after);
     }
 
     function weekFieldsUnchanged(before, after) {
@@ -201,7 +245,8 @@ service cloud.firestore {
         && after.questsClaimed == before.questsClaimed
         && after.lastDiscoveryWallID == before.lastDiscoveryWallID
         && after.lastClaimID == before.lastClaimID
-        && weekFieldsUnchanged(before, after);
+        && weekFieldsUnchanged(before, after)
+        && shopFieldsUnchanged(before, after);
     }
 
     function isOwnerRename(before, after) {
@@ -229,7 +274,8 @@ service cloud.firestore {
         && after.lastQualifiedDay == before.lastQualifiedDay
         && after.lastDiscoveryWallID == before.lastDiscoveryWallID
         && publishFieldsUnchanged(before, after)
-        && weekFieldsUnchanged(before, after);
+        && weekFieldsUnchanged(before, after)
+        && shopFieldsUnchanged(before, after);
     }
 
     function isAwardRecord(data) {
@@ -329,7 +375,8 @@ service cloud.firestore {
         && request.resource.data.keys().hasAll(statsFields())
         && (isDiscoveryUpdate(userID, resource.data, request.resource.data)
             || isQuestClaimUpdate(userID, resource.data, request.resource.data)
-            || isWallPublishDebit(resource.data, request.resource.data));
+            || isWallPublishDebit(resource.data, request.resource.data)
+            || isShopPurchase(userID, resource.data, request.resource.data));
       allow delete: if false;
 
       match /discoveries/{wallID} {
@@ -355,6 +402,31 @@ service cloud.firestore {
           && getAfter(messagePath(resource.data.wallID, resource.data.messageID)).data.sparkCount
              == get(messagePath(resource.data.wallID, resource.data.messageID)).data.sparkCount - 1;
         allow update: if false;
+      }
+
+      match /purchases/{purchaseID} {
+        allow read: if isOwner(userID);
+        allow create: if isOwner(userID)
+          && request.resource.data.keys().hasOnly(['itemID', 'price', 'createdAt'])
+          && request.resource.data.keys().hasAll(['itemID', 'price', 'createdAt'])
+          && shopPrice(request.resource.data.itemID) > 0
+          && request.resource.data.price == shopPrice(request.resource.data.itemID)
+          && request.resource.data.createdAt == request.time
+          && getAfter(userPath(userID)).data.lastPurchaseID == purchaseID;
+        allow update, delete: if false;
+      }
+
+      match /inventory/{itemID} {
+        allow read: if isOwner(userID);
+        allow create: if isOwner(userID)
+          && request.resource.data.keys().hasOnly(['itemID', 'purchaseID', 'createdAt'])
+          && request.resource.data.keys().hasAll(['itemID', 'purchaseID', 'createdAt'])
+          && request.resource.data.itemID == itemID
+          && itemID == 'neonBrush'
+          && request.resource.data.purchaseID == getAfter(userPath(userID)).data.lastPurchaseID
+          && getAfter(/databases/$(database)/documents/users/$(userID)/purchases/$(request.resource.data.purchaseID)).data.itemID == itemID
+          && request.resource.data.createdAt == request.time;
+        allow update, delete: if false;
       }
 
       match /questClaims/{claimID} {

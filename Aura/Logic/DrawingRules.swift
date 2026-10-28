@@ -7,6 +7,9 @@ let maximumDrawingPayloadCharacters = 40_000
 let minimumDrawingPointSpacing = 0.004
 let drawingAspectRatio = 4.0 / 3.0
 
+let neonGlowLayers: [(widthScale: Double, opacity: Double)] = [(3.2, 0.18), (2.2, 0.3), (1.4, 0.5)]
+let neonCoreWidthScale = 0.45
+
 func normalizedDrawingPoint(_ location: CGPoint, in size: CGSize) -> DrawingPoint {
     guard size.width > 0, size.height > 0 else { return DrawingPoint(x: 0, y: 0) }
     let x = min(1, max(0, Double(location.x / size.width)))
@@ -50,7 +53,7 @@ func decodeDrawing(_ payload: String) -> MessageDrawing? {
           let drawing = try? JSONDecoder().decode(MessageDrawing.self, from: Data(payload.utf8)),
           drawingValidationError(drawing) == nil else { return nil }
     let clamped = drawing.strokes.map { stroke in
-        DrawingStroke(color: stroke.color, width: stroke.width, points: stroke.points.map {
+        DrawingStroke(color: stroke.color, width: stroke.width, brush: stroke.brush, points: stroke.points.map {
             DrawingPoint(x: min(1, max(0, $0.x)), y: min(1, max(0, $0.y)))
         })
     }

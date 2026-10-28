@@ -18,7 +18,8 @@ func widgetSnapshot(from stats: UserStats, accountID: String, now: Date) -> Widg
         questProgress: stats.dailyDiscoveries,
         questTarget: dailyQuestTarget,
         questClaimedDay: claimedQuestDay(lastClaimID: stats.lastClaimID),
-        updatedAt: now
+        updatedAt: now,
+        streakFreezes: stats.streakFreezes
     )
 }
 

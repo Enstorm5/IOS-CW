@@ -26,8 +26,10 @@ func dailyQuestSummary(_ stats: UserStats, today: Int) -> String {
 func streakSummary(_ stats: UserStats, today: Int) -> String {
     let streak = displayedStreak(stats, today: today)
     if streak == 0 { return "No streak yet. Discover a wall to start one." }
-    if streak == 1 { return "1 day streak" }
-    return "\(streak) day streak"
+    let streakText = streak == 1 ? "1 day streak" : "\(streak) day streak"
+    if stats.streakFreezes == 0 { return streakText }
+    let freezeText = stats.streakFreezes == 1 ? "1 freeze ready" : "\(stats.streakFreezes) freezes ready"
+    return "\(streakText) · \(freezeText)"
 }
 
 func nearbyWallsSummary(count: Int, isOffline: Bool) -> String {

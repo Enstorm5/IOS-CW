@@ -27,7 +27,7 @@ struct WidgetRulesTests {
         let stats = UserStats(balance: 120, streakDays: 3, lastQualifiedDay: today, dailyDay: today, dailyDiscoveries: 2, lastClaimID: "\(today - 1)_readFive")
         let now = Date(timeIntervalSince1970: 50)
         let made = widgetSnapshot(from: stats, accountID: "u1", now: now)
-        #expect(made == WidgetSnapshot(accountID: "u1", balance: 120, streakDays: 3, lastQualifiedDay: today, questDay: today, questProgress: 2, questTarget: 5, questClaimedDay: today - 1, updatedAt: now))
+        #expect(made == WidgetSnapshot(accountID: "u1", balance: 120, streakDays: 3, lastQualifiedDay: today, questDay: today, questProgress: 2, questTarget: 5, questClaimedDay: today - 1, updatedAt: now, streakFreezes: 0))
     }
 
     @Test func claimedDayIsReadFromTheClaimID() {

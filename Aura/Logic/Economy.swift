@@ -18,8 +18,22 @@ func streakAfterQualifying(streakDays: Int, lastQualifiedDay: Int, today: Int) -
     return 1
 }
 
+func streakQualifyingOutcome(streakDays: Int, lastQualifiedDay: Int, today: Int, freezes: Int) -> (streak: Int, usedFreeze: Bool) {
+    if lastQualifiedDay == today - 2 && freezes > 0 && streakDays > 0 {
+        return (streakDays + 1, true)
+    }
+    return (streakAfterQualifying(streakDays: streakDays, lastQualifiedDay: lastQualifiedDay, today: today), false)
+}
+
+func isStreakProtectedByFreeze(_ stats: UserStats, today: Int) -> Bool {
+    stats.lastQualifiedDay == today - 2 && stats.streakFreezes > 0 && stats.streakDays > 0
+}
+
 func displayedStreak(_ stats: UserStats, today: Int) -> Int {
-    stats.lastQualifiedDay >= today - 1 ? stats.streakDays : 0
+    if stats.lastQualifiedDay >= today - 1 || isStreakProtectedByFreeze(stats, today: today) {
+        return stats.streakDays
+    }
+    return 0
 }
 
 func weekStartDay(forDay day: Int) -> Int {
@@ -36,7 +50,11 @@ func statsAfterDiscovery(_ stats: UserStats, wallID: String, today: Int) -> User
     let weekStart = weekStartDay(forDay: today)
     updated.weekDiscoveries = stats.weekStartDay == weekStart ? stats.weekDiscoveries + 1 : 1
     updated.weekStartDay = weekStart
-    updated.streakDays = streakAfterQualifying(streakDays: stats.streakDays, lastQualifiedDay: stats.lastQualifiedDay, today: today)
+    let outcome = streakQualifyingOutcome(streakDays: stats.streakDays, lastQualifiedDay: stats.lastQualifiedDay, today: today, freezes: stats.streakFreezes)
+    updated.streakDays = outcome.streak
+    if outcome.usedFreeze {
+        updated.streakFreezes = stats.streakFreezes - 1
+    }
     updated.longestStreak = max(stats.longestStreak, updated.streakDays)
     updated.lastQualifiedDay = today
     updated.lastDiscoveryWallID = wallID
@@ -132,7 +150,9 @@ func userStats(fields: [String: Any]) -> UserStats {
         wallsPublished: fields["wallsPublished"] as? Int ?? 0,
         lastPublishedWallID: fields["lastPublishedWallID"] as? String ?? "",
         weekStartDay: fields["weekStartDay"] as? Int ?? 0,
-        weekDiscoveries: fields["weekDiscoveries"] as? Int ?? 0
+        weekDiscoveries: fields["weekDiscoveries"] as? Int ?? 0,
+        streakFreezes: fields["streakFreezes"] as? Int ?? 0,
+        lastPurchaseID: fields["lastPurchaseID"] as? String ?? ""
     )
 }
 
@@ -153,5 +173,7 @@ func firestoreFields(for stats: UserStats) -> [String: Any] {
         "lastPublishedWallID": stats.lastPublishedWallID,
         "weekStartDay": stats.weekStartDay,
         "weekDiscoveries": stats.weekDiscoveries,
+        "streakFreezes": stats.streakFreezes,
+        "lastPurchaseID": stats.lastPurchaseID,
     ]
 }
