@@ -53,7 +53,7 @@ struct MainTabView: View {
                 ARSpikeView(publisher: publisher, locationService: locationService, currentUser: profile, statsStore: statsStore)
             }
             Tab("Crew", systemImage: "person.3", value: .crew) {
-                CrewView(store: crewStore, profile: profile)
+                CrewView(store: crewStore, profile: profile, statsStore: statsStore)
             }
             Tab("Me", systemImage: "person.crop.circle", value: .me) {
                 ProfileView(session: session, profile: profile, statsStore: statsStore, localStore: localStore, appLock: appLock, publisher: publisher, settings: $settings)
@@ -85,6 +85,12 @@ struct MainTabView: View {
         .onChange(of: statsStore.stats) {
             if let stats = statsStore.stats {
                 widgetSnapshots.save(widgetSnapshot(from: stats, accountID: profile.id, now: Date()))
+                Task { await crewStore.syncScore(stats: stats) }
+            }
+        }
+        .onChange(of: crewStore.members) {
+            if let stats = statsStore.stats {
+                Task { await crewStore.syncScore(stats: stats) }
             }
         }
         .onChange(of: scenePhase) {

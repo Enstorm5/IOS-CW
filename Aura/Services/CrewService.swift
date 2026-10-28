@@ -111,6 +111,15 @@ final class CrewService {
         try await batch.commit()
     }
 
+    func saveRankingScore(_ score: RankingScore, crewID: String, userID: String) async throws {
+        try await crewDocument(crewID).collection("members").document(userID).updateData([
+            "showOnRankings": score.showOnRankings,
+            "lifetimeXP": score.lifetimeXP,
+            "weekStartDay": score.weekStartDay,
+            "weekDiscoveries": score.weekDiscoveries,
+        ])
+    }
+
     func removeMember(_ memberID: String, crewID: String) async throws {
         let crewReference = crewDocument(crewID)
         let batch = database.batch()

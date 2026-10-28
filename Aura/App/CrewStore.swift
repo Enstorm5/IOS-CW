@@ -19,10 +19,19 @@ final class CrewStore {
     private var crewListener: ListenerRegistration?
     private var membersListener: ListenerRegistration?
     private var isLeaving = false
+    private var isSyncingScore = false
 
     init(service: CrewService, userID: String) {
         self.service = service
         self.userID = userID
+    }
+
+    var me: CrewMember? {
+        members.first { $0.id == userID }
+    }
+
+    var rankings: [CrewRanking] {
+        rankedCrewMembers(members)
     }
 
     var sortedMembers: [CrewMember] {
@@ -100,6 +109,29 @@ final class CrewStore {
             actionError = error.localizedDescription
         }
         isLeaving = false
+    }
+
+    func setRankingOptIn(_ isOn: Bool, stats: UserStats?) async {
+        guard let crewID else { return }
+        guard let stats else {
+            actionError = "Your points are still loading. Try again in a moment."
+            return
+        }
+        let score = rankingScore(from: stats, showOnRankings: isOn)
+        do {
+            try await runAction(failureMessage: "Couldn't change your ranking setting. Check your connection and try again.") {
+                try await self.service.saveRankingScore(score, crewID: crewID, userID: self.userID)
+            }
+        } catch {
+            actionError = error.localizedDescription
+        }
+    }
+
+    func syncScore(stats: UserStats) async {
+        guard let crewID, let me, needsScoreSync(member: me, stats: stats), !isSyncingScore, !isWorking else { return }
+        isSyncingScore = true
+        try? await service.saveRankingScore(rankingScore(from: stats, showOnRankings: true), crewID: crewID, userID: userID)
+        isSyncingScore = false
     }
 
     func remove(_ member: CrewMember) async {
