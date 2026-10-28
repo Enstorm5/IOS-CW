@@ -1,43 +1,64 @@
-//
-//  AuraUITests.swift
-//  AuraUITests
-//
-//  Created by Enstorm on 2026-10-19.
-//
-
 import XCTest
 
 final class AuraUITests: XCTestCase {
-
     override func setUpWithError() throws {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
-
-        // In UI tests it is usually best to stop immediately when a failure occurs.
         continueAfterFailure = false
-
-        // In UI tests it’s important to set the initial state - such as interface orientation - required for your tests before they run. The setUp method is a good place to do this.
-    }
-
-    override func tearDownWithError() throws {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
     }
 
     @MainActor
-    func testExample() throws {
-        // UI tests must launch the application that they test.
+    private func launchSignedOutApp() throws -> XCUIApplication {
         let app = XCUIApplication()
         app.launch()
-
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
-        // XCUIAutomation Documentation
-        // https://developer.apple.com/documentation/xcuiautomation
+        let alreadyHaveAccount = app.buttons["I already have an account"]
+        let tabBar = app.tabBars.firstMatch
+        let deadline = Date().addingTimeInterval(15)
+        while !alreadyHaveAccount.exists && !tabBar.exists && Date() < deadline {
+            _ = alreadyHaveAccount.waitForExistence(timeout: 1)
+        }
+        try XCTSkipIf(tabBar.exists, "A user is already signed in on this simulator.")
+        XCTAssertTrue(alreadyHaveAccount.exists, "The welcome screen should appear when signed out.")
+        return app
     }
 
     @MainActor
-    func testLaunchPerformance() throws {
-        // This measures how long it takes to launch your application.
-        measure(metrics: [XCTApplicationLaunchMetric()]) {
-            XCUIApplication().launch()
-        }
+    func testWelcomeLeadsToLogIn() throws {
+        let app = try launchSignedOutApp()
+        app.buttons["I already have an account"].tap()
+        XCTAssertTrue(app.staticTexts["Welcome back"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["Log in"].exists)
+        XCTAssertTrue(app.buttons["Forgot password?"].exists)
+    }
+
+    @MainActor
+    func testLogInShowsErrorsForEmptyFields() throws {
+        let app = try launchSignedOutApp()
+        app.buttons["I already have an account"].tap()
+        XCTAssertTrue(app.buttons["Log in"].waitForExistence(timeout: 5))
+        app.buttons["Log in"].tap()
+        XCTAssertTrue(app.staticTexts["Enter your email."].waitForExistence(timeout: 5))
+    }
+
+    @MainActor
+    func testSignUpShowsErrorsForEmptyFields() throws {
+        let app = try launchSignedOutApp()
+        app.buttons["I already have an account"].tap()
+        XCTAssertTrue(app.buttons["Create an account"].waitForExistence(timeout: 5))
+        app.buttons["Create an account"].tap()
+        XCTAssertTrue(app.staticTexts["Create account"].waitForExistence(timeout: 5))
+        app.buttons["Sign up"].tap()
+        XCTAssertTrue(app.staticTexts["Enter your email."].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Choose a password."].exists)
+        XCTAssertTrue(app.staticTexts["Choose a display name."].exists)
+    }
+
+    @MainActor
+    func testCanSwitchBetweenLogInAndSignUp() throws {
+        let app = try launchSignedOutApp()
+        app.buttons["I already have an account"].tap()
+        XCTAssertTrue(app.buttons["Create an account"].waitForExistence(timeout: 5))
+        app.buttons["Create an account"].tap()
+        XCTAssertTrue(app.buttons["I already have an account"].waitForExistence(timeout: 5))
+        app.buttons["I already have an account"].tap()
+        XCTAssertTrue(app.staticTexts["Welcome back"].waitForExistence(timeout: 5))
     }
 }
