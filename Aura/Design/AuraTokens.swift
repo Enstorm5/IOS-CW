@@ -36,6 +36,9 @@ extension Font {
     static let auraLargeChip = bricolage("ExtraBold", size: 18, relativeTo: .body)
     static let auraIcon = Font.largeTitle
     static let auraLogo = Font.system(size: 34, weight: .heavy)
+    static let auraSplashLogo = Font.system(size: 64, weight: .heavy)
+    static let auraSplashTitle = bricolage("ExtraBold", size: 52, relativeTo: .largeTitle)
+    static let auraSplashTagline = bricolage("SemiBold", size: 22, relativeTo: .title3)
     static let auraPinIcon = Font.caption2.weight(.heavy)
     static let auraPinEmoji = Font.title3
 }
@@ -58,6 +61,7 @@ enum AuraRadius {
     static let row: CGFloat = 20
     static let card: CGFloat = 24
     static let logo: CGFloat = 24
+    static let splashLogo: CGFloat = 38
 }
 
 enum AuraMotion {
@@ -69,6 +73,8 @@ enum AuraMotion {
 
 enum AuraSize {
     static let control: CGFloat = 62
+    static let logo: CGFloat = 76
+    static let splashLogo: CGFloat = 130
     static let buttonEdge: CGFloat = 5
     static let minTap: CGFloat = 44
     static let pin: CGFloat = 42

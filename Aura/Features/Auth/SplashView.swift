@@ -5,10 +5,11 @@ struct SplashView: View {
         ZStack {
             AuraNightBackground()
             VStack(spacing: AuraSpacing.small) {
-                AuraLogo()
+                AuraLogo(size: AuraSize.splashLogo, font: .auraSplashLogo, cornerRadius: AuraRadius.splashLogo)
                 Text("Aura")
-                    .font(.auraScreenTitle)
+                    .font(.auraSplashTitle)
                 Text("Write on the city.")
+                    .font(.auraSplashTagline)
                     .opacity(0.75)
                 ProgressView()
                     .tint(.white)

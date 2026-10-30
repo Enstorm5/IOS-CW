@@ -129,14 +129,18 @@ struct ChipToggle: View {
 }
 
 struct AuraLogo: View {
+    var size: CGFloat = AuraSize.logo
+    var font: Font = .auraLogo
+    var cornerRadius: CGFloat = AuraRadius.logo
+
     var body: some View {
         Text("A")
-            .font(.auraLogo)
+            .font(font)
             .foregroundStyle(Color.auraInk)
-            .frame(width: 76, height: 76)
+            .frame(width: size, height: size)
             .background(
                 AngularGradient(colors: [.auraYellow, .auraMagenta, .auraMint, .auraYellow], center: .center),
-                in: .rect(cornerRadius: AuraRadius.logo)
+                in: .rect(cornerRadius: cornerRadius)
             )
             .accessibilityHidden(true)
     }
