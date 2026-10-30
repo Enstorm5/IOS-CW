@@ -5,7 +5,6 @@ import ARKit
 import RealityKit
 import Observation
 
-// AR phases
 enum ARWallPhase: Equatable {
     case idle
     case placing
@@ -15,7 +14,6 @@ enum ARWallPhase: Equatable {
     case failed(message: String, canRetryRestore: Bool)
 }
 
-// Export result
 struct ExportedWall {
     let wallID: String
     let mapData: Data
@@ -32,7 +30,6 @@ let messageLiftMeters: Float = 0.004
 let messageTextDepthMeters: Float = 0.002
 
 @MainActor @Observable
-// AR session manager
 final class ARSessionService: NSObject, ARSessionDelegate {
     private(set) var phase: ARWallPhase = .idle
     private(set) var tracking: TrackingStatus = .notAvailable
@@ -68,7 +65,6 @@ final class ARSessionService: NSObject, ARSessionDelegate {
 
     var currentWallID: String? { wallID }
 
-    // Shared AR view
     func arViewForDisplay() -> ARView {
         if let arView { return arView }
         let view = ARView(frame: .zero)
@@ -87,14 +83,12 @@ final class ARSessionService: NSObject, ARSessionDelegate {
         hasPlacedWall = false
         wallSize = defaultWallSize
 
-        // AR setup
         let configuration = ARWorldTrackingConfiguration()
         configuration.planeDetection = [.vertical]
         run(configuration)
         phase = .placing
     }
 
-    // Wall resize
     func resizeWall(to size: WallSize) {
         guard canResize else { return }
         wallSize = clampedWallSize(size)
@@ -143,7 +137,6 @@ final class ARSessionService: NSObject, ARSessionDelegate {
         }
     }
 
-    // Show wall messages
     func showMessages(_ messages: [WallMessage]) {
         messagesToShow = Array(messages.prefix(maximumMessagesOnARWall))
         if phase == .restored {
@@ -151,7 +144,6 @@ final class ARSessionService: NSObject, ARSessionDelegate {
         }
     }
 
-    // Stop camera
     func stopCamera() {
         sessionGeneration += 1
         arView?.session.pause()
@@ -171,7 +163,6 @@ final class ARSessionService: NSObject, ARSessionDelegate {
         phase = .idle
     }
 
-    // Frame updates
     nonisolated func session(_ session: ARSession, didUpdate frame: ARFrame) {
         MainActor.assumeIsolated {
             handleFrame(frame)
@@ -348,10 +339,13 @@ final class ARSessionService: NSObject, ARSessionDelegate {
         return note
     }
 
-    // Drawing card
     private func makeDrawingCard(_ message: WallMessage) -> Entity {
+        guard let drawing = message.drawing, let texture = drawingTexture(drawing) else {
+            var placeholder = message
+            placeholder.text = "Drawing"
+            return makeTextCard(placeholder)
+        }
         let note = Entity()
-        guard let drawing = message.drawing, let texture = drawingTexture(drawing) else { return note }
 
         let cardWidth = Float(wallSize.width * messageCardWidthFraction)
         let cardHeight = cardWidth / Float(drawingAspectRatio)
@@ -365,23 +359,15 @@ final class ARSessionService: NSObject, ARSessionDelegate {
         return note
     }
 
-    // Drawing texture
     private func drawingTexture(_ drawing: MessageDrawing) -> TextureResource? {
-        let pixelWidth = AuraSize.drawingTexturePixelWidth
-        let renderer = ImageRenderer(
-            content: DrawingView(drawing: drawing)
-                .frame(width: pixelWidth, height: pixelWidth / CGFloat(drawingAspectRatio))
-        )
-        renderer.scale = 1
-        guard let image = renderer.cgImage else { return nil }
+        guard let image = drawingCGImage(drawing, pixelWidth: AuraSize.drawingTexturePixelWidth) else { return nil }
         return try? TextureResource(image: image, options: .init(semantic: .color))
     }
 
-    // Text card
     private func makeTextCard(_ message: WallMessage) -> Entity {
         let textWidth = CGFloat(wallSize.width * messageCardWidthFraction)
         let textMesh = MeshResource.generateText(
-            message.text,
+            message.text.isEmpty ? "Message" : message.text,
             extrusionDepth: messageTextDepthMeters,
             font: .systemFont(ofSize: messageFontSizeMeters, weight: .bold),
             containerFrame: CGRect(x: 0, y: 0, width: textWidth, height: CGFloat(wallSize.height)),

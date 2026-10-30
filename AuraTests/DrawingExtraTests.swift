@@ -52,4 +52,16 @@ struct DrawingExtraTests {
         #expect(messageAccessibilityLabel(message, isMine: false) == "Mira wrote hello. 2 sparks.")
         #expect(messageAccessibilityLabel(message, isMine: true) == "You wrote hello. 2 sparks.")
     }
+
+    @Test func aDrawingBecomesAnOpaqueImageOfTheRequestedSize() throws {
+        let drawing = MessageDrawing(strokes: [
+            DrawingStroke(color: .magenta, width: .thick, points: [DrawingPoint(x: 0.1, y: 0.1), DrawingPoint(x: 0.9, y: 0.8)]),
+            DrawingStroke(color: .mint, width: .medium, brush: .neon, points: [DrawingPoint(x: 0.2, y: 0.7), DrawingPoint(x: 0.8, y: 0.2)]),
+        ])
+        let image = try #require(drawingCGImage(drawing, pixelWidth: 320))
+        #expect(image.width == 320)
+        #expect(image.height == Int((320 / drawingAspectRatio).rounded()))
+        #expect(drawingCGImage(MessageDrawing(), pixelWidth: 160) != nil)
+    }
 }
+
