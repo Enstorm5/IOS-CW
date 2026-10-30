@@ -62,10 +62,10 @@ struct WidgetRulesTests {
     }
 
     @Test func appGroupFollowsTheBundleIDForTheAppAndTheWidget() {
-        #expect(appGroupID(forBundleID: "l.Aura") == "group.l.Aura")
-        #expect(appGroupID(forBundleID: "l.Aura.AuraWidget") == "group.l.Aura")
-        #expect(appGroupID(forBundleID: "com.example.Aura.AuraWidget") == "group.com.example.Aura")
-        #expect(appGroupID(forBundleID: "com.example.Aura") == appGroupID(forBundleID: "com.example.Aura.AuraWidget"))
+        #expect(groupIdentifier(forBundleID: "l.Aura") == "group.l.Aura")
+        #expect(groupIdentifier(forBundleID: "l.Aura.AuraWidget") == "group.l.Aura")
+        #expect(groupIdentifier(forBundleID: "com.example.Aura.AuraWidget") == "group.com.example.Aura")
+        #expect(groupIdentifier(forBundleID: "com.example.Aura") == groupIdentifier(forBundleID: "com.example.Aura.AuraWidget"))
     }
 
     @Test func deepLinksPickATab() {
