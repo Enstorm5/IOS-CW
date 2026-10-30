@@ -19,6 +19,7 @@ struct DiscoveryMapView: View {
     )
     @State private var visibleCenter: Coordinate?
     @State private var isShowingHome = false
+    @State private var isShowingList = false
 
     var body: some View {
         Map(position: $cameraPosition, selection: $viewModel.selectedWallID) {
@@ -45,6 +46,8 @@ struct DiscoveryMapView: View {
                 WallPreviewCard(
                     wall: selected.wall,
                     distanceText: viewModel.distanceText(to: selected.wall),
+                    closeWallCount: wallsCloseTo(selected, in: viewModel.nearbyWalls).count,
+                    onShowAll: { isShowingList = true },
                     onOpen: { viewModel.open(selected.wall) },
                     onClose: { viewModel.selectedWallID = nil }
                 )
@@ -54,6 +57,12 @@ struct DiscoveryMapView: View {
         .navigationDestination(item: $viewModel.openedWall) { wall in
             WallDetailView(wall: wall, currentUser: currentUser, messageService: messageService, locationService: viewModel.locationService, publisher: publisher, localStore: localStore, statsStore: statsStore, startsWriting: viewModel.opensWithWriter, onDeleted: { viewModel.removeWall(id: $0) })
         }
+        .sheet(isPresented: $isShowingList) {
+            NearbyWallsSheet(walls: viewModel.nearbyWalls, distanceText: { viewModel.distanceText(to: $0) }) { wall in
+                isShowingList = false
+                showOnMap(wall)
+            }
+        }
         .sheet(isPresented: $isShowingHome) {
             HomeView(currentUser: currentUser, discovery: viewModel, statsStore: statsStore, publisher: publisher, onSelectWall: showOnMap)
         }
@@ -62,7 +71,10 @@ struct DiscoveryMapView: View {
                 Task { await viewModel.retry() }
             }
         }
-        .onAppear { viewModel.mapAppeared() }
+        .onAppear {
+            viewModel.mapAppeared()
+            Task { await viewModel.refreshIfSearched() }
+        }
         .onDisappear { viewModel.mapDisappeared() }
         .task(id: viewModel.locationService.latestLocation) {
             await viewModel.locationOrAccessChanged()
@@ -93,6 +105,17 @@ struct DiscoveryMapView: View {
                 }
                 if viewModel.isLoading {
                     ProgressView()
+                }
+                if !viewModel.nearbyWalls.isEmpty {
+                    Button {
+                        isShowingList = true
+                    } label: {
+                        Image(systemName: "list.bullet")
+                            .font(.auraCardTitle)
+                            .foregroundStyle(Color.auraText)
+                            .frame(width: AuraSize.minTap, height: AuraSize.minTap)
+                    }
+                    .accessibilityLabel("List all nearby walls")
                 }
             }
             .padding(.horizontal, AuraSpacing.screen)
@@ -163,15 +186,12 @@ struct WallPin: View {
 
     var body: some View {
         Circle()
-            .fill(kind == .sponsored ? Color.auraYellow : Color.auraMagenta)
+            .fill(kind == .sponsored ? Color.auraYellow : Color.auraCard)
             .frame(width: AuraSize.pin, height: AuraSize.pin)
-            .overlay(Circle().strokeBorder(.white, lineWidth: AuraSize.pinBorder))
+            .overlay(Circle().strokeBorder(Color.auraMagenta, lineWidth: AuraSize.pinBorder))
             .overlay {
-                if kind == .sponsored {
-                    Image(systemName: "star.fill")
-                        .font(.auraPinIcon)
-                        .foregroundStyle(Color.auraInk)
-                }
+                Text(kind == .sponsored ? "⭐️" : "❓")
+                    .font(.auraPinEmoji)
             }
             .accessibilityLabel(Text(kind == .sponsored ? "Sponsored wall" : "Community wall"))
     }
@@ -180,6 +200,8 @@ struct WallPin: View {
 struct WallPreviewCard: View {
     let wall: Wall
     let distanceText: String?
+    var closeWallCount = 0
+    var onShowAll: (() -> Void)? = nil
     let onOpen: () -> Void
     let onClose: () -> Void
 
@@ -209,6 +231,13 @@ struct WallPreviewCard: View {
             if let distanceText {
                 Text(distanceText)
                     .foregroundStyle(Color.auraMuted)
+            }
+
+            if closeWallCount > 0, let onShowAll {
+                Button(action: onShowAll) {
+                    Text("\(closeWallsText(count: closeWallCount)) · See all")
+                }
+                .buttonStyle(AuraPillButtonStyle())
             }
 
             HStack(spacing: AuraSpacing.small) {

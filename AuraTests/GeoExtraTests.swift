@@ -48,4 +48,19 @@ struct GeoExtraTests {
         let b = Wall(id: "b", title: "B", coordinate: colomboSeven, kind: .community)
         #expect(wallsWithinRadius(from: [b, a], center: colomboSeven, radiusMeters: 10).map(\.id) == ["a", "b"])
     }
+
+    @Test func wallsStandingTogetherAreFoundButFarOnesAreNot() {
+        func nearby(_ id: String, lat: Double, meters: Double) -> NearbyWall {
+            NearbyWall(wall: Wall(id: id, title: id, coordinate: Coordinate(latitude: lat, longitude: 79.86), kind: .community), distanceMeters: meters)
+        }
+        let a = nearby("a", lat: 6.9110, meters: 100)
+        let b = nearby("b", lat: 6.91110, meters: 90)
+        let far = nearby("far", lat: 6.9150, meters: 500)
+        let close = wallsCloseTo(a, in: [a, b, far])
+        #expect(close.map(\.id) == ["b"])
+        #expect(wallsCloseTo(far, in: [a, b, far]).isEmpty)
+        #expect(closeWallsText(count: 1) == "1 more wall right here")
+        #expect(closeWallsText(count: 3) == "3 more walls right here")
+    }
 }
+

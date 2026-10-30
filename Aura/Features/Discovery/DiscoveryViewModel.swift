@@ -109,6 +109,11 @@ final class DiscoveryViewModel {
         try? localStore.removeCachedWall(wallID: id, accountID: accountID)
     }
 
+    func refreshIfSearched() async {
+        guard hasSearched else { return }
+        await retry()
+    }
+
     func retry() async {
         await search(around: lastRequestedCenter ?? discoveryFallbackCenter)
     }

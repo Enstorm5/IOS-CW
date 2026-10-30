@@ -114,11 +114,11 @@ struct MoveMessageSheet: View {
         } else {
             Text(message.text)
                 .font(.auraErrorText)
-                .foregroundStyle(message.color == .ink ? Color.white : Color.auraInk)
+                .foregroundStyle(message.color.swatchColor)
                 .lineLimit(2)
                 .padding(AuraSpacing.xSmall)
                 .frame(width: width, height: width * textCardHeightFraction)
-                .background(message.color.swatchColor, in: .rect(cornerRadius: AuraRadius.swatch))
+                .background(Color.auraCard.opacity(0.6), in: .rect(cornerRadius: AuraRadius.swatch))
         }
     }
 

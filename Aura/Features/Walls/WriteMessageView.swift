@@ -62,7 +62,7 @@ struct WriteMessageView: View {
                         drawSection
                     }
 
-                    Text("Color")
+                    Text(mode == .type ? "Text color" : "Pen color")
                         .font(.auraSectionLabel)
                         .foregroundStyle(Color.auraMuted)
 

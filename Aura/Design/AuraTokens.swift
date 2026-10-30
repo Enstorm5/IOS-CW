@@ -26,6 +26,7 @@ extension Font {
     static let auraIcon = Font.largeTitle
     static let auraLogo = Font.system(size: 34, weight: .heavy)
     static let auraPinIcon = Font.caption2.weight(.heavy)
+    static let auraPinEmoji = Font.title3
 }
 
 enum AuraSpacing {
@@ -59,7 +60,7 @@ enum AuraSize {
     static let control: CGFloat = 62
     static let buttonEdge: CGFloat = 5
     static let minTap: CGFloat = 44
-    static let pin: CGFloat = 30
+    static let pin: CGFloat = 42
     static let pinBorder: CGFloat = 3
     static let messageSwatch: CGFloat = 32
     static let teaserBlur: CGFloat = 6

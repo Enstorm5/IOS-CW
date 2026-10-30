@@ -135,3 +135,17 @@ func formattedDistance(meters: Double) -> String {
     }
     return String(format: "%.1f km", meters / 1000)
 }
+
+let closeWallsMeters = 40.0
+
+// Walls too close to tap
+func wallsCloseTo(_ wall: NearbyWall, in walls: [NearbyWall], meters: Double = closeWallsMeters) -> [NearbyWall] {
+    walls
+        .filter { $0.id != wall.id && distanceInMeters(from: wall.wall.coordinate, to: $0.wall.coordinate) <= meters }
+        .sorted { $0.distanceMeters < $1.distanceMeters }
+}
+
+func closeWallsText(count: Int) -> String {
+    count == 1 ? "1 more wall right here" : "\(count) more walls right here"
+}
+
