@@ -7,8 +7,10 @@ struct ARSpikeView: View {
     @State private var isNaming = false
 
     private let isARSupported = ARWorldTrackingConfiguration.isSupported
+    private let onWriteOnWall: (Wall) -> Void
 
-    init(publisher: WallPublishService, locationService: LocationService, currentUser: UserProfile, statsStore: StatsStore) {
+    init(publisher: WallPublishService, locationService: LocationService, currentUser: UserProfile, statsStore: StatsStore, onWriteOnWall: @escaping (Wall) -> Void) {
+        self.onWriteOnWall = onWriteOnWall
         _viewModel = State(initialValue: PlaceWallViewModel(publisher: publisher, locationService: locationService, currentUser: currentUser, statsStore: statsStore))
     }
 
@@ -86,9 +88,16 @@ struct ARSpikeView: View {
     @ViewBuilder
     private var bottomControls: some View {
         if let publishedTitle = viewModel.publishedTitle {
-            StatusBanner(systemImage: "checkmark.circle", message: "\u{201C}\(publishedTitle)\u{201D} is live. People within 50 m can now open it from the map.")
-            Button("Place another wall") { viewModel.startPlacing() }
+            StatusBanner(systemImage: "checkmark.circle", message: "\u{201C}\(publishedTitle)\u{201D} is live. Be the first to write on it.")
+            if let publishedWall = viewModel.publishedWall {
+                Button("Write on your wall") {
+                    onWriteOnWall(publishedWall)
+                    viewModel.finish()
+                }
                 .buttonStyle(AuraButtonStyle(kind: .highlight))
+            }
+            Button("Place another wall") { viewModel.startPlacing() }
+                .buttonStyle(AuraButtonStyle(kind: .outline, onNight: true))
             Button("Done") { viewModel.finish() }
                 .buttonStyle(AuraButtonStyle(kind: .outline, onNight: true))
         } else {

@@ -104,6 +104,25 @@ func messageCanvasPosition(normalizedX: Double, normalizedY: Double, size: WallS
     return (Float((x - 0.5) * size.width), Float((y - 0.5) * size.height))
 }
 
+// Wall from draft
+func wallFromDraft(_ draft: NewWallDraft) -> Wall {
+    Wall(
+        id: draft.wallID,
+        title: draft.title,
+        coordinate: draft.coordinate,
+        kind: .community,
+        map: WallMapInfo(
+            chunkCount: draft.mapChunkCount,
+            version: firstMapVersion,
+            checksum: draft.mapChecksum,
+            byteCount: draft.mapByteCount,
+            anchorName: draft.wallID,
+            size: draft.size
+        ),
+        ownerID: draft.ownerID
+    )
+}
+
 // Owner check
 func isWallOwner(_ wall: Wall, userID: String) -> Bool {
     wall.ownerID == userID

@@ -111,6 +111,15 @@ final class WallMessageService {
         ])
     }
 
+    // Move message
+    func moveMessage(wallID: String, messageID: String, x: Double, y: Double) async throws {
+        try await messageDocument(wallID: wallID, messageID: messageID).updateData([
+            "normalizedX": x,
+            "normalizedY": y,
+            "updatedAt": FieldValue.serverTimestamp(),
+        ])
+    }
+
     func deleteMessage(wallID: String, messageID: String) async throws {
         try await messageDocument(wallID: wallID, messageID: messageID).delete()
     }

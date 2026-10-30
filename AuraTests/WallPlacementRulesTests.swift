@@ -81,6 +81,20 @@ struct WallPlacementRulesTests {
         #expect(parsed?.map == WallMapInfo(chunkCount: 3, version: 1, checksum: draft.mapChecksum, byteCount: 2_500_000, anchorName: "w1", size: draft.size))
     }
 
+    @Test func aPublishedWallCanBeOpenedStraightFromItsDraft() {
+        let draft = NewWallDraft(
+            wallID: "w1", ownerID: "u1", title: "Library steps",
+            coordinate: Coordinate(latitude: 6.9113, longitude: 79.8597),
+            size: WallSize(width: 1.5, height: 1), mapChunkCount: 3, mapByteCount: 2_500_000,
+            mapChecksum: String(repeating: "a", count: 64), captureOSVersion: "26.5"
+        )
+        let wall = wallFromDraft(draft)
+        #expect(wall.id == "w1" && wall.title == "Library steps" && wall.kind == .community)
+        #expect(wall.coordinate == draft.coordinate)
+        #expect(wall.ownerID == "u1" && isWallOwner(wall, userID: "u1"))
+        #expect(wall.map == WallMapInfo(chunkCount: 3, version: 1, checksum: draft.mapChecksum, byteCount: 2_500_000, anchorName: "w1", size: draft.size))
+    }
+
     @Test func demoWallsHaveNoMap() {
         #expect(wall(id: "demo", fields: ["title": "Demo", "latitude": 6.9, "longitude": 79.8])?.map == nil)
     }

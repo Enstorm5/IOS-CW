@@ -7,6 +7,7 @@ struct WallDetailView: View {
     let currentUser: UserProfile
     let publisher: WallPublishService
     let onDeleted: (String) -> Void
+    let startsWriting: Bool
 
     @Environment(\.openURL) private var openURL
     @Environment(\.dismiss) private var dismiss
@@ -15,16 +16,19 @@ struct WallDetailView: View {
     @State private var deleteError: String?
     @State private var viewModel: WallDetailViewModel
     @State private var isWriting = false
+    @State private var didOpenWriter = false
     @State private var isViewingAR = false
     @State private var editingMessage: WallMessage?
+    @State private var movingMessage: WallMessage?
     @State private var deletingMessage: WallMessage?
 
     private var canViewInAR: Bool {
         wall.map != nil && ARWorldTrackingConfiguration.isSupported
     }
 
-    init(wall: Wall, currentUser: UserProfile, messageService: WallMessageService, locationService: LocationService, publisher: WallPublishService, localStore: LocalStore, statsStore: StatsStore, onDeleted: @escaping (String) -> Void = { _ in }) {
+    init(wall: Wall, currentUser: UserProfile, messageService: WallMessageService, locationService: LocationService, publisher: WallPublishService, localStore: LocalStore, statsStore: StatsStore, startsWriting: Bool = false, onDeleted: @escaping (String) -> Void = { _ in }) {
         self.onDeleted = onDeleted
+        self.startsWriting = startsWriting
         self.wall = wall
         self.currentUser = currentUser
         self.publisher = publisher
@@ -68,6 +72,12 @@ struct WallDetailView: View {
                 .background(Color.auraBackground)
             }
         }
+        .onChange(of: viewModel.isUnlocked, initial: true) {
+            if startsWriting, viewModel.isUnlocked, !didOpenWriter {
+                didOpenWriter = true
+                isWriting = true
+            }
+        }
         .sheet(isPresented: $isWriting) {
             WriteMessageView(
                 initialDraft: viewModel.savedDraft(),
@@ -77,6 +87,11 @@ struct WallDetailView: View {
                 onSaveDraft: { text, color in viewModel.saveDraft(text: text, color: color) },
                 onDiscardDraft: { viewModel.discardDraft() }
             )
+        }
+        .sheet(item: $movingMessage) { message in
+            MoveMessageSheet(wallSize: wall.map?.size ?? defaultWallSize, messages: viewModel.messages, moving: message) { placement in
+                try await viewModel.move(message, to: placement)
+            }
         }
         .sheet(item: $editingMessage) { message in
             EditMessageSheet(originalText: message.text) { newText in
@@ -244,6 +259,7 @@ struct WallDetailView: View {
                     isSparking: viewModel.sparkingMessageIDs.contains(message.id),
                     onSpark: canSpark(message, userID: currentUser.id) ? { Task { await viewModel.toggleSpark(message) } } : nil,
                     onEdit: canEdit(message, userID: currentUser.id) ? { editingMessage = message } : nil,
+                    onMove: canMove(message, userID: currentUser.id) ? { movingMessage = message } : nil,
                     onDelete: canDelete(message, userID: currentUser.id) ? { deletingMessage = message } : nil
                 )
             }
@@ -280,6 +296,7 @@ struct MessageRow: View {
     var isSparking = false
     var onSpark: (() -> Void)? = nil
     var onEdit: (() -> Void)? = nil
+    var onMove: (() -> Void)? = nil
     var onDelete: (() -> Void)? = nil
 
     var body: some View {
@@ -305,10 +322,13 @@ struct MessageRow: View {
 
             sparkControl
 
-            if onEdit != nil || onDelete != nil {
+            if onEdit != nil || onMove != nil || onDelete != nil {
                 Menu {
                     if let onEdit {
                         Button("Edit", systemImage: "pencil", action: onEdit)
+                    }
+                    if let onMove {
+                        Button("Move on wall", systemImage: "arrow.up.and.down.and.arrow.left.and.right", action: onMove)
                     }
                     if let onDelete {
                         Button("Delete", systemImage: "trash", role: .destructive, action: onDelete)
@@ -332,6 +352,9 @@ struct MessageRow: View {
             }
             if let onEdit {
                 Button("Edit", action: onEdit)
+            }
+            if let onMove {
+                Button("Move on wall", action: onMove)
             }
             if let onDelete {
                 Button("Delete", action: onDelete)

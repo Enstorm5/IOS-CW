@@ -55,7 +55,10 @@ struct MainTabView: View {
                 QuestsView(statsStore: statsStore, shop: shopStore)
             }
             Tab("Camera", systemImage: "camera.viewfinder", value: .camera) {
-                ARSpikeView(publisher: publisher, locationService: locationService, currentUser: profile, statsStore: statsStore)
+                ARSpikeView(publisher: publisher, locationService: locationService, currentUser: profile, statsStore: statsStore, onWriteOnWall: { wall in
+                    discovery.open(wall, startWriting: true)
+                    selectedTab = .map
+                })
             }
             Tab("Crew", systemImage: "person.3", value: .crew) {
                 CrewView(store: crewStore, profile: profile)

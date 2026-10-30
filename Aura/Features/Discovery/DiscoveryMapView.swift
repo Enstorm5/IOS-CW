@@ -19,7 +19,6 @@ struct DiscoveryMapView: View {
         ))
     )
     @State private var visibleCenter: Coordinate?
-    @State private var openedWall: Wall?
     @State private var isShowingHome = false
 
     var body: some View {
@@ -47,14 +46,14 @@ struct DiscoveryMapView: View {
                 WallPreviewCard(
                     wall: selected.wall,
                     distanceText: viewModel.distanceText(to: selected.wall),
-                    onOpen: { openedWall = selected.wall },
+                    onOpen: { viewModel.open(selected.wall) },
                     onClose: { viewModel.selectedWallID = nil }
                 )
             }
         }
         .toolbar(.hidden, for: .navigationBar)
-        .navigationDestination(item: $openedWall) { wall in
-            WallDetailView(wall: wall, currentUser: currentUser, messageService: messageService, locationService: viewModel.locationService, publisher: publisher, localStore: localStore, statsStore: statsStore, onDeleted: { viewModel.removeWall(id: $0) })
+        .navigationDestination(item: $viewModel.openedWall) { wall in
+            WallDetailView(wall: wall, currentUser: currentUser, messageService: messageService, locationService: viewModel.locationService, publisher: publisher, localStore: localStore, statsStore: statsStore, startsWriting: viewModel.opensWithWriter, onDeleted: { viewModel.removeWall(id: $0) })
         }
         .sheet(isPresented: $isShowingHome) {
             HomeView(currentUser: currentUser, discovery: viewModel, statsStore: statsStore, publisher: publisher, onSelectWall: showOnMap)

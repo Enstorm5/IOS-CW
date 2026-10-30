@@ -208,6 +208,20 @@ final class WallDetailViewModel {
         updateMessage(id: message.id) { $0.text = cleaned }
     }
 
+    // Move message
+    func move(_ message: WallMessage, to placement: (x: Double, y: Double)) async throws {
+        guard canMove(message, userID: accountID) else { return }
+        do {
+            try await messageService.moveMessage(wallID: wall.id, messageID: message.id, x: placement.x, y: placement.y)
+        } catch {
+            throw UserFacingError(message: "Couldn't move your message. Check your connection and try again.")
+        }
+        updateMessage(id: message.id) {
+            $0.normalizedX = placement.x
+            $0.normalizedY = placement.y
+        }
+    }
+
     func delete(_ message: WallMessage) async {
         guard canDelete(message, userID: accountID) else { return }
         actionError = nil

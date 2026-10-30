@@ -2,6 +2,7 @@ import Foundation
 
 let maximumMessageLength = 140
 let messagePlacementMargin = 0.1
+let messageMoveMargin = 0.05
 
 // Message check
 func messageValidationError(_ text: String) -> String? {
@@ -63,6 +64,26 @@ func canSpark(_ message: WallMessage, userID: String) -> Bool {
 
 func canEdit(_ message: WallMessage, userID: String) -> Bool {
     message.authorID == userID && message.contentType == .text
+}
+
+// Move permission
+func canMove(_ message: WallMessage, userID: String) -> Bool {
+    message.authorID == userID
+}
+
+// Keep on wall
+func clampedPlacement(_ value: Double) -> Double {
+    let clamped = min(1 - messageMoveMargin, max(messageMoveMargin, value))
+    return (clamped * 1000).rounded() / 1000
+}
+
+// Drag to position
+func movedPlacement(start: (x: Double, y: Double), translation: CGSize, canvas: CGSize) -> (x: Double, y: Double) {
+    guard canvas.width > 0, canvas.height > 0 else { return start }
+    return (
+        clampedPlacement(start.x + Double(translation.width / canvas.width)),
+        clampedPlacement(start.y + Double(translation.height / canvas.height))
+    )
 }
 
 func canDelete(_ message: WallMessage, userID: String) -> Bool {

@@ -34,8 +34,13 @@ struct ARTutorialView: View {
                 }
 
                 if isPracticing && !cameraFailed {
-                    AuraPill(text: didPlaceWall ? "Nice! Walls appear just like this." : "Point at a flat wall, then tap it")
-                    Spacer()
+                    if didPlaceWall {
+                        Spacer()
+                        congratulations
+                    } else {
+                        AuraPill(text: "Point at a flat wall, then tap it")
+                        Spacer()
+                    }
                 } else {
                     Spacer()
                     introduction
@@ -50,6 +55,23 @@ struct ARTutorialView: View {
             }
             .padding(AuraSpacing.screen)
         }
+    }
+
+    // Practice success
+    private var congratulations: some View {
+        VStack(spacing: AuraSpacing.small) {
+            Text("Congratulations!")
+                .font(.auraHeading)
+                .foregroundStyle(Color.auraText)
+            Text("You placed your first wall. You're ready to explore. Real walls near you work just like this one.")
+                .font(.auraNotice)
+                .foregroundStyle(Color.auraMuted)
+                .multilineTextAlignment(.center)
+        }
+        .padding(AuraSpacing.large)
+        .frame(maxWidth: .infinity)
+        .background(Color.auraCard, in: .rect(cornerRadius: AuraRadius.card))
+        .accessibilityElement(children: .combine)
     }
 
     private var introduction: some View {
@@ -81,7 +103,7 @@ struct ARTutorialView: View {
                 .tint(.white)
                 .frame(minHeight: AuraSize.control)
         } else if didPlaceWall && !cameraFailed {
-            Button("Finish", action: onFinish)
+            Button("Start exploring", action: onFinish)
                 .buttonStyle(AuraButtonStyle(kind: .highlight))
         } else {
             if isARSupported && !isPracticing && !cameraFailed {

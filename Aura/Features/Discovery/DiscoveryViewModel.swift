@@ -16,6 +16,8 @@ final class DiscoveryViewModel {
     private(set) var showingSavedWallsSince: Date?
     private(set) var isShowingSavedWalls = false
     var selectedWallID: String?
+    var openedWall: Wall?
+    private(set) var opensWithWriter = false
 
     let locationService: LocationService
     private let wallService: WallService
@@ -92,6 +94,11 @@ final class DiscoveryViewModel {
             }
         }
         isLoading = false
+    }
+
+    func open(_ wall: Wall, startWriting: Bool = false) {
+        opensWithWriter = startWriting
+        openedWall = wall
     }
 
     func removeWall(id: String) {

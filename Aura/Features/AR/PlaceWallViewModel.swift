@@ -11,6 +11,7 @@ final class PlaceWallViewModel {
     private(set) var isCapturing = false
     private(set) var publishError: String?
     private(set) var publishedTitle: String?
+    private(set) var publishedWall: Wall?
 
     private let publisher: WallPublishService
     private let locationService: LocationService
@@ -28,6 +29,7 @@ final class PlaceWallViewModel {
 
     func startPlacing() {
         publishedTitle = nil
+        publishedWall = nil
         publishError = nil
         discardCapture()
         arSession.startPlacing()
@@ -39,6 +41,7 @@ final class PlaceWallViewModel {
 
     func finish() {
         publishedTitle = nil
+        publishedWall = nil
         publishError = nil
         discardCapture()
         arSession.finish()
@@ -120,6 +123,7 @@ final class PlaceWallViewModel {
             try await publisher.publish(draft, mapData: exported.mapData)
             arSession.finish()
             discardCapture()
+            publishedWall = wallFromDraft(draft)
             publishedTitle = cleanedTitle
         } catch let error as UserFacingError {
             publishError = error.message
