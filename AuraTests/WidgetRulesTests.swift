@@ -61,6 +61,13 @@ struct WidgetRulesTests {
         #expect(!shouldKeepWidgetSnapshot(nil, signedInAccountID: "u1"))
     }
 
+    @Test func appGroupFollowsTheBundleIDForTheAppAndTheWidget() {
+        #expect(appGroupID(forBundleID: "l.Aura") == "group.l.Aura")
+        #expect(appGroupID(forBundleID: "l.Aura.AuraWidget") == "group.l.Aura")
+        #expect(appGroupID(forBundleID: "com.example.Aura.AuraWidget") == "group.com.example.Aura")
+        #expect(appGroupID(forBundleID: "com.example.Aura") == appGroupID(forBundleID: "com.example.Aura.AuraWidget"))
+    }
+
     @Test func deepLinksPickATab() {
         #expect(appTab(forDeepLink: URL(string: "aura://quests")!) == .quests)
         #expect(appTab(forDeepLink: URL(string: "aura://crew")!) == .crew)

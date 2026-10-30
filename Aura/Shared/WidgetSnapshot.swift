@@ -14,7 +14,7 @@ nonisolated struct WidgetSnapshot: Codable, Equatable {
 }
 
 nonisolated enum WidgetConfig {
-    static let appGroupID = "group.l.Aura"
+    static var appGroupID: String { appGroupID(forBundleID: Bundle.main.bundleIdentifier ?? "") }
     static let snapshotKey = "widgetSnapshot"
     static let questsLink = "aura://quests"
     static let utcOffsetSeconds = 19_800
@@ -56,4 +56,11 @@ nonisolated func encodeWidgetSnapshot(_ snapshot: WidgetSnapshot) -> Data? {
 nonisolated func decodeWidgetSnapshot(_ data: Data?) -> WidgetSnapshot? {
     guard let data else { return nil }
     return try? JSONDecoder().decode(WidgetSnapshot.self, from: data)
+}
+
+// App group from bundle ID
+nonisolated func appGroupID(forBundleID bundleID: String) -> String {
+    let widgetSuffix = ".AuraWidget"
+    let appID = bundleID.hasSuffix(widgetSuffix) ? String(bundleID.dropLast(widgetSuffix.count)) : bundleID
+    return "group.\(appID)"
 }
