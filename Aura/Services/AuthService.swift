@@ -1,5 +1,22 @@
 import Foundation
+import UIKit
 import FirebaseAuth
+import FirebaseCore
+import GoogleSignIn
+
+enum GoogleSignInSetupError: Error {
+    case notConfigured
+    case noScreen
+    case noToken
+
+    var message: String {
+        switch self {
+        case .notConfigured: "Google sign-in isn't set up for this build yet."
+        case .noScreen: "Couldn't open Google sign-in. Try again."
+        case .noToken: "Google didn't return a sign-in token. Try again."
+        }
+    }
+}
 
 final class AuthService {
     private let auth = Auth.auth()
@@ -7,6 +24,7 @@ final class AuthService {
     var currentUserID: String? { auth.currentUser?.uid }
     var currentDisplayName: String? { auth.currentUser?.displayName }
     var currentEmail: String? { auth.currentUser?.email }
+    var signInMethod: SignInMethod { signInMethodFrom(providerIDs: auth.currentUser?.providerData.map(\.providerID) ?? []) }
 
     // Auth listener
     func observeSignIn(_ onChange: @escaping (String?) -> Void) -> AuthStateDidChangeListenerHandle {
@@ -26,11 +44,46 @@ final class AuthService {
         _ = try await auth.signIn(withEmail: email, password: password)
     }
 
+    // Google sign-in
+    func logInWithGoogle() async throws {
+        let credential = try await googleCredential()
+        _ = try await auth.signIn(with: credential)
+    }
+
+    func reauthenticateWithGoogle() async throws {
+        guard let user = auth.currentUser else {
+            throw UserFacingError(message: "You're not signed in.")
+        }
+        let credential = try await googleCredential()
+        _ = try await user.reauthenticate(with: credential)
+    }
+
+    private func googleCredential() async throws -> AuthCredential {
+        guard let clientID = FirebaseApp.app()?.options.clientID else { throw GoogleSignInSetupError.notConfigured }
+        guard let presenter = topViewController() else { throw GoogleSignInSetupError.noScreen }
+        GIDSignIn.sharedInstance.configuration = GIDConfiguration(clientID: clientID)
+        let result = try await GIDSignIn.sharedInstance.signIn(withPresenting: presenter)
+        guard let idToken = result.user.idToken?.tokenString else { throw GoogleSignInSetupError.noToken }
+        return GoogleAuthProvider.credential(withIDToken: idToken, accessToken: result.user.accessToken.tokenString)
+    }
+
+    private func topViewController() -> UIViewController? {
+        let scene = UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .first { $0.activationState == .foregroundActive }
+        var top = scene?.keyWindow?.rootViewController
+        while let presented = top?.presentedViewController {
+            top = presented
+        }
+        return top
+    }
+
     func sendPasswordReset(email: String) async throws {
         try await auth.sendPasswordReset(withEmail: email)
     }
 
     func signOut() throws {
+        GIDSignIn.sharedInstance.signOut()
         try auth.signOut()
     }
 
@@ -71,9 +124,20 @@ func authErrorMessage(for error: Error) -> String {
         return "You're offline. Check your connection and try again."
     case .tooManyRequests:
         return "Too many attempts. Wait a moment and try again."
+    case .accountExistsWithDifferentCredential:
+        return "An account already uses this email with a different sign-in method."
     case .operationNotAllowed:
-        return "Email sign-in isn't turned on for this app yet."
+        return "This sign-in method isn't turned on for this app yet."
     default:
         return "Something went wrong. Please try again."
     }
 }
+
+// Google error text
+func googleSignInErrorMessage(for error: Error) -> String? {
+    let nsError = error as NSError
+    if isGoogleSignInCancelled(domain: nsError.domain, code: nsError.code) { return nil }
+    if let setupError = error as? GoogleSignInSetupError { return setupError.message }
+    return authErrorMessage(for: error)
+}
+

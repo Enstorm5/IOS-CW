@@ -49,6 +49,8 @@ struct SignUpView: View {
                 .disabled(isWorking)
                 .padding(.top, AuraSpacing.small)
 
+                GoogleSignInButton(session: session)
+
                 Button("I already have an account", action: onLogInInstead)
                     .font(.auraLink)
                     .foregroundStyle(Color.auraText)

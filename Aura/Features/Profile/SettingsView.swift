@@ -230,6 +230,10 @@ struct DeleteAccountView: View {
     @State private var isDeleting = false
     @State private var errorMessage: String?
 
+    private var needsPassword: Bool {
+        deleteAccountNeedsPassword(session.signInMethod)
+    }
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: AuraSpacing.medium) {
@@ -240,8 +244,14 @@ struct DeleteAccountView: View {
                     .font(.auraNotice)
                     .foregroundStyle(Color.auraMuted)
 
-                AuraTextField(title: "Password", text: $password, isSecure: true)
-                    .textContentType(.password)
+                if needsPassword {
+                    AuraTextField(title: "Password", text: $password, isSecure: true)
+                        .textContentType(.password)
+                } else {
+                    Text("You'll be asked to sign in with Google again to confirm.")
+                        .font(.auraNotice)
+                        .foregroundStyle(Color.auraMuted)
+                }
                 AuraTextField(title: "Type DELETE to confirm", text: $confirmation)
                     .textInputAutocapitalization(.characters)
                     .autocorrectionDisabled()
@@ -260,7 +270,7 @@ struct DeleteAccountView: View {
                     }
                 }
                 .buttonStyle(AuraButtonStyle())
-                .disabled(isDeleting || password.isEmpty || deleteAccountConfirmationError(typed: confirmation) != nil)
+                .disabled(isDeleting || (needsPassword && password.isEmpty) || deleteAccountConfirmationError(typed: confirmation) != nil)
             }
             .padding(AuraSpacing.screen)
         }
@@ -274,8 +284,9 @@ struct DeleteAccountView: View {
         errorMessage = nil
         isDeleting = true
         do {
-            try await session.deleteAccount(password: password, userID: profile.id)
+            try await session.deleteAccount(password: needsPassword ? password : nil, userID: profile.id)
             try? localStore.deleteAccountData(accountID: profile.id)
+        } catch is SignInCancelled {
         } catch {
             errorMessage = error.localizedDescription
         }

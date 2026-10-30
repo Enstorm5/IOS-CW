@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		A1F0000000000000000000B2 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = A1F0000000000000000000A2 /* FirebaseAuth */; };
 		A1F0000000000000000000B3 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = A1F0000000000000000000A3 /* FirebaseFirestore */; };
+		A1F0000000000000000000B4 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = A1F0000000000000000000A5 /* GoogleSignIn */; };
 		C0CC541F3091333D00ADF00C /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C0CC541E3091333D00ADF00C /* WidgetKit.framework */; };
 		C0CC54213091333D00ADF00C /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C0CC54203091333D00ADF00C /* SwiftUI.framework */; };
 		C0CC542C3091334000ADF00C /* AuraWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = C0CC541C3091333D00ADF00C /* AuraWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -119,6 +120,7 @@
 			files = (
 				A1F0000000000000000000B2 /* FirebaseAuth in Frameworks */,
 				A1F0000000000000000000B3 /* FirebaseFirestore in Frameworks */,
+				A1F0000000000000000000B4 /* GoogleSignIn in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -206,6 +208,7 @@
 			packageProductDependencies = (
 				A1F0000000000000000000A2 /* FirebaseAuth */,
 				A1F0000000000000000000A3 /* FirebaseFirestore */,
+				A1F0000000000000000000A5 /* GoogleSignIn */,
 			);
 			productName = Aura;
 			productReference = C030CBDB308663B2006A98CF /* Aura.app */;
@@ -316,6 +319,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				A1F0000000000000000000A1 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				A1F0000000000000000000A4 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = C030CBDC308663B2006A98CF /* Products */;
@@ -542,6 +546,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Config/AppInfo.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Aura uses the camera to show walls in AR.";
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "Aura uses Face ID to unlock the app when you turn on app lock.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Aura uses your location to find walls near you.";
@@ -578,6 +583,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Config/AppInfo.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Aura uses the camera to show walls in AR.";
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "Aura uses Face ID to unlock the app when you turn on app lock.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Aura uses your location to find walls near you.";
@@ -801,6 +807,14 @@
 				minimumVersion = 12.0.0;
 			};
 		};
+		A1F0000000000000000000A4 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 8.0.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -813,6 +827,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = A1F0000000000000000000A1 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseFirestore;
+		};
+		A1F0000000000000000000A5 /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1F0000000000000000000A4 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

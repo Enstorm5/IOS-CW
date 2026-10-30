@@ -44,3 +44,29 @@ func displayNameValidationError(_ name: String) -> String? {
 func interestsValidationError(_ interests: Set<Interest>) -> String? {
     interests.isEmpty ? "Pick at least one." : nil
 }
+
+let googleSignInErrorDomain = "com.google.GIDSignIn"
+let googleSignInCancelledCode = -5
+
+enum SignInMethod: Equatable {
+    case password
+    case google
+    case other
+}
+
+// Google cancel check
+func isGoogleSignInCancelled(domain: String, code: Int) -> Bool {
+    domain == googleSignInErrorDomain && code == googleSignInCancelledCode
+}
+
+// Account sign-in type
+func signInMethodFrom(providerIDs: [String]) -> SignInMethod {
+    if providerIDs.contains("password") { return .password }
+    if providerIDs.contains("google.com") { return .google }
+    return .other
+}
+
+func deleteAccountNeedsPassword(_ method: SignInMethod) -> Bool {
+    method == .password
+}
+

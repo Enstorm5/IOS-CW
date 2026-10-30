@@ -50,6 +50,8 @@ struct LogInView: View {
                 .buttonStyle(AuraButtonStyle())
                 .disabled(isWorking)
 
+                GoogleSignInButton(session: session)
+
                 Button("Create an account", action: onSignUpInstead)
                     .font(.auraLink)
                     .foregroundStyle(Color.auraText)

@@ -29,6 +29,36 @@ struct AuthErrorTests {
         #expect(authErrorMessage(for: UserFacingError(message: "x")) == "Something went wrong. Please try again.")
     }
 
+    @Test func googleCancelIsRecognisedAndOtherErrorsAreNot() {
+        #expect(isGoogleSignInCancelled(domain: "com.google.GIDSignIn", code: -5))
+        #expect(!isGoogleSignInCancelled(domain: "com.google.GIDSignIn", code: -4))
+        #expect(!isGoogleSignInCancelled(domain: "FIRAuthErrorDomain", code: -5))
+    }
+
+    @Test func googleSignInMessagesHideCancelAndExplainSetupProblems() {
+        let cancelled = NSError(domain: "com.google.GIDSignIn", code: -5)
+        #expect(googleSignInErrorMessage(for: cancelled) == nil)
+        #expect(googleSignInErrorMessage(for: GoogleSignInSetupError.notConfigured) == "Google sign-in isn't set up for this build yet.")
+        #expect(googleSignInErrorMessage(for: GoogleSignInSetupError.noToken) == "Google didn't return a sign-in token. Try again.")
+        let offline = NSError(domain: "FIRAuthErrorDomain", code: 17020)
+        #expect(googleSignInErrorMessage(for: offline) == "You're offline. Check your connection and try again.")
+        #expect(googleSignInErrorMessage(for: NSError(domain: "x", code: 1)) == "Something went wrong. Please try again.")
+    }
+
+    @Test func accountsAreClassifiedByTheirProviders() {
+        #expect(signInMethodFrom(providerIDs: ["password"]) == .password)
+        #expect(signInMethodFrom(providerIDs: ["google.com"]) == .google)
+        #expect(signInMethodFrom(providerIDs: ["google.com", "password"]) == .password)
+        #expect(signInMethodFrom(providerIDs: ["apple.com"]) == .other)
+        #expect(signInMethodFrom(providerIDs: []) == .other)
+    }
+
+    @Test func onlyPasswordAccountsNeedAPasswordToDelete() {
+        #expect(deleteAccountNeedsPassword(.password))
+        #expect(!deleteAccountNeedsPassword(.google))
+        #expect(!deleteAccountNeedsPassword(.other))
+    }
+
     @Test func userFacingErrorShowsItsMessage() {
         #expect(UserFacingError(message: "Nope").localizedDescription == "Nope")
     }

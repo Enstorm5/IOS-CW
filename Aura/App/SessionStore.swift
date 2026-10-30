@@ -11,6 +11,8 @@ enum SessionState: Equatable {
     case failed(message: String)
 }
 
+struct SignInCancelled: Error {}
+
 struct UserFacingError: LocalizedError {
     let message: String
     var errorDescription: String? { message }
@@ -35,6 +37,7 @@ final class SessionStore {
     }
 
     var currentEmail: String? { authService.currentEmail }
+    var signInMethod: SignInMethod { authService.signInMethod }
 
     func updateProfile(_ profile: UserProfile) async throws {
         do {
@@ -47,11 +50,16 @@ final class SessionStore {
     }
 
     // Delete account steps
-    func deleteAccount(password: String, userID: String) async throws {
+    func deleteAccount(password: String?, userID: String) async throws {
         do {
-            try await authService.reauthenticate(password: password)
+            if authService.signInMethod == .google {
+                try await authService.reauthenticateWithGoogle()
+            } else {
+                try await authService.reauthenticate(password: password ?? "")
+            }
         } catch {
-            throw UserFacingError(message: authErrorMessage(for: error))
+            guard let message = googleSignInErrorMessage(for: error) else { throw SignInCancelled() }
+            throw UserFacingError(message: message)
         }
         do {
             try await deletionService.deleteContent(userID: userID)
@@ -93,6 +101,17 @@ final class SessionStore {
             try await authService.logIn(email: email, password: password)
         } catch {
             throw UserFacingError(message: authErrorMessage(for: error))
+        }
+        await reload()
+    }
+
+    // Google log in
+    func logInWithGoogle() async throws {
+        do {
+            try await authService.logInWithGoogle()
+        } catch {
+            guard let message = googleSignInErrorMessage(for: error) else { throw SignInCancelled() }
+            throw UserFacingError(message: message)
         }
         await reload()
     }

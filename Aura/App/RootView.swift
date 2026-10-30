@@ -1,4 +1,5 @@
 import SwiftUI
+import GoogleSignIn
 
 // Screen by session
 struct RootView: View {
@@ -28,6 +29,7 @@ struct RootView: View {
             services.notifications.onOpenQuests = { requestedTab = .quests }
         }
         .onOpenURL { url in
+            if GIDSignIn.sharedInstance.handle(url) { return }
             requestedTab = appTab(forDeepLink: url)
         }
         .onChange(of: session.state) {

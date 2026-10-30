@@ -1,4 +1,5 @@
 AURA_BUNDLE_ID = com.example.Aura
 DEVELOPMENT_TEAM =
+GOOGLE_REVERSED_CLIENT_ID = aura.google.unconfigured
 
 #include? "Local.xcconfig"
