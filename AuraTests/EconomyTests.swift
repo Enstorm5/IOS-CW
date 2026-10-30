@@ -64,6 +64,15 @@ struct EconomyTests {
         #expect(earned.filter(\.isEarned).map(\.id) == ["first-find", "wall-hunter", "on-a-roll"])
     }
 
+    @Test func newUsersStartWithTheWelcomeBonusButNoXP() {
+        let fresh = newUserStats()
+        #expect(fresh.balance == 1_000 && welcomeBonusPoints == 1_000)
+        #expect(fresh.lifetimeXP == 0 && level(forXP: fresh.lifetimeXP) == 1)
+        #expect(fresh.discoveryCount == 0 && fresh.wallsPublished == 0)
+        #expect(canAfford(balance: fresh.balance, cost: publicWallCost))
+        #expect(firestoreFields(for: fresh).count == 17)
+    }
+
     @Test func statsRoundTripThroughFirestoreFields() {
         let stats = UserStats(balance: 50, lifetimeXP: 90, discoveryCount: 5, streakDays: 2, longestStreak: 3,
                               lastQualifiedDay: today, dailyDay: today, dailyDiscoveries: 5, questsClaimed: 1,

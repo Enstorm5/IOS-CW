@@ -79,7 +79,7 @@ final class EconomyService {
         let document = userDocument(userID)
         let snapshot = try await document.getDocument()
         if !snapshot.exists {
-            try await document.setData(firestoreFields(for: UserStats()))
+            try await document.setData(firestoreFields(for: newUserStats()))
         }
     }
 

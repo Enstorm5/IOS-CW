@@ -100,7 +100,7 @@ struct AuraWidgetView: View {
             ProgressView(value: Double(progress), total: Double(max(1, snapshot.questsTotal)))
                 .tint(Color.auraMint)
                 .accessibilityHidden(true)
-            Text("Updated \(snapshot.updatedAt, style: .relative) ago")
+            Text("Updated \(snapshot.updatedAt, format: .dateTime.hour().minute())")
                 .font(.auraErrorText)
                 .foregroundStyle(Color.auraMuted)
                 .lineLimit(1)

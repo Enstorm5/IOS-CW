@@ -129,6 +129,14 @@ service cloud.firestore {
         && after.updatedAt == request.time;
     }
 
+    function isAuthorMove(before, after) {
+      return before.authorID == request.auth.uid
+        && after.diff(before).affectedKeys().hasOnly(['normalizedX', 'normalizedY', 'updatedAt'])
+        && after.normalizedX is number && after.normalizedX >= 0 && after.normalizedX <= 1
+        && after.normalizedY is number && after.normalizedY >= 0 && after.normalizedY <= 1
+        && after.updatedAt == request.time;
+    }
+
     function isSparkChange(wallID, messageID, before, after) {
       return before.authorID != request.auth.uid
         && after.diff(before).affectedKeys().hasOnly(['sparkCount'])
@@ -142,7 +150,7 @@ service cloud.firestore {
 
     function isFreshStats(data) {
       return data.keys().hasOnly(statsFields()) && data.keys().hasAll(statsFields())
-        && data.balance == 0 && data.lifetimeXP == 0 && data.discoveryCount == 0
+        && data.balance == 1000 && data.lifetimeXP == 0 && data.discoveryCount == 0
         && data.streakDays == 0 && data.longestStreak == 0 && data.lastQualifiedDay == 0
         && data.dailyDay == 0 && data.dailyDiscoveries == 0 && data.questsClaimed == 0
         && data.lastDiscoveryWallID == '' && data.lastClaimID == ''
@@ -606,6 +614,7 @@ service cloud.firestore {
           && isReadableWall(wallID)
           && resource.data.moderationStatus == 'active'
           && (isAuthorTextEdit(resource.data, request.resource.data)
+              || isAuthorMove(resource.data, request.resource.data)
               || isSparkChange(wallID, messageID, resource.data, request.resource.data));
         allow delete: if isSignedIn() && resource.data.authorID == request.auth.uid;
       }

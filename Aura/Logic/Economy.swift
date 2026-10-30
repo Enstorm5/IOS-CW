@@ -5,6 +5,7 @@ let discoveryRewardPoints = 10
 let colomboUTCOffsetSeconds = 19_800
 let secondsPerDay = 86_400
 let publicWallCost = 50
+let welcomeBonusPoints = 1_000
 let levelThresholds = [0, 100, 250, 450, 700, 1_000, 1_400, 1_900, 2_500, 3_200, 4_000]
 
 // Colombo day number
@@ -41,6 +42,11 @@ func displayedStreak(_ stats: UserStats, today: Int) -> Int {
 // Monday of week
 func weekStartDay(forDay day: Int) -> Int {
     day - ((day + 3) % 7)
+}
+
+// Starting stats
+func newUserStats() -> UserStats {
+    UserStats(balance: welcomeBonusPoints)
 }
 
 // Discovery award
