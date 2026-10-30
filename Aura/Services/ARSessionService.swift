@@ -376,19 +376,10 @@ final class ARSessionService: NSObject, ARSessionDelegate {
             lineBreakMode: .byWordWrapping
         )
         let textBounds = textMesh.bounds
-        let textColor = message.color == .ink ? UIColor.white : UIColor(Color.auraInk)
-        let text = ModelEntity(mesh: textMesh, materials: [SimpleMaterial(color: textColor, isMetallic: false)])
+        let text = ModelEntity(mesh: textMesh, materials: [UnlitMaterial(color: UIColor(message.color.swatchColor))])
         text.position = SIMD3<Float>(-textBounds.center.x, -textBounds.center.y, messageLiftMeters)
 
-        let cardMesh = MeshResource.generatePlane(
-            width: textBounds.extents.x + messageCardPaddingMeters * 2,
-            height: textBounds.extents.y + messageCardPaddingMeters * 2,
-            cornerRadius: messageCardCornerRadiusMeters
-        )
-        let card = ModelEntity(mesh: cardMesh, materials: [SimpleMaterial(color: UIColor(message.color.swatchColor), isMetallic: false)])
-
         let note = Entity()
-        note.addChild(card)
         note.addChild(text)
         return note
     }
