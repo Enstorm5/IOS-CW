@@ -118,7 +118,6 @@ final class PlaceWallViewModel {
             )
 
             try await publisher.publish(draft, mapData: exported.mapData)
-            try? arSession.saveLocally(exported)
             arSession.finish()
             discardCapture()
             publishedTitle = cleanedTitle

@@ -3,7 +3,6 @@ import ARKit
 
 // AR limits
 let maximumWorldMapBytes = 20 * 1024 * 1024
-let maximumSnapshotBytes = 2 * 1024 * 1024
 let relocalizationTimeoutSeconds: TimeInterval = 30
 
 // Mapping states

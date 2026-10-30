@@ -13,7 +13,6 @@ struct SettingsView: View {
 
     @Environment(\.openURL) private var openURL
     @State private var isConfirmingSignOut = false
-    @State private var isConfirmingReset = false
     @State private var unsentDraftCount = 0
     @State private var errorMessage: String?
     @State private var isAllowedBySystem = true
@@ -80,13 +79,6 @@ struct SettingsView: View {
                         .foregroundStyle(Color.auraError)
                         .frame(maxWidth: .infinity, minHeight: AuraSize.minTap)
                 }
-
-                Button("Development: reset local data") {
-                    isConfirmingReset = true
-                }
-                .font(.auraLink)
-                .foregroundStyle(Color.auraMuted)
-                .frame(maxWidth: .infinity, minHeight: AuraSize.minTap)
             }
             .padding(AuraSpacing.screen)
         }
@@ -99,17 +91,6 @@ struct SettingsView: View {
             }
         } message: {
             Text(signOutMessage(unsentDraftCount: unsentDraftCount))
-        }
-        .confirmationDialog("Reset local data?", isPresented: $isConfirmingReset, titleVisibility: .visible) {
-            Button("Reset", role: .destructive) {
-                do {
-                    try localStore.deleteEverything()
-                } catch {
-                    errorMessage = "Couldn't reset local data."
-                }
-            }
-        } message: {
-            Text("Deletes all drafts and saved walls and messages on this phone. Nothing online changes.")
         }
     }
 

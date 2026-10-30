@@ -19,7 +19,6 @@ enum ARWallPhase: Equatable {
 struct ExportedWall {
     let wallID: String
     let mapData: Data
-    let snapshotData: Data
     let size: WallSize
 }
 
@@ -39,13 +38,10 @@ final class ARSessionService: NSObject, ARSessionDelegate {
     private(set) var tracking: TrackingStatus = .notAvailable
     private(set) var mapping: MappingStatus = .notAvailable
     private(set) var wallSize = defaultWallSize
-    private(set) var savedWall: SavedWallMetadata?
-    private(set) var savedSnapshot: UIImage?
     private(set) var isCameraActive = false
     private(set) var hasPlacedWall = false
 
     @ObservationIgnored private var arView: ARView?
-    @ObservationIgnored private let store: LocalWorldMapStore
     @ObservationIgnored private var wallID: String?
     @ObservationIgnored private var placedAnchor: ARAnchor?
     @ObservationIgnored private var wallEntity: AnchorEntity?
@@ -55,10 +51,9 @@ final class ARSessionService: NSObject, ARSessionDelegate {
     @ObservationIgnored private var pinchStartSize = defaultWallSize
     @ObservationIgnored private var sessionGeneration = 0
 
-    init(store: LocalWorldMapStore? = nil) {
-        self.store = store ?? LocalWorldMapStore()
+    override init() {
         super.init()
-        refreshSavedWall()
+        removeLeftoverLocalCopy()
     }
 
     var canExport: Bool {
@@ -119,36 +114,7 @@ final class ARSessionService: NSObject, ARSessionDelegate {
             throw WorldMapArchiveError.missingWallAnchor
         }
         let mapData = try encodeWorldMap(map)
-        guard let pixelBuffer = session.currentFrame?.capturedImage else {
-            throw WorldMapArchiveError.snapshotFailed
-        }
-        let snapshotData = try snapshotJPEG(from: pixelBuffer)
-        return ExportedWall(wallID: wallID, mapData: mapData, snapshotData: snapshotData, size: wallSize)
-    }
-
-    // Local copy
-    func saveLocally(_ exported: ExportedWall) throws {
-        let metadata = SavedWallMetadata(
-            wallID: exported.wallID,
-            savedAt: Date(),
-            mapByteCount: exported.mapData.count,
-            snapshotByteCount: exported.snapshotData.count,
-            osVersion: UIDevice.current.systemVersion,
-            archiveVersion: worldMapArchiveVersion,
-            size: exported.size
-        )
-        try store.save(mapData: exported.mapData, snapshotData: exported.snapshotData, metadata: metadata)
-        refreshSavedWall()
-    }
-
-    // Restore local wall
-    func restoreSavedWall() {
-        guard let metadata = savedWall else { return }
-        do {
-            restoreWall(mapData: try store.loadMapData(), wallID: metadata.wallID, size: metadata.size ?? defaultWallSize)
-        } catch {
-            phase = .failed(message: worldMapErrorMessage(error), canRetryRestore: false)
-        }
+        return ExportedWall(wallID: wallID, mapData: mapData, size: wallSize)
     }
 
     // Restore published wall
@@ -201,15 +167,6 @@ final class ARSessionService: NSObject, ARSessionDelegate {
         stopCamera()
         removeWallEntity()
         phase = .idle
-    }
-
-    func deleteSavedWall() {
-        do {
-            try store.delete()
-            refreshSavedWall()
-        } catch {
-            phase = .failed(message: "Couldn't delete the saved wall. Try again.", canRetryRestore: false)
-        }
     }
 
     // Frame updates
@@ -430,8 +387,9 @@ final class ARSessionService: NSObject, ARSessionDelegate {
         messageCanvas = nil
     }
 
-    private func refreshSavedWall() {
-        savedWall = store.loadMetadata()
-        savedSnapshot = store.loadSnapshotData().flatMap { UIImage(data: $0) }
+    // Old test copy
+    private func removeLeftoverLocalCopy() {
+        let folder = URL.applicationSupportDirectory.appendingPathComponent("ARSpike", isDirectory: true)
+        try? FileManager.default.removeItem(at: folder)
     }
 }

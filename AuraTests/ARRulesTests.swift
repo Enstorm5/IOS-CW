@@ -50,21 +50,7 @@ struct ARRulesTests {
     }
 
     @Test func errorMessagesAreReadable() {
-        #expect(worldMapErrorMessage(WorldMapArchiveError.corrupt) == "The saved map is damaged. Delete it and place the wall again.")
+        #expect(worldMapErrorMessage(WorldMapArchiveError.corrupt) == "The wall's map is damaged. Place the wall again.")
         #expect(formattedByteCount(3_565_158) == "3.4 MB")
-    }
-
-    @Test func localStoreRoundTripAndDelete() throws {
-        let folder = URL.temporaryDirectory.appendingPathComponent("ARSpikeTest-\(UUID().uuidString)", isDirectory: true)
-        let store = LocalWorldMapStore(folder: folder)
-        let metadata = SavedWallMetadata(wallID: "spike-1", savedAt: Date(timeIntervalSince1970: 1_800_000_000), mapByteCount: 3, snapshotByteCount: 2, osVersion: "26.5", archiveVersion: 1)
-
-        try store.save(mapData: Data([1, 2, 3]), snapshotData: Data([4, 5]), metadata: metadata)
-        #expect(store.loadMetadata() == metadata)
-        #expect(try store.loadMapData() == Data([1, 2, 3]))
-        #expect(store.loadSnapshotData() == Data([4, 5]))
-
-        try store.delete()
-        #expect(store.loadMetadata() == nil)
     }
 }

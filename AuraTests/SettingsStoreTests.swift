@@ -39,16 +39,13 @@ struct SettingsStoreTests {
         #expect(store.settings(accountID: "A").questRemindersEnabled == false)
     }
 
-    @Test func signOutAndResetClearSettings() throws {
+    @Test func signOutClearsOnlyThatAccountsSettings() throws {
         try store.saveSettings(UserSettings(theme: .dark), accountID: "A")
         try store.saveSettings(UserSettings(theme: .dark), accountID: "B")
 
         try store.deleteAccountData(accountID: "A")
         #expect(store.settings(accountID: "A").theme == .system)
         #expect(store.settings(accountID: "B").theme == .dark)
-
-        try store.deleteEverything()
-        #expect(store.settings(accountID: "B").theme == .system)
     }
 
     @Test func drawingMessagesSurviveTheCache() throws {

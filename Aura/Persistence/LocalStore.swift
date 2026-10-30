@@ -153,14 +153,6 @@ final class LocalStore {
         try context.save()
     }
 
-    func deleteEverything() throws {
-        try deleteObjects(UserSettingsEntity.fetchRequest(), matching: nil)
-        try deleteObjects(MessageDraftEntity.fetchRequest(), matching: nil)
-        try deleteObjects(CachedWallEntity.fetchRequest(), matching: nil)
-        try deleteObjects(CachedMessageEntity.fetchRequest(), matching: nil)
-        try context.save()
-    }
-
     private func fetchDraftEntity(key: String) -> MessageDraftEntity? {
         let request = MessageDraftEntity.fetchRequest()
         request.predicate = NSPredicate(format: "key == %@", key)

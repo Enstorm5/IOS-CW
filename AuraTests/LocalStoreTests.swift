@@ -79,12 +79,6 @@ struct LocalStoreTests {
         #expect(store.draft(accountID: "B", wallID: "w1")?.text == "b")
     }
 
-    @Test func resetDeletesEverything() throws {
-        try store.saveDraft(draft(account: "A", wall: "w1", text: "a"))
-        try store.deleteEverything()
-        #expect(store.draftCount(accountID: "A") == 0)
-    }
-
     @Test func messagesForOfflineAndSignOut() {
         #expect(offlineSavedText(nil, now: savedAt) == "You're offline.")
         #expect(signOutMessage(unsentDraftCount: 2) == "You have 2 unsent drafts on this phone. Signing out deletes them.")

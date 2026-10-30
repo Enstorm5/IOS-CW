@@ -35,10 +35,6 @@ struct ARSpikeView: View {
 
                 Spacer()
 
-                if case .restoring = arSession.phase, let snapshot = arSession.savedSnapshot {
-                    GuidancePhoto(image: snapshot)
-                }
-
                 if arSession.phase == .mapping {
                     WallSizeControls(size: arSession.wallSize) { widthSteps, heightSteps in
                         arSession.stepWallSize(widthSteps: widthSteps, heightSteps: heightSteps)
@@ -126,12 +122,8 @@ struct ARSpikeView: View {
             case .restored:
                 Button("Done") { viewModel.finish() }
                     .buttonStyle(AuraButtonStyle(kind: .highlight))
-            case .failed(let message, let canRetryRestore):
+            case .failed(let message, _):
                 StatusBanner(systemImage: "exclamationmark.triangle", message: message)
-                if canRetryRestore {
-                    Button("Try again") { arSession.restoreSavedWall() }
-                        .buttonStyle(AuraButtonStyle(kind: .highlight))
-                }
                 Button("Back") { viewModel.finish() }
                     .buttonStyle(AuraButtonStyle(kind: .outline, onNight: true))
             }
@@ -150,19 +142,6 @@ struct ARSpikeView: View {
 
             Button("Place a wall") { viewModel.startPlacing() }
                 .buttonStyle(AuraButtonStyle(kind: .highlight))
-
-            if let savedWall = arSession.savedWall {
-                Button("Test: restore my last wall") { arSession.restoreSavedWall() }
-                    .buttonStyle(AuraButtonStyle(kind: .outline, onNight: true))
-                Text("Saved on this phone \(savedWall.savedAt.formatted(date: .abbreviated, time: .shortened)) · \(formattedByteCount(savedWall.mapByteCount))")
-                    .font(.auraErrorText)
-                    .foregroundStyle(.white)
-                    .opacity(0.75)
-                Button("Delete local copy") { arSession.deleteSavedWall() }
-                    .font(.auraLink)
-                    .foregroundStyle(.white)
-                    .frame(minHeight: AuraSize.minTap)
-            }
         }
     }
 }
@@ -209,23 +188,5 @@ private struct SizeStepperRow: View {
         }
         .font(.auraCardTitle)
         .foregroundStyle(Color.auraText)
-    }
-}
-
-// Guidance photo
-private struct GuidancePhoto: View {
-    let image: UIImage
-
-    var body: some View {
-        Image(uiImage: image)
-            .resizable()
-            .scaledToFit()
-            .frame(width: AuraSize.guidancePhotoWidth)
-            .clipShape(.rect(cornerRadius: AuraRadius.control))
-            .overlay {
-                RoundedRectangle(cornerRadius: AuraRadius.control)
-                    .strokeBorder(.white, lineWidth: AuraSize.pinBorder)
-            }
-            .accessibilityLabel("Guidance photo of where the wall was saved")
     }
 }

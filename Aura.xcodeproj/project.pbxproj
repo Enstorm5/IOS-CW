@@ -53,7 +53,6 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		C0DD00012F5B000100AA0001 /* Aura.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config/Aura.xcconfig; sourceTree = "<group>"; };
 		C030CBDB308663B2006A98CF /* Aura.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Aura.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C030CBFB30866930006A98CF /* AuraTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AuraTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		C030CC0830866955006A98CF /* AuraUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AuraUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -61,6 +60,7 @@
 		C0CC541E3091333D00ADF00C /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		C0CC54203091333D00ADF00C /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		C0CC54333091340200ADF00C /* AuraWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = AuraWidgetExtension.entitlements; sourceTree = "<group>"; };
+		C0DD00012F5B000100AA0001 /* Config/Aura.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config/Aura.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -151,7 +151,7 @@
 		C030CBD2308663B2006A98CF = {
 			isa = PBXGroup;
 			children = (
-				C0DD00012F5B000100AA0001 /* Aura.xcconfig */,
+				C0DD00012F5B000100AA0001 /* Config/Aura.xcconfig */,
 				C0CC54333091340200ADF00C /* AuraWidgetExtension.entitlements */,
 				C030CBDD308663B2006A98CF /* Aura */,
 				C030CBFC30866930006A98CF /* AuraTests */,
@@ -413,7 +413,7 @@
 /* Begin XCBuildConfiguration section */
 		C030CBE4308663B5006A98CF /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = C0DD00012F5B000100AA0001 /* Aura.xcconfig */;
+			baseConfigurationReference = C0DD00012F5B000100AA0001 /* Config/Aura.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -477,7 +477,7 @@
 		};
 		C030CBE5308663B5006A98CF /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = C0DD00012F5B000100AA0001 /* Aura.xcconfig */;
+			baseConfigurationReference = C0DD00012F5B000100AA0001 /* Config/Aura.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;

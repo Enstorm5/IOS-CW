@@ -36,7 +36,7 @@ struct AuthErrorTests {
     @Test func mapErrorsExplainThemselves() {
         #expect(wallMapErrorMessage(WorldMapArchiveError.corrupt) == worldMapErrorMessage(WorldMapArchiveError.corrupt))
         #expect(wallMapErrorMessage(NSError(domain: "net", code: 1)) == "Couldn't reach the server. Check your connection and try again.")
-        for error in [WorldMapArchiveError.exportFailed, .tooLarge, .corrupt, .missingWallAnchor, .snapshotFailed, .snapshotTooLarge] {
+        for error in [WorldMapArchiveError.exportFailed, .tooLarge, .corrupt, .missingWallAnchor] {
             #expect(!worldMapErrorMessage(error).isEmpty)
         }
     }
