@@ -14,7 +14,6 @@ final class WallMessageService {
     private let database = Firestore.firestore()
     private let pageSize = 20
 
-    // Message page
     func fetchMessages(wallID: String, after cursor: MessageCursor?) async throws -> MessagePage {
         var query = activeMessages(wallID: wallID)
             .order(by: "createdAt", descending: true)
@@ -45,7 +44,6 @@ final class WallMessageService {
         return WallTeaser(messageCount: countSnapshot.count.intValue, latestMessage: latest)
     }
 
-    // Post message
     func post(_ message: NewWallMessage) async throws -> WallMessage {
         let document = database.collection("walls").document(message.wallID).collection("messages").document(message.id)
         var fields = firestoreFields(for: message)
@@ -87,9 +85,6 @@ final class WallMessageService {
 
         _ = try await database.runTransaction { transaction, errorPointer -> Any? in
             do {
-                if try transaction.getDocument(document).exists {
-                    return nil
-                }
                 let counters = dailyCounters(fields: try transaction.getDocument(countersReference).data() ?? [:])
                 transaction.setData(fields, forDocument: document)
                 transaction.setData(
@@ -111,7 +106,6 @@ final class WallMessageService {
         ])
     }
 
-    // Move message
     func moveMessage(wallID: String, messageID: String, x: Double, y: Double) async throws {
         try await messageDocument(wallID: wallID, messageID: messageID).updateData([
             "normalizedX": x,
@@ -184,7 +178,6 @@ final class WallMessageService {
     }
 }
 
-// Message fields
 func firestoreFields(for message: NewWallMessage) -> [String: Any] {
     var fields: [String: Any] = [
         "authorID": message.authorID,
