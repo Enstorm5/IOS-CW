@@ -18,12 +18,14 @@ struct MainTabView: View {
     private let locationService: LocationService
     private let localStore: LocalStore
     private let widgetSnapshots: WidgetSnapshotService
+    private let notifications: NotificationService
 
     init(session: SessionStore, profile: UserProfile, services: AppServices, requestedTab: Binding<AppTab?>) {
         self.session = session
         self.profile = profile
         _requestedTab = requestedTab
         self.widgetSnapshots = services.widgetSnapshots
+        self.notifications = services.notifications
         self.messageService = services.messages
         self.publisher = services.publisher
         self.locationService = services.location
@@ -58,7 +60,7 @@ struct MainTabView: View {
                 CrewView(store: crewStore, profile: profile)
             }
             Tab("Me", systemImage: "person.crop.circle", value: .me) {
-                ProfileView(session: session, profile: profile, statsStore: statsStore, localStore: localStore, appLock: appLock, publisher: publisher, crewStore: crewStore, settings: $settings)
+                ProfileView(session: session, profile: profile, statsStore: statsStore, localStore: localStore, appLock: appLock, publisher: publisher, crewStore: crewStore, notifications: notifications, settings: $settings)
             }
         }
         .tint(Color.auraText)
@@ -90,12 +92,24 @@ struct MainTabView: View {
             if let stats = statsStore.stats {
                 saveWidgetSnapshot(stats)
                 Task { await crewStore.syncScore(stats: stats) }
+                refreshQuestReminders()
+            }
+        }
+        .onChange(of: statsStore.dayCounters) {
+            refreshQuestReminders()
+        }
+        .onChange(of: settings.questRemindersEnabled) {
+            if settings.questRemindersEnabled {
+                refreshQuestReminders()
+            } else {
+                notifications.cancelQuestReminders()
             }
         }
         .onChange(of: statsStore.claimIDs) {
             if let stats = statsStore.stats {
                 saveWidgetSnapshot(stats)
             }
+            refreshQuestReminders()
         }
         .onChange(of: crewStore.members) {
             if let stats = statsStore.stats {
@@ -104,12 +118,21 @@ struct MainTabView: View {
         }
         .onChange(of: scenePhase) {
             appLock.scenePhaseChanged(to: scenePhase, now: Date())
+            if scenePhase == .active {
+                refreshQuestReminders()
+            }
         }
         .onDisappear {
             statsStore.stop()
             crewStore.stop()
             shopStore.stop()
         }
+    }
+
+    private func refreshQuestReminders() {
+        guard settings.questRemindersEnabled, let stats = statsStore.stats else { return }
+        let planned = plannedQuestReminders(now: Date(), stats: stats, todayStates: statsStore.todaysQuestStates)
+        notifications.replaceQuestReminders(planned)
     }
 
     private func saveWidgetSnapshot(_ stats: UserStats) {

@@ -8,6 +8,7 @@ struct ProfileView: View {
     let appLock: AppLockStore
     let publisher: WallPublishService
     let crewStore: CrewStore
+    let notifications: NotificationService
     @Binding var settings: UserSettings
 
     var body: some View {
@@ -55,7 +56,7 @@ struct ProfileView: View {
                             ProfileLinkRow(systemImage: "rosette", title: "Badges", detail: "\(badges(for: statsStore.stats ?? UserStats()).filter(\.isEarned).count) earned")
                         }
                         NavigationLink {
-                            SettingsView(session: session, profile: profile, localStore: localStore, appLock: appLock, crewStore: crewStore, statsStore: statsStore, settings: $settings)
+                            SettingsView(session: session, profile: profile, localStore: localStore, appLock: appLock, crewStore: crewStore, statsStore: statsStore, notifications: notifications, settings: $settings)
                         } label: {
                             ProfileLinkRow(systemImage: "gearshape", title: "Settings", detail: "Theme, app lock, location, account")
                         }

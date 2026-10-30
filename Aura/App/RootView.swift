@@ -22,7 +22,10 @@ struct RootView: View {
             }
         }
         .animation(.default, value: session.state)
-        .task { session.start() }
+        .task {
+            session.start()
+            services.notifications.onOpenQuests = { requestedTab = .quests }
+        }
         .onOpenURL { url in
             requestedTab = appTab(forDeepLink: url)
         }
@@ -32,6 +35,7 @@ struct RootView: View {
                 services.widgetSnapshots.keepOnly(accountID: profile.id)
             case .signedOut, .needsOnboarding:
                 services.widgetSnapshots.keepOnly(accountID: nil)
+                services.notifications.cancelQuestReminders()
             case .loading, .failed:
                 break
             }

@@ -7,6 +7,7 @@ struct SettingsView: View {
     let appLock: AppLockStore
     let crewStore: CrewStore
     let statsStore: StatsStore
+    let notifications: NotificationService
     @Binding var settings: UserSettings
 
     @Environment(\.openURL) private var openURL
@@ -14,6 +15,7 @@ struct SettingsView: View {
     @State private var isConfirmingReset = false
     @State private var unsentDraftCount = 0
     @State private var errorMessage: String?
+    @State private var isAllowedBySystem = true
 
     var body: some View {
         ScrollView {
@@ -34,6 +36,11 @@ struct SettingsView: View {
                         errorMessage = "Couldn't save the theme."
                     }
                 }
+
+                Text("Notifications")
+                    .font(.auraSectionLabel)
+                    .foregroundStyle(Color.auraMuted)
+                questRemindersRow
 
                 Text("Privacy")
                     .font(.auraSectionLabel)
@@ -125,6 +132,51 @@ struct SettingsView: View {
         }
         .padding(AuraSpacing.medium)
         .background(Color.auraCard, in: .rect(cornerRadius: AuraRadius.row))
+    }
+
+    private var questRemindersRow: some View {
+        VStack(alignment: .leading, spacing: AuraSpacing.xxSmall) {
+            Toggle(isOn: Binding(
+                get: { settings.questRemindersEnabled },
+                set: { newValue in Task { await changeQuestReminders(to: newValue) } }
+            )) {
+                Text("Quest reminders")
+                    .font(.auraCardTitle)
+                    .foregroundStyle(Color.auraText)
+            }
+            .tint(Color.auraMint)
+
+            Text("A note each morning with today's quests, and an evening reminder if some are left or your streak is about to end. Reminders are scheduled on this phone only.")
+                .font(.auraErrorText)
+                .foregroundStyle(Color.auraMuted)
+
+            if let warning = notificationDeniedMessage(isEnabled: settings.questRemindersEnabled, isAllowedBySystem: isAllowedBySystem) {
+                Text(warning)
+                    .font(.auraErrorText)
+                    .foregroundStyle(Color.auraError)
+                Button("Open iOS Settings", action: openSystemSettings)
+                    .font(.auraLink)
+                    .foregroundStyle(Color.auraText)
+                    .frame(minHeight: AuraSize.minTap)
+            }
+        }
+        .padding(AuraSpacing.medium)
+        .background(Color.auraCard, in: .rect(cornerRadius: AuraRadius.row))
+        .task { isAllowedBySystem = await notifications.isAllowedBySystem() }
+    }
+
+    private func changeQuestReminders(to enabled: Bool) async {
+        errorMessage = nil
+        if enabled {
+            let granted = await notifications.requestAuthorization()
+            isAllowedBySystem = granted
+            settings.questRemindersEnabled = true
+            if !granted {
+                errorMessage = "Allow notifications for Aura in iOS Settings to get quest reminders."
+            }
+        } else {
+            settings.questRemindersEnabled = false
+        }
     }
 
     private var rankingsRow: some View {

@@ -14,6 +14,7 @@ struct AppServices {
     let biometric = BiometricService()
     let location = LocationService()
     let widgetSnapshots = WidgetSnapshotService()
+    let notifications = NotificationService()
 
     init() {
         persistence = PersistenceController()
