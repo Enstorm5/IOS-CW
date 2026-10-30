@@ -27,7 +27,7 @@ struct ARTutorialView: View {
             VStack(spacing: AuraSpacing.medium) {
                 HStack {
                     Text("Try it")
-                        .font(.auraHeading)
+                        .font(.auraLargeHeading)
                         .foregroundStyle(.white)
                     Spacer()
                 }
@@ -60,10 +60,10 @@ struct ARTutorialView: View {
     private var congratulations: some View {
         VStack(spacing: AuraSpacing.small) {
             Text("Congratulations!")
-                .font(.auraHeading)
+                .font(.auraLargeHeading)
                 .foregroundStyle(Color.auraText)
             Text("You placed your first wall. You're ready to explore. Real walls near you work just like this one.")
-                .font(.auraNotice)
+                .font(.auraLargeNotice)
                 .foregroundStyle(Color.auraMuted)
                 .multilineTextAlignment(.center)
         }
@@ -78,7 +78,7 @@ struct ARTutorialView: View {
         VStack(spacing: AuraSpacing.medium) {
             AuraPill(text: "AR tutorial")
             Text("Place a practice wall")
-                .font(.auraHeading)
+                .font(.auraLargeHeading)
             Text(introductionMessage)
                 .opacity(0.75)
         }

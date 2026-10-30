@@ -64,7 +64,7 @@ struct QuestsView: View {
     private var todaysQuestsSection: some View {
         VStack(alignment: .leading, spacing: AuraSpacing.small) {
             Text("Today's quests")
-                .font(.auraSectionLabel)
+                .font(.auraMidLabel)
                 .foregroundStyle(Color.auraMuted)
 
             ForEach(statsStore.todaysQuests) { quest in
@@ -79,12 +79,12 @@ struct QuestsView: View {
 
             if let message = statsStore.questMessage {
                 Text(message)
-                    .font(.auraNotice)
+                    .font(.auraMidNotice)
                     .foregroundStyle(Color.auraText)
             }
 
             Text("New quests appear every day at midnight, Colombo time.")
-                .font(.auraErrorText)
+                .font(.auraMidSmall)
                 .foregroundStyle(Color.auraMuted)
         }
     }
@@ -108,17 +108,17 @@ private struct QuestCard: View {
                     .accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: AuraSpacing.xxSmall) {
                     Text(quest.title)
-                        .font(.auraCardTitle)
+                        .font(.auraMidCardTitle)
                         .foregroundStyle(Color.auraText)
                     Text(questStatusText(quest, state: state))
-                        .font(.auraNotice)
+                        .font(.auraMidNotice)
                         .foregroundStyle(Color.auraMuted)
                 }
                 Spacer(minLength: 0)
             }
 
             Text(quest.detail)
-                .font(.auraErrorText)
+                .font(.auraMidSmall)
                 .foregroundStyle(Color.auraMuted)
 
             ProgressView(value: Double(progress), total: Double(quest.target))
@@ -170,7 +170,7 @@ struct PointsSummaryCard: View {
                 ProgressView(value: Double(progress.current), total: Double(progress.needed))
                     .tint(Color.auraMint)
                 Text("\(progress.current) / \(progress.needed) XP to level \(level(forXP: stats.lifetimeXP) + 1)")
-                    .font(.auraErrorText)
+                    .font(.auraMidSmall)
                     .foregroundStyle(Color.auraMuted)
             }
         }
@@ -187,10 +187,10 @@ private struct StatColumn: View {
     var body: some View {
         VStack(spacing: AuraSpacing.xxSmall) {
             Text(value)
-                .font(.auraCardTitle)
+                .font(.auraMidCardTitle)
                 .foregroundStyle(Color.auraText)
             Text(label)
-                .font(.auraErrorText)
+                .font(.auraMidSmall)
                 .foregroundStyle(Color.auraMuted)
         }
         .accessibilityElement(children: .combine)
@@ -211,10 +211,10 @@ private struct QuestRow: View {
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: AuraSpacing.xxSmall) {
                 Text(title)
-                    .font(.auraCardTitle)
+                    .font(.auraMidCardTitle)
                     .foregroundStyle(Color.auraText)
                 Text(detail)
-                    .font(.auraNotice)
+                    .font(.auraMidNotice)
                     .foregroundStyle(Color.auraMuted)
             }
             Spacer(minLength: 0)
@@ -235,7 +235,7 @@ struct BadgesView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: AuraSpacing.medium) {
                 Text("\(allBadges.filter(\.isEarned).count) of \(allBadges.count) earned")
-                    .font(.auraSectionLabel)
+                    .font(.auraMidLabel)
                     .foregroundStyle(Color.auraMuted)
 
                 LazyVGrid(columns: columns, spacing: AuraSpacing.small) {
@@ -243,9 +243,9 @@ struct BadgesView: View {
                         VStack(spacing: AuraSpacing.xxSmall) {
                             Image(systemName: badge.isEarned ? "rosette" : "lock")
                             Text(badge.title)
-                                .font(.auraChipSelected)
+                                .font(.auraMidChip)
                             Text(badge.isEarned ? "Earned" : "\(badge.progress) / \(badge.target)")
-                                .font(.auraErrorText)
+                                .font(.auraMidSmall)
                         }
                         .foregroundStyle(Color.auraInk)
                         .multilineTextAlignment(.center)

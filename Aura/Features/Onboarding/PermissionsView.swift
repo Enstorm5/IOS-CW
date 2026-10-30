@@ -13,7 +13,7 @@ struct PermissionsView: View {
 
             AuraPill(text: "Camera + Location")
             Text("Aura needs two things")
-                .font(.auraHeading)
+                .font(.auraLargeHeading)
                 .foregroundStyle(Color.auraText)
                 .multilineTextAlignment(.center)
             Text("Location finds walls near you. The camera shows walls in AR. You can change both later in Settings.")
@@ -68,10 +68,10 @@ private struct PermissionRow: View {
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: AuraSpacing.xxSmall) {
                 Text(title)
-                    .font(.auraCardTitle)
+                    .font(.auraLargeCardTitle)
                     .foregroundStyle(Color.auraText)
                 Text(detail)
-                    .font(.auraNotice)
+                    .font(.auraLargeNotice)
                     .foregroundStyle(Color.auraMuted)
             }
             Spacer(minLength: 0)

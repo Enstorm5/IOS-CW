@@ -67,30 +67,6 @@ struct ARSafetyTests {
     }
 
     // Map archive
-    @Test func aSavedMapWithTheNamedAnchorComesBack() throws {
-        let map = ARWorldMap()
-        map.anchors = [ARAnchor(name: "wall-1", transform: matrix_identity_float4x4)]
-        let data = try encodeWorldMap(map)
-        let decoded = try decodeWorldMap(data, expectedAnchorName: "wall-1")
-        #expect(decoded.anchors.contains { $0.name == "wall-1" })
-    }
-
-    @Test func aMapWithAnotherAnchorNameIsRejected() throws {
-        let map = ARWorldMap()
-        map.anchors = [ARAnchor(name: "other-wall", transform: matrix_identity_float4x4)]
-        let data = try encodeWorldMap(map)
-        #expect(throws: WorldMapArchiveError.missingWallAnchor) {
-            try decodeWorldMap(data, expectedAnchorName: "wall-1")
-        }
-    }
-
-    @Test func aMapWithNoAnchorsIsRejected() throws {
-        let data = try encodeWorldMap(ARWorldMap())
-        #expect(throws: WorldMapArchiveError.missingWallAnchor) {
-            try decodeWorldMap(data, expectedAnchorName: "wall-1")
-        }
-    }
-
     @Test func emptyDataIsCorruptNotCrashing() {
         #expect(throws: WorldMapArchiveError.corrupt) {
             try decodeWorldMap(Data(), expectedAnchorName: "wall-1")

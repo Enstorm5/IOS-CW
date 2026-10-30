@@ -49,7 +49,7 @@ struct InterestsView: View {
                 }
 
                 Text("Pick your explorer look")
-                    .font(.auraSectionLabel)
+                    .font(.auraLargeLabel)
                     .foregroundStyle(Color.auraMuted)
                     .padding(.top, AuraSpacing.medium)
 
@@ -85,7 +85,7 @@ struct InterestsView: View {
                         errorMessage = error.localizedDescription
                     }
                 }
-                .font(.auraLink)
+                .font(.auraLargeLabel)
                 .foregroundStyle(Color.auraText)
                 .frame(maxWidth: .infinity, minHeight: AuraSize.minTap)
             }

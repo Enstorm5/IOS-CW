@@ -41,7 +41,7 @@ struct EconomyExtraTests {
 
     @Test func badgeProgressStopsAtTheTarget() {
         let all = badges(for: UserStats(discoveryCount: 999, longestStreak: 99, questsClaimed: 9, wallsPublished: 3))
-        #expect(all.allSatisfy(\.isEarned))
+        #expect(all.allSatisfy { $0.isEarned })
         #expect(all.allSatisfy { $0.progress == $0.target })
         #expect(Set(all.map(\.id)).count == all.count)
     }
