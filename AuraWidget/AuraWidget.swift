@@ -18,6 +18,7 @@ let sampleWidgetSnapshot = WidgetSnapshot(
     updatedAt: Date()
 )
 
+// Widget timeline
 struct AuraProvider: TimelineProvider {
     func placeholder(in context: Context) -> AuraEntry {
         AuraEntry(date: Date(), snapshot: sampleWidgetSnapshot)
@@ -43,6 +44,7 @@ struct AuraProvider: TimelineProvider {
     }
 }
 
+// Widget layout
 struct AuraWidgetView: View {
     let entry: AuraEntry
 
@@ -119,6 +121,7 @@ struct AuraWidgetView: View {
     }
 }
 
+// Widget setup
 struct AuraWidget: Widget {
     let kind = "AuraWidget"
 

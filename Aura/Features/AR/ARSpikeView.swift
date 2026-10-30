@@ -1,6 +1,7 @@
 import SwiftUI
 import ARKit
 
+// Place wall screen
 struct ARSpikeView: View {
     @State private var viewModel: PlaceWallViewModel
     @State private var isNaming = false
@@ -153,6 +154,7 @@ struct ARSpikeView: View {
     }
 }
 
+// Size controls
 struct WallSizeControls: View {
     let size: WallSize
     let onStep: (Int, Int) -> Void
@@ -197,6 +199,7 @@ private struct SizeStepperRow: View {
     }
 }
 
+// Guidance photo
 private struct GuidancePhoto: View {
     let image: UIImage
 

@@ -14,6 +14,7 @@ final class WallMessageService {
     private let database = Firestore.firestore()
     private let pageSize = 20
 
+    // Message page
     func fetchMessages(wallID: String, after cursor: MessageCursor?) async throws -> MessagePage {
         var query = activeMessages(wallID: wallID)
             .order(by: "createdAt", descending: true)
@@ -31,6 +32,7 @@ final class WallMessageService {
         return MessagePage(messages: messages, nextCursor: nextCursor)
     }
 
+    // Locked teaser
     func fetchTeaser(wallID: String) async throws -> WallTeaser {
         let countSnapshot = try await activeMessages(wallID: wallID).count.getAggregation(source: .server)
         let latestSnapshot = try await activeMessages(wallID: wallID)
@@ -43,6 +45,7 @@ final class WallMessageService {
         return WallTeaser(messageCount: countSnapshot.count.intValue, latestMessage: latest)
     }
 
+    // Post message
     func post(_ message: NewWallMessage) async throws -> WallMessage {
         let document = database.collection("walls").document(message.wallID).collection("messages").document(message.id)
         var fields = firestoreFields(for: message)
@@ -76,6 +79,7 @@ final class WallMessageService {
         )
     }
 
+    // Message plus counter
     private func postCountingTowardsQuests(_ message: NewWallMessage, document: DocumentReference, fields: [String: Any]) async throws {
         let day = dayNumber(for: Date())
         let countersReference = database.collection("users").document(message.authorID).collection("days").document(String(day))
@@ -118,6 +122,7 @@ final class WallMessageService {
         return Set(snapshot.documents.compactMap { $0.data()["messageID"] as? String })
     }
 
+    // Spark toggle
     func setSpark(userID: String, wallID: String, messageID: String, isAddingSpark: Bool) async throws -> Int {
         let messageReference = messageDocument(wallID: wallID, messageID: messageID)
         let sparkReference = database.collection("users").document(userID).collection("sparks")
@@ -170,6 +175,7 @@ final class WallMessageService {
     }
 }
 
+// Message fields
 func firestoreFields(for message: NewWallMessage) -> [String: Any] {
     var fields: [String: Any] = [
         "authorID": message.authorID,
@@ -188,6 +194,7 @@ func firestoreFields(for message: NewWallMessage) -> [String: Any] {
     return fields
 }
 
+// Map message fields
 func wallMessage(id: String, wallID: String, fields: [String: Any]) -> WallMessage? {
     guard let authorID = fields["authorID"] as? String,
           let text = fields["text"] as? String,

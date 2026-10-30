@@ -1,5 +1,6 @@
 import SwiftUI
 
+// Log in form
 struct LogInView: View {
     let session: SessionStore
     let onForgotPassword: () -> Void

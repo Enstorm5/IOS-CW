@@ -1,5 +1,6 @@
 import Foundation
 
+// Unsent draft
 struct MessageDraft: Equatable {
     var accountID: String
     var wallID: String

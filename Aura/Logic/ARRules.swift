@@ -1,10 +1,12 @@
 import Foundation
 import ARKit
 
+// AR limits
 let maximumWorldMapBytes = 20 * 1024 * 1024
 let maximumSnapshotBytes = 2 * 1024 * 1024
 let relocalizationTimeoutSeconds: TimeInterval = 30
 
+// Mapping states
 enum MappingStatus: Equatable {
     case notAvailable
     case limited
@@ -22,6 +24,7 @@ enum TrackingStatus: Equatable {
     case normal
 }
 
+// Map ARKit status
 func mappingStatus(from status: ARFrame.WorldMappingStatus) -> MappingStatus {
     switch status {
     case .notAvailable: .notAvailable
@@ -49,18 +52,22 @@ func trackingStatus(from state: ARCamera.TrackingState) -> TrackingStatus {
     }
 }
 
+// Save gate
 func canSaveWorldMap(tracking: TrackingStatus, mapping: MappingStatus, hasWallAnchor: Bool) -> Bool {
     tracking == .normal && mapping == .mapped && hasWallAnchor
 }
 
+// Restore gate
 func isWallRestored(tracking: TrackingStatus, hasExpectedAnchor: Bool) -> Bool {
     tracking == .normal && hasExpectedAnchor
 }
 
+// Restore timeout
 func hasRelocalizationTimedOut(startedAt: Date, now: Date, timeoutSeconds: TimeInterval) -> Bool {
     now.timeIntervalSince(startedAt) >= timeoutSeconds
 }
 
+// Scan guidance
 func mappingGuidance(_ mapping: MappingStatus) -> String {
     switch mapping {
     case .notAvailable: "Point the camera around the area."

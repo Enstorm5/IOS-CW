@@ -1,5 +1,6 @@
 import SwiftUI
 
+// Quests screen
 struct QuestsView: View {
     let statsStore: StatsStore
     let shop: ShopStore
@@ -61,6 +62,7 @@ struct QuestsView: View {
         }
     }
 
+    // Today's quests
     private var todaysQuestsSection: some View {
         VStack(alignment: .leading, spacing: AuraSpacing.small) {
             Text("Today's quests")
@@ -90,6 +92,7 @@ struct QuestsView: View {
     }
 }
 
+// Quest card
 private struct QuestCard: View {
     let quest: Quest
     let state: QuestState
@@ -151,6 +154,7 @@ private struct QuestCard: View {
     }
 }
 
+// Points summary
 struct PointsSummaryCard: View {
     let stats: UserStats
 
@@ -220,6 +224,7 @@ private struct QuestRow: View {
     }
 }
 
+// Badge grid
 struct BadgesView: View {
     let stats: UserStats
 

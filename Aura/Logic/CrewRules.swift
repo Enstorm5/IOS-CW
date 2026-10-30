@@ -6,6 +6,7 @@ let weeklyWallsPerParticipant = 5
 let inviteCodeLength = 6
 let inviteCodeAlphabet = Array("ABCDEFGHJKLMNPQRSTUVWXYZ23456789")
 
+// Crew name check
 func crewNameValidationError(_ name: String) -> String? {
     let cleaned = name.trimmingCharacters(in: .whitespacesAndNewlines)
     if cleaned.isEmpty { return "Give your crew a name." }
@@ -18,6 +19,7 @@ func normalizedInviteCode(_ code: String) -> String {
     code.uppercased().filter { !$0.isWhitespace && $0 != "-" }
 }
 
+// Invite code check
 func inviteCodeValidationError(_ code: String) -> String? {
     let cleaned = normalizedInviteCode(code)
     if cleaned.isEmpty { return "Enter the invite code from your friend." }
@@ -31,10 +33,12 @@ func inviteCode(fromIndexes indexes: [Int]) -> String {
     String(indexes.prefix(inviteCodeLength).map { inviteCodeAlphabet[abs($0) % inviteCodeAlphabet.count] })
 }
 
+// Generate invite code
 func randomInviteCode() -> String {
     inviteCode(fromIndexes: (0..<inviteCodeLength).map { _ in Int.random(in: 0..<inviteCodeAlphabet.count) })
 }
 
+// Member order
 func sortedCrewMembers(_ members: [CrewMember], ownerID: String) -> [CrewMember] {
     members.sorted { first, second in
         if (first.id == ownerID) != (second.id == ownerID) { return first.id == ownerID }
@@ -43,6 +47,7 @@ func sortedCrewMembers(_ members: [CrewMember], ownerID: String) -> [CrewMember]
     }
 }
 
+// Leave outcome
 func crewLeavePlan(crew: Crew, members: [CrewMember], leavingID: String) -> CrewLeavePlan {
     let others = members.filter { $0.id != leavingID }
     if crew.memberCount <= 1 || others.isEmpty { return .deleteCrew }
@@ -93,6 +98,7 @@ func removedFromCrewMessage(crewName: String?) -> String {
     return "You're no longer in that crew."
 }
 
+// Map Firestore fields
 func crew(id: String, fields: [String: Any]) -> Crew? {
     guard let name = fields["name"] as? String,
           let inviteCode = fields["inviteCode"] as? String,
@@ -123,6 +129,7 @@ func crewInvite(code: String, fields: [String: Any]) -> CrewInvite? {
     return CrewInvite(code: code, crewID: crewID, crewName: crewName)
 }
 
+// Weekly goal
 func currentWeekStart(now: Date) -> Int {
     weekStartDay(forDay: dayNumber(for: now))
 }
@@ -132,6 +139,7 @@ func weeklyWalls(of member: CrewMember, weekStart: Int) -> Int {
     return max(0, member.weekDiscoveries)
 }
 
+// Ranking order
 func rankedCrewMembers(_ members: [CrewMember]) -> [CrewRanking] {
     let sorted = members.filter(\.showOnRankings).sorted { first, second in
         if first.lifetimeXP != second.lifetimeXP { return first.lifetimeXP > second.lifetimeXP }
@@ -174,6 +182,7 @@ struct RankingScore: Equatable {
     var weekDiscoveries: Int
 }
 
+// Score to share
 func rankingScore(from stats: UserStats, showOnRankings: Bool) -> RankingScore {
     guard showOnRankings else {
         return RankingScore(showOnRankings: false, lifetimeXP: 0, weekStartDay: 0, weekDiscoveries: 0)
@@ -186,6 +195,7 @@ func rankingScore(from stats: UserStats, showOnRankings: Bool) -> RankingScore {
     )
 }
 
+// Sync check
 func needsScoreSync(member: CrewMember, stats: UserStats) -> Bool {
     guard member.showOnRankings else { return false }
     let wanted = rankingScore(from: stats, showOnRankings: true)

@@ -10,12 +10,14 @@ enum BiometricOutcome: Equatable {
     case unavailable(String)
 }
 
+// Relock timing
 func shouldRelock(enabled: Bool, backgroundedAt: Date?, now: Date, intervalSeconds: TimeInterval) -> Bool {
     guard enabled, let backgroundedAt else { return false }
     let elapsed = now.timeIntervalSince(backgroundedAt)
     return elapsed < 0 || elapsed >= intervalSeconds
 }
 
+// Map LAError
 func biometricOutcome(forErrorCode code: LAError.Code) -> BiometricOutcome {
     switch code {
     case .userCancel, .systemCancel, .appCancel:
@@ -33,6 +35,7 @@ func biometricOutcome(forErrorCode code: LAError.Code) -> BiometricOutcome {
     }
 }
 
+// Face ID name
 func lockMethodName(biometryType: LABiometryType) -> String {
     switch biometryType {
     case .faceID: "Face ID"

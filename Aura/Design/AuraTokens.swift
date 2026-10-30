@@ -1,6 +1,7 @@
 import SwiftUI
 import CoreText
 
+// Load font file
 nonisolated func registerAuraFonts() {
     guard let url = Bundle.main.url(forResource: "BricolageGrotesque", withExtension: "ttf") else { return }
     CTFontManagerRegisterFontsForURL(url as CFURL, .process, nil)
@@ -10,6 +11,7 @@ private func bricolage(_ weight: String, size: CGFloat, relativeTo style: Font.T
     .custom("BricolageGrotesque-96ptExtraBold_\(weight)", size: size, relativeTo: style)
 }
 
+// Text styles
 extension Font {
     static let auraScreenTitle = bricolage("ExtraBold", size: 34, relativeTo: .largeTitle)
     static let auraHeading = bricolage("ExtraBold", size: 28, relativeTo: .title)
@@ -27,6 +29,7 @@ extension Font {
     static let auraPinIcon = Font.caption2.weight(.heavy)
 }
 
+// Spacing tokens
 enum AuraSpacing {
     static let xxSmall: CGFloat = 4
     static let xSmall: CGFloat = 6
@@ -38,6 +41,7 @@ enum AuraSpacing {
     static let xLarge: CGFloat = 24
 }
 
+// Corner radii
 enum AuraRadius {
     static let control: CGFloat = 12
     static let swatch: CGFloat = 10
@@ -46,6 +50,7 @@ enum AuraRadius {
     static let logo: CGFloat = 24
 }
 
+// Size tokens
 enum AuraSize {
     static let control: CGFloat = 50
     static let minTap: CGFloat = 44

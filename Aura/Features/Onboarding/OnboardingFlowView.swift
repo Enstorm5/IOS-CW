@@ -12,6 +12,7 @@ enum OnboardingStep {
     case arTutorial
 }
 
+// Onboarding steps
 struct OnboardingFlowView: View {
     let session: SessionStore
     let userID: String

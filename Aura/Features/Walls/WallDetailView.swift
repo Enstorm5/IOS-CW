@@ -1,6 +1,7 @@
 import SwiftUI
 import ARKit
 
+// Wall screen
 struct WallDetailView: View {
     let wall: Wall
     let currentUser: UserProfile
@@ -217,6 +218,7 @@ struct WallDetailView: View {
     }
 }
 
+// Message row
 struct MessageRow: View {
     let message: WallMessage
     let isMine: Bool

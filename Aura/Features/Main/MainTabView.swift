@@ -1,5 +1,6 @@
 import SwiftUI
 
+// Five tabs
 struct MainTabView: View {
     let session: SessionStore
     let profile: UserProfile
@@ -129,12 +130,14 @@ struct MainTabView: View {
         }
     }
 
+    // Reschedule reminders
     private func refreshQuestReminders() {
         guard settings.questRemindersEnabled, let stats = statsStore.stats else { return }
         let planned = plannedQuestReminders(now: Date(), stats: stats, todayStates: statsStore.todaysQuestStates)
         notifications.replaceQuestReminders(planned)
     }
 
+    // Update widget
     private func saveWidgetSnapshot(_ stats: UserStats) {
         widgetSnapshots.save(widgetSnapshot(from: stats, questStates: statsStore.todaysQuestStates, accountID: profile.id, now: Date()))
     }

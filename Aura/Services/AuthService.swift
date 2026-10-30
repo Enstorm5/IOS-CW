@@ -8,6 +8,7 @@ final class AuthService {
     var currentDisplayName: String? { auth.currentUser?.displayName }
     var currentEmail: String? { auth.currentUser?.email }
 
+    // Auth listener
     func observeSignIn(_ onChange: @escaping (String?) -> Void) -> AuthStateDidChangeListenerHandle {
         auth.addStateDidChangeListener { _, user in
             onChange(user?.uid)
@@ -33,6 +34,7 @@ final class AuthService {
         try auth.signOut()
     }
 
+    // Re-authenticate
     func reauthenticate(password: String) async throws {
         guard let user = auth.currentUser, let email = user.email else {
             throw UserFacingError(message: "You're not signed in.")
@@ -47,6 +49,7 @@ final class AuthService {
     }
 }
 
+// Readable auth errors
 func authErrorMessage(for error: Error) -> String {
     let nsError = error as NSError
     guard nsError.domain == AuthErrorDomain, let code = AuthErrorCode(rawValue: nsError.code) else {

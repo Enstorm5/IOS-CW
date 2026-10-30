@@ -12,6 +12,7 @@ private let introPages = [
     IntroPage(chip: "Earn", title: "Explore to earn points", message: "Discover new walls to earn points, then spend them on walls of your own."),
 ]
 
+// Welcome pages
 struct WelcomeView: View {
     let onFinish: () -> Void
     let onLogIn: () -> Void

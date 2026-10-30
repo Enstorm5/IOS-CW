@@ -7,6 +7,7 @@ let searchAgainDistanceMeters = 250.0
 let discoveryFallbackCenter = Coordinate(latitude: 6.9110, longitude: 79.8640)
 
 @MainActor @Observable
+// Map search state
 final class DiscoveryViewModel {
     private(set) var nearbyWalls: [NearbyWall] = []
     private(set) var isLoading = false
@@ -45,6 +46,7 @@ final class DiscoveryViewModel {
         locationService.stopUpdating()
     }
 
+    // Search on move
     func locationOrAccessChanged() async {
         if locationService.access.isAllowed, let location = locationService.latestLocation {
             let center = Coordinate(location.coordinate)
@@ -56,6 +58,7 @@ final class DiscoveryViewModel {
         }
     }
 
+    // Nearby wall search
     func search(around center: Coordinate) async {
         latestSearchID += 1
         let searchID = latestSearchID
@@ -76,6 +79,7 @@ final class DiscoveryViewModel {
             }
         } catch {
             guard searchID == latestSearchID else { return }
+            // Offline fallback
             let saved = localStore.cachedWalls(accountID: accountID)
             let savedNearby = wallsWithinRadius(from: saved.walls, center: center, radiusMeters: discoveryRadiusMeters)
             if savedNearby.isEmpty {

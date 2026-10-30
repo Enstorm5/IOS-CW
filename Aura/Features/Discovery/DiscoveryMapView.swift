@@ -1,6 +1,7 @@
 import SwiftUI
 import MapKit
 
+// Map screen
 struct DiscoveryMapView: View {
     @Bindable var viewModel: DiscoveryViewModel
     let currentUser: UserProfile
@@ -140,6 +141,7 @@ struct DiscoveryMapView: View {
         }
     }
 
+    // Zoom to wall
     private func showOnMap(_ wall: Wall) {
         isShowingHome = false
         viewModel.selectedWallID = wall.id
@@ -157,6 +159,7 @@ struct DiscoveryMapView: View {
     }
 }
 
+// Map pin
 struct WallPin: View {
     let kind: WallKind
 
@@ -176,6 +179,7 @@ struct WallPin: View {
     }
 }
 
+// Wall preview
 struct WallPreviewCard: View {
     let wall: Wall
     let distanceText: String?
@@ -223,6 +227,7 @@ struct WallPreviewCard: View {
         .padding(.bottom, AuraSpacing.small)
     }
 
+    // Walking directions
     private func openDirections() {
         let location = CLLocation(latitude: wall.coordinate.latitude, longitude: wall.coordinate.longitude)
         let mapItem = MKMapItem(location: location, address: nil)

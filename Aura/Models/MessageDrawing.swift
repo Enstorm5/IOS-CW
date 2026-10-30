@@ -5,6 +5,7 @@ enum MessageContentType: String, Codable {
     case drawing
 }
 
+// Stroke widths
 enum StrokeWidth: String, Codable, CaseIterable {
     case thin
     case medium
@@ -32,6 +33,7 @@ struct DrawingPoint: Codable, Equatable {
     var y: Double
 }
 
+// Brush types
 enum StrokeBrush: String, Codable, CaseIterable {
     case marker
     case neon
@@ -44,6 +46,7 @@ enum StrokeBrush: String, Codable, CaseIterable {
     }
 }
 
+// One stroke
 struct DrawingStroke: Codable, Equatable {
     var color: MessageColor
     var width: StrokeWidth
@@ -75,6 +78,7 @@ extension DrawingStroke {
     }
 }
 
+// Whole drawing
 struct MessageDrawing: Codable, Equatable {
     var strokes: [DrawingStroke] = []
 }

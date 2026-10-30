@@ -2,6 +2,7 @@ import Foundation
 import CoreLocation
 import Observation
 
+// Access states
 nonisolated enum LocationAccess: Equatable {
     case notAsked
     case denied
@@ -18,6 +19,7 @@ nonisolated enum LocationAccess: Equatable {
     }
 }
 
+// Map permission
 nonisolated func locationAccess(status: CLAuthorizationStatus, isPrecise: Bool) -> LocationAccess {
     switch status {
     case .notDetermined: .notAsked
@@ -29,6 +31,7 @@ nonisolated func locationAccess(status: CLAuthorizationStatus, isPrecise: Bool) 
 }
 
 @MainActor @Observable
+// Location manager
 final class LocationService: NSObject, CLLocationManagerDelegate {
     private(set) var access: LocationAccess = .notAsked
     private(set) var latestLocation: CLLocation?
@@ -43,12 +46,14 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
         manager.distanceFilter = kCLDistanceFilterNone
     }
 
+    // Ask permission
     func requestAccessIfNeeded() {
         if manager.authorizationStatus == .notDetermined {
             manager.requestWhenInUseAuthorization()
         }
     }
 
+    // Start updates
     func startUpdating() {
         activeUpdateRequests += 1
         if activeUpdateRequests == 1 {
@@ -63,6 +68,7 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
         }
     }
 
+    // Fresh fix
     func freshLocation(timeoutSeconds: Double) async -> CLLocation? {
         guard access.isAllowed else { return nil }
         let location = await firstLiveLocation(timeoutSeconds: timeoutSeconds)
@@ -92,6 +98,7 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
     nonisolated func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {}
 }
 
+// Fix with timeout
 nonisolated func firstLiveLocation(timeoutSeconds: Double) async -> CLLocation? {
     await withTaskGroup(of: CLLocation?.self) { group in
         group.addTask {

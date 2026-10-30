@@ -1,5 +1,6 @@
 import SwiftUI
 
+// Rewards shop
 struct RewardsView: View {
     let shop: ShopStore
     let statsStore: StatsStore
@@ -67,6 +68,7 @@ struct RewardsView: View {
     }
 }
 
+// Shop item
 private struct ShopItemCard: View {
     let item: ShopItem
     let availability: ShopAvailability

@@ -4,6 +4,7 @@ import FirebaseFirestore
 final class ProfileService {
     private let profiles = Firestore.firestore().collection("profiles")
 
+    // Profile read
     func fetchProfile(userID: String) async throws -> UserProfile? {
         let snapshot = try await profiles.document(userID).getDocument()
         guard let fields = snapshot.data() else { return nil }
@@ -30,6 +31,7 @@ func firestoreFields(for profile: UserProfile) -> [String: Any] {
     ]
 }
 
+// Map profile fields
 func userProfile(id: String, fields: [String: Any]) -> UserProfile? {
     guard let displayName = fields["displayName"] as? String else { return nil }
     let interestValues = fields["interests"] as? [String] ?? []

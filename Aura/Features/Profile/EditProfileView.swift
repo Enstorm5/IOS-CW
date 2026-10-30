@@ -1,5 +1,6 @@
 import SwiftUI
 
+// Edit profile
 struct EditProfileView: View {
     let session: SessionStore
     let profile: UserProfile

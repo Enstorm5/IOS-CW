@@ -1,5 +1,6 @@
 import SwiftUI
 
+// Permission intro
 struct PermissionsView: View {
     let locationService: LocationService
     let onContinue: () -> Void

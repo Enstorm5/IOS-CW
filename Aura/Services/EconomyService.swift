@@ -19,6 +19,7 @@ final class EconomyService {
         database.collection("users").document(userID)
     }
 
+    // Live stats
     func listenToStats(userID: String, onChange: @escaping (UserStats?, Bool) -> Void) -> ListenerRegistration {
         userDocument(userID).addSnapshotListener { snapshot, error in
             onChange(snapshot?.data().map(userStats(fields:)), error != nil)
@@ -32,6 +33,7 @@ final class EconomyService {
         }
     }
 
+    // Shop purchase
     func purchase(userID: String, item: ShopItem, purchaseID: String) async throws -> PurchaseOutcome {
         try await createStatsIfMissing(userID: userID)
         let userReference = userDocument(userID)
@@ -81,6 +83,7 @@ final class EconomyService {
         }
     }
 
+    // Wall discovery award
     func claimDiscovery(userID: String, wallID: String, now: Date) async throws -> DiscoveryOutcome {
         try await createStatsIfMissing(userID: userID)
         let userReference = userDocument(userID)
@@ -125,6 +128,7 @@ final class EconomyService {
             }
     }
 
+    // Quest claim
     func claimQuest(userID: String, quest: Quest, now: Date) async throws -> QuestClaimOutcome {
         let userReference = userDocument(userID)
         let today = dayNumber(for: now)

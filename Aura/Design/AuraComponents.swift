@@ -6,6 +6,7 @@ enum AuraButtonKind {
     case outline
 }
 
+// Main button
 struct AuraButtonStyle: ButtonStyle {
     var kind: AuraButtonKind = .primary
     var onNight = false
@@ -44,6 +45,7 @@ struct AuraButtonStyle: ButtonStyle {
     }
 }
 
+// Text field
 struct AuraTextField: View {
     let title: String
     @Binding var text: String
@@ -130,6 +132,7 @@ struct AuraNightBackground: View {
     }
 }
 
+// Avatar circle
 struct AvatarView: View {
     let preset: AvatarPreset
     var size: CGFloat = 60
@@ -173,6 +176,7 @@ struct AuraPillButtonStyle: ButtonStyle {
     }
 }
 
+// Info banner
 struct StatusBanner: View {
     let systemImage: String
     let message: String

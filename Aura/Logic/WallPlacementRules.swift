@@ -15,6 +15,7 @@ let firstMapVersion = 1
 let wallGeohashPrecision = 9
 let maximumMessagesOnARWall = 20
 
+// Size limits
 func clampedWallSide(_ meters: Double) -> Double {
     let clamped = min(maximumWallSideMeters, max(minimumWallSideMeters, meters))
     return (clamped * 10).rounded() / 10
@@ -24,6 +25,7 @@ func clampedWallSize(_ size: WallSize) -> WallSize {
     WallSize(width: clampedWallSide(size.width), height: clampedWallSide(size.height))
 }
 
+// Pinch resize
 func resizedWallSize(start: WallSize, pinchScale: Double) -> WallSize {
     guard pinchScale.isFinite, pinchScale > 0 else { return clampedWallSize(start) }
     return clampedWallSize(WallSize(width: start.width * pinchScale, height: start.height * pinchScale))
@@ -51,6 +53,7 @@ func wallTitleValidationError(_ title: String) -> String? {
 let firestoreChunkStorage = "firestoreChunks"
 let mapChunkByteLimit = 900_000
 
+// Split map data
 func splitIntoChunks(_ data: Data, chunkSize: Int) -> [Data] {
     guard chunkSize > 0, !data.isEmpty else { return [] }
     return stride(from: 0, to: data.count, by: chunkSize).map { start in
@@ -58,6 +61,7 @@ func splitIntoChunks(_ data: Data, chunkSize: Int) -> [Data] {
     }
 }
 
+// Join map chunks
 func joinedMapData(chunks: [(index: Int, data: Data)], expectedCount: Int) -> Data? {
     let sorted = chunks.sorted { $0.index < $1.index }
     guard sorted.count == expectedCount,
@@ -65,10 +69,12 @@ func joinedMapData(chunks: [(index: Int, data: Data)], expectedCount: Int) -> Da
     return sorted.reduce(into: Data()) { $0.append($1.data) }
 }
 
+// Checksum
 func sha256Hex(_ data: Data) -> String {
     SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
 }
 
+// Publish location
 func publishLocationError(access: LocationAccess, fix: LocationFix?, now: Date) -> String? {
     switch access {
     case .notAsked, .denied, .restricted:
@@ -86,10 +92,12 @@ func publishLocationError(access: LocationAccess, fix: LocationFix?, now: Date) 
     return nil
 }
 
+// Text orientation
 func canvasNeedsFlip(anchorZAxisWorldY: Float) -> Bool {
     anchorZAxisWorldY > 0
 }
 
+// Wall position
 func messageCanvasPosition(normalizedX: Double, normalizedY: Double, size: WallSize) -> (x: Float, z: Float) {
     let x = min(1, max(0, normalizedX))
     let y = min(1, max(0, normalizedY))

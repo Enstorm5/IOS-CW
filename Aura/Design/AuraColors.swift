@@ -1,6 +1,7 @@
 import SwiftUI
 import UIKit
 
+// Colour tokens
 extension Color {
     static let auraBackground = Color(light: 0xF7F5FF, dark: 0x14112B)
     static let auraCard = Color(light: 0xFFFFFF, dark: 0x231F47)

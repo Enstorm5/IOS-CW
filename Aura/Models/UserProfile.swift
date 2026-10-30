@@ -1,5 +1,6 @@
 import Foundation
 
+// Profile data
 struct UserProfile: Equatable {
     var id: String
     var displayName: String

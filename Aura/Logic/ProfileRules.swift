@@ -8,6 +8,7 @@ func bioValidationError(_ bio: String) -> String? {
         : nil
 }
 
+// Validate edits
 func editedProfile(_ profile: UserProfile, displayName: String, bio: String, avatar: AvatarPreset, interests: Set<Interest>) throws -> UserProfile {
     let cleanedName = displayName.trimmingCharacters(in: .whitespacesAndNewlines)
     let cleanedBio = bio.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -22,6 +23,7 @@ func editedProfile(_ profile: UserProfile, displayName: String, bio: String, ava
     return updated
 }
 
+// Delete confirmation
 func deleteAccountConfirmationError(typed: String) -> String? {
     typed.trimmingCharacters(in: .whitespacesAndNewlines).uppercased() == "DELETE" ? nil : "Type DELETE to confirm."
 }

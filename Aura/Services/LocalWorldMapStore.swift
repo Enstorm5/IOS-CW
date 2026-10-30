@@ -10,6 +10,7 @@ struct SavedWallMetadata: Codable, Equatable {
     var size: WallSize?
 }
 
+// Local map files
 final class LocalWorldMapStore {
     private let folder: URL
     private let fileManager = FileManager.default
@@ -22,6 +23,7 @@ final class LocalWorldMapStore {
         self.folder = folder
     }
 
+    // Atomic save
     func save(mapData: Data, snapshotData: Data, metadata: SavedWallMetadata) throws {
         try fileManager.createDirectory(at: folder, withIntermediateDirectories: true)
         try mapData.write(to: mapURL, options: .atomic)
@@ -46,6 +48,7 @@ final class LocalWorldMapStore {
         try? Data(contentsOf: snapshotURL)
     }
 
+    // Remove saved wall
     func delete() throws {
         if fileManager.fileExists(atPath: folder.path()) {
             try fileManager.removeItem(at: folder)

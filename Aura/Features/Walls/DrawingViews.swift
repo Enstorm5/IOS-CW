@@ -1,5 +1,6 @@
 import SwiftUI
 
+// Draw strokes
 struct DrawingView: View {
     let drawing: MessageDrawing
     var currentStroke: DrawingStroke? = nil
@@ -10,6 +11,7 @@ struct DrawingView: View {
             for stroke in strokes {
                 let path = drawingPath(for: stroke, in: size)
                 let lineWidth = stroke.width.fractionOfWidth * size.width
+                // Neon glow
                 if stroke.brush == .neon {
                     for layer in neonGlowLayers {
                         context.stroke(
@@ -36,6 +38,7 @@ struct DrawingView: View {
     }
 }
 
+// Stroke path
 func drawingPath(for stroke: DrawingStroke, in size: CGSize) -> Path {
     var path = Path()
     guard let first = stroke.points.first else { return path }
@@ -50,6 +53,7 @@ func drawingPath(for stroke: DrawingStroke, in size: CGSize) -> Path {
     return path
 }
 
+// Finger drawing
 struct DrawingPad: View {
     @Binding var drawing: MessageDrawing
     let color: MessageColor
@@ -88,6 +92,7 @@ struct DrawingPad: View {
     }
 }
 
+// Small preview
 struct DrawingThumbnail: View {
     let drawing: MessageDrawing
 

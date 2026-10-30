@@ -1,5 +1,6 @@
 import SwiftUI
 
+// Home summary
 struct HomeView: View {
     let currentUser: UserProfile
     let discovery: DiscoveryViewModel

@@ -1,6 +1,7 @@
 import Foundation
 import CoreData
 
+// Core Data stack
 final class PersistenceController {
     static let model: NSManagedObjectModel = {
         guard let url = Bundle(for: PersistenceController.self).url(forResource: "Aura", withExtension: "momd"),
@@ -31,6 +32,7 @@ final class PersistenceController {
         container.viewContext.automaticallyMergesChangesFromParent = true
     }
 
+    // Open store
     private func loadStores() -> Error? {
         var firstError: Error?
         container.loadPersistentStores { _, error in
@@ -41,6 +43,7 @@ final class PersistenceController {
         return firstError
     }
 
+    // Reset on failure
     private func resetStoreFiles() {
         guard let url = container.persistentStoreDescriptions.first?.url else { return }
         try? container.persistentStoreCoordinator.destroyPersistentStore(at: url, type: .sqlite)

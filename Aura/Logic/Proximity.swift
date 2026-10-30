@@ -12,9 +12,11 @@ struct ProximityPolicy {
     var maximumAgeSeconds: TimeInterval
 }
 
+// Distance policies
 let wallReadingPolicy = ProximityPolicy(radiusMeters: 50, maximumAccuracyMeters: 25, maximumAgeSeconds: 120)
 let wallPostingPolicy = ProximityPolicy(radiusMeters: 50, maximumAccuracyMeters: 25, maximumAgeSeconds: 15)
 
+// Proximity states
 enum WallProximity: Equatable {
     case unlocked
     case locationOff
@@ -23,6 +25,7 @@ enum WallProximity: Equatable {
     case tooFar(distanceMeters: Double)
 }
 
+// 50 m geofence
 func wallProximity(wallCoordinate: Coordinate, access: LocationAccess, fix: LocationFix?, policy: ProximityPolicy, now: Date) -> WallProximity {
     switch access {
     case .notAsked, .denied, .restricted:
@@ -58,6 +61,7 @@ func lockedWallMessage(for proximity: WallProximity, policy: ProximityPolicy) ->
     }
 }
 
+// Posting block text
 func postingBlockedMessage(for proximity: WallProximity, policy: ProximityPolicy) -> String? {
     switch proximity {
     case .unlocked:

@@ -1,5 +1,6 @@
 import SwiftUI
 
+// Name and interests
 struct InterestsView: View {
     let session: SessionStore
     let suggestedName: String

@@ -16,6 +16,7 @@ enum MessageColor: String, CaseIterable, Codable {
     }
 }
 
+// Message to post
 struct NewWallMessage: Equatable {
     let id: String
     let wallID: String
@@ -34,6 +35,7 @@ struct WallTeaser: Equatable {
     let latestMessage: WallMessage?
 }
 
+// Posted message
 struct WallMessage: Identifiable, Equatable {
     var id: String
     var wallID: String

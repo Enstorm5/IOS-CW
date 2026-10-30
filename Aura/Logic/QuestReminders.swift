@@ -1,5 +1,6 @@
 import Foundation
 
+// Reminder times
 let questReminderMorningHour = 9
 let questReminderEveningHour = 19
 let questReminderDaysAhead = 6
@@ -13,6 +14,7 @@ struct PlannedNotification: Equatable {
     let body: String
 }
 
+// Colombo time
 func colomboDate(day: Int, hour: Int) -> Date {
     Date(timeIntervalSince1970: Double(day * secondsPerDay - colomboUTCOffsetSeconds + hour * 3_600))
 }
@@ -21,6 +23,7 @@ func questNamesText(_ quests: [Quest]) -> String {
     quests.map(\.title).joined(separator: " · ")
 }
 
+// Morning note
 func morningReminder(day: Int) -> PlannedNotification {
     let quests = questsForDay(day)
     let points = quests.reduce(0) { $0 + $1.reward }
@@ -46,6 +49,7 @@ func isStreakAtRisk(_ stats: UserStats, today: Int) -> Bool {
     displayedStreak(stats, today: today) > 0 && stats.lastQualifiedDay < today
 }
 
+// Evening reminder
 func todaysEveningReminder(day: Int, states: [QuestState], stats: UserStats) -> PlannedNotification? {
     let ready = states.filter { $0 == .readyToClaim }.count
     let toDo = states.filter { if case .inProgress = $0 { true } else { false } }.count
@@ -65,6 +69,7 @@ func todaysEveningReminder(day: Int, states: [QuestState], stats: UserStats) -> 
     )
 }
 
+// Reminder plan
 func plannedQuestReminders(now: Date, stats: UserStats, todayStates: [QuestState]) -> [PlannedNotification] {
     let today = dayNumber(for: now)
     var planned: [PlannedNotification] = []

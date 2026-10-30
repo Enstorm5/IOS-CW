@@ -3,6 +3,7 @@ import Observation
 import SwiftUI
 
 @MainActor @Observable
+// App lock state
 final class AppLockStore {
     private(set) var isEnabled = false
     private(set) var isLocked = false
@@ -29,6 +30,7 @@ final class AppLockStore {
         }
     }
 
+    // Relock on return
     func scenePhaseChanged(to phase: ScenePhase, now: Date) {
         isCovered = isEnabled && phase != .active
         switch phase {
@@ -44,6 +46,7 @@ final class AppLockStore {
         }
     }
 
+    // Face ID unlock
     func unlock() async {
         guard isLocked, !isAuthenticating else { return }
         isAuthenticating = true

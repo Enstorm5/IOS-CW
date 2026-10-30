@@ -2,6 +2,7 @@ import SwiftUI
 import Observation
 
 @MainActor @Observable
+// AR wall state
 final class WallARViewModel {
     let arSession = ARSessionService()
     let wall: Wall
@@ -27,6 +28,7 @@ final class WallARViewModel {
             isDownloading = true
             downloadError = nil
             do {
+                // Download map
                 mapData = try await publisher.downloadMap(wallID: wall.id, map: map)
             } catch {
                 downloadError = wallMapErrorMessage(error)
@@ -35,10 +37,12 @@ final class WallARViewModel {
         }
 
         guard let mapData else { return }
+        // Relocalize wall
         arSession.restoreWall(mapData: mapData, wallID: map.anchorName, size: map.size)
     }
 }
 
+// AR wall screen
 struct WallARView: View {
     let currentUser: UserProfile
     let detailViewModel: WallDetailViewModel

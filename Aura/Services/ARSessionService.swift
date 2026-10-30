@@ -5,6 +5,7 @@ import ARKit
 import RealityKit
 import Observation
 
+// AR phases
 enum ARWallPhase: Equatable {
     case idle
     case placing
@@ -14,6 +15,7 @@ enum ARWallPhase: Equatable {
     case failed(message: String, canRetryRestore: Bool)
 }
 
+// Export result
 struct ExportedWall {
     let wallID: String
     let mapData: Data
@@ -31,6 +33,7 @@ let messageLiftMeters: Float = 0.004
 let messageTextDepthMeters: Float = 0.002
 
 @MainActor @Observable
+// AR session manager
 final class ARSessionService: NSObject, ARSessionDelegate {
     private(set) var phase: ARWallPhase = .idle
     private(set) var tracking: TrackingStatus = .notAvailable
@@ -68,6 +71,7 @@ final class ARSessionService: NSObject, ARSessionDelegate {
 
     var currentWallID: String? { wallID }
 
+    // Shared AR view
     func arViewForDisplay() -> ARView {
         if let arView { return arView }
         let view = ARView(frame: .zero)
@@ -86,12 +90,14 @@ final class ARSessionService: NSObject, ARSessionDelegate {
         hasPlacedWall = false
         wallSize = defaultWallSize
 
+        // AR setup
         let configuration = ARWorldTrackingConfiguration()
         configuration.planeDetection = [.vertical]
         run(configuration)
         phase = .placing
     }
 
+    // Wall resize
     func resizeWall(to size: WallSize) {
         guard canResize else { return }
         wallSize = clampedWallSize(size)
@@ -102,6 +108,7 @@ final class ARSessionService: NSObject, ARSessionDelegate {
         resizeWall(to: steppedWallSize(wallSize, widthSteps: widthSteps, heightSteps: heightSteps))
     }
 
+    // Save world map
     func exportPlacedWall() async throws -> ExportedWall {
         guard canExport, let wallID, let session = arView?.session else {
             throw WorldMapArchiveError.exportFailed
@@ -119,6 +126,7 @@ final class ARSessionService: NSObject, ARSessionDelegate {
         return ExportedWall(wallID: wallID, mapData: mapData, snapshotData: snapshotData, size: wallSize)
     }
 
+    // Local copy
     func saveLocally(_ exported: ExportedWall) throws {
         let metadata = SavedWallMetadata(
             wallID: exported.wallID,
@@ -133,6 +141,7 @@ final class ARSessionService: NSObject, ARSessionDelegate {
         refreshSavedWall()
     }
 
+    // Restore local wall
     func restoreSavedWall() {
         guard let metadata = savedWall else { return }
         do {
@@ -142,6 +151,7 @@ final class ARSessionService: NSObject, ARSessionDelegate {
         }
     }
 
+    // Restore published wall
     func restoreWall(mapData: Data, wallID restoredWallID: String, size: WallSize) {
         do {
             let map = try decodeWorldMap(mapData, expectedAnchorName: restoredWallID)
@@ -153,6 +163,7 @@ final class ARSessionService: NSObject, ARSessionDelegate {
 
             let configuration = ARWorldTrackingConfiguration()
             configuration.planeDetection = [.vertical]
+            // Restore saved map
             configuration.initialWorldMap = map
             run(configuration)
 
@@ -164,6 +175,7 @@ final class ARSessionService: NSObject, ARSessionDelegate {
         }
     }
 
+    // Show wall messages
     func showMessages(_ messages: [WallMessage]) {
         messagesToShow = Array(messages.prefix(maximumMessagesOnARWall))
         if phase == .restored {
@@ -171,6 +183,7 @@ final class ARSessionService: NSObject, ARSessionDelegate {
         }
     }
 
+    // Stop camera
     func stopCamera() {
         sessionGeneration += 1
         arView?.session.pause()
@@ -199,6 +212,7 @@ final class ARSessionService: NSObject, ARSessionDelegate {
         }
     }
 
+    // Frame updates
     nonisolated func session(_ session: ARSession, didUpdate frame: ARFrame) {
         MainActor.assumeIsolated {
             handleFrame(frame)
@@ -213,6 +227,7 @@ final class ARSessionService: NSObject, ARSessionDelegate {
         }
     }
 
+    // Tracking status
     private func handleFrame(_ frame: ARFrame) {
         let newTracking = trackingStatus(from: frame.camera.trackingState)
         let newMapping = mappingStatus(from: frame.worldMappingStatus)
@@ -228,10 +243,12 @@ final class ARSessionService: NSObject, ARSessionDelegate {
         }
     }
 
+    // Tap to place
     @objc private func handleTapGesture(_ gesture: UITapGestureRecognizer) {
         guard canResize, let arView else { return }
 
         let point = gesture.location(in: arView)
+        // Raycast to wall
         guard let hit = arView.raycast(from: point, allowing: .estimatedPlane, alignment: .vertical).first else { return }
 
         if let placedAnchor {
@@ -247,6 +264,7 @@ final class ARSessionService: NSObject, ARSessionDelegate {
         phase = .mapping
     }
 
+    // Pinch to resize
     @objc private func handlePinchGesture(_ gesture: UIPinchGestureRecognizer) {
         guard canResize, hasPlacedWall else { return }
         switch gesture.state {
@@ -259,6 +277,7 @@ final class ARSessionService: NSObject, ARSessionDelegate {
         }
     }
 
+    // Run session
     private func run(_ configuration: ARWorldTrackingConfiguration) {
         sessionGeneration += 1
         tracking = .initializing
@@ -267,6 +286,7 @@ final class ARSessionService: NSObject, ARSessionDelegate {
         isCameraActive = true
     }
 
+    // Relocalize timeout
     private func scheduleRelocalizationTimeout(startedAt: Date, generation: Int) {
         Task {
             try? await Task.sleep(for: .seconds(relocalizationTimeoutSeconds))
@@ -280,6 +300,7 @@ final class ARSessionService: NSObject, ARSessionDelegate {
         }
     }
 
+    // Capture world map
     private func currentWorldMap(from session: ARSession) async throws -> ARWorldMap {
         try await withCheckedThrowingContinuation { continuation in
             session.getCurrentWorldMap { map, error in
@@ -292,6 +313,7 @@ final class ARSessionService: NSObject, ARSessionDelegate {
         }
     }
 
+    // Draw wall plane
     private func showWall(on anchor: ARAnchor) {
         guard let arView else { return }
         removeWallEntity()
@@ -319,6 +341,7 @@ final class ARSessionService: NSObject, ARSessionDelegate {
         wallPlane?.scale = SIMD3<Float>(Float(wallSize.width), 1, Float(wallSize.height))
     }
 
+    // Draw messages
     private func renderMessages() {
         guard let messageCanvas else { return }
         for child in Array(messageCanvas.children) {
@@ -340,6 +363,7 @@ final class ARSessionService: NSObject, ARSessionDelegate {
         return note
     }
 
+    // Drawing card
     private func makeDrawingCard(_ message: WallMessage) -> Entity {
         let note = Entity()
         guard let drawing = message.drawing, let texture = drawingTexture(drawing) else { return note }
@@ -356,6 +380,7 @@ final class ARSessionService: NSObject, ARSessionDelegate {
         return note
     }
 
+    // Drawing texture
     private func drawingTexture(_ drawing: MessageDrawing) -> TextureResource? {
         let pixelWidth = AuraSize.drawingTexturePixelWidth
         let renderer = ImageRenderer(
@@ -367,6 +392,7 @@ final class ARSessionService: NSObject, ARSessionDelegate {
         return try? TextureResource(image: image, options: .init(semantic: .color))
     }
 
+    // Text card
     private func makeTextCard(_ message: WallMessage) -> Entity {
         let textWidth = CGFloat(wallSize.width * messageCardWidthFraction)
         let textMesh = MeshResource.generateText(

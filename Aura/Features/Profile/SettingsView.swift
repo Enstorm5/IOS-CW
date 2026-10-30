@@ -1,5 +1,6 @@
 import SwiftUI
 
+// Settings screen
 struct SettingsView: View {
     let session: SessionStore
     let profile: UserProfile
@@ -113,6 +114,7 @@ struct SettingsView: View {
     }
 
     @ViewBuilder
+    // Face ID lock
     private var appLockRow: some View {
         let unavailable = appLock.biometric.unavailableMessage()
         VStack(alignment: .leading, spacing: AuraSpacing.xxSmall) {
@@ -134,6 +136,7 @@ struct SettingsView: View {
         .background(Color.auraCard, in: .rect(cornerRadius: AuraRadius.row))
     }
 
+    // Quest reminders
     private var questRemindersRow: some View {
         VStack(alignment: .leading, spacing: AuraSpacing.xxSmall) {
             Toggle(isOn: Binding(
@@ -179,6 +182,7 @@ struct SettingsView: View {
         }
     }
 
+    // Rankings opt-in
     private var rankingsRow: some View {
         let isInCrew = crewStore.crew != nil
         return VStack(alignment: .leading, spacing: AuraSpacing.xxSmall) {
@@ -234,6 +238,7 @@ struct SettingsView: View {
     }
 }
 
+// Delete account
 struct DeleteAccountView: View {
     let session: SessionStore
     let profile: UserProfile

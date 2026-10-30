@@ -1,6 +1,7 @@
 import Foundation
 import CoreData
 
+// Local cache
 final class LocalStore {
     private let context: NSManagedObjectContext
 
@@ -13,6 +14,7 @@ final class LocalStore {
         return messageDraft(from: entity)
     }
 
+    // Draft upsert
     func saveDraft(_ draft: MessageDraft) throws {
         let key = localKey(accountID: draft.accountID, itemID: draft.wallID)
         let entity = fetchDraftEntity(key: key) ?? MessageDraftEntity(context: context)
@@ -37,6 +39,7 @@ final class LocalStore {
         return (try? context.count(for: request)) ?? 0
     }
 
+    // Wall cache
     func cacheWalls(_ walls: [Wall], accountID: String, fetchedAt: Date) throws {
         for wall in walls {
             let key = localKey(accountID: accountID, itemID: wall.id)
@@ -67,6 +70,7 @@ final class LocalStore {
         )
     }
 
+    // Message cache
     func replaceCachedMessages(_ messages: [WallMessage], wallID: String, accountID: String, fetchedAt: Date) throws {
         let oldRequest = CachedMessageEntity.fetchRequest()
         oldRequest.predicate = NSPredicate(format: "accountID == %@ AND wallID == %@", accountID, wallID)
@@ -106,6 +110,7 @@ final class LocalStore {
         )
     }
 
+    // Per-account settings
     func settings(accountID: String) -> UserSettings {
         guard let entity = fetchSettingsEntity(accountID: accountID) else { return UserSettings() }
         return UserSettings(
@@ -131,6 +136,7 @@ final class LocalStore {
         return try? context.fetch(request).first
     }
 
+    // Clear account
     func deleteAccountData(accountID: String) throws {
         let predicate = NSPredicate(format: "accountID == %@", accountID)
         try deleteObjects(UserSettingsEntity.fetchRequest(), matching: predicate)
@@ -217,6 +223,7 @@ func localKey(accountID: String, itemID: String) -> String {
     "\(accountID)|\(itemID)"
 }
 
+// Offline banner text
 func offlineSavedText(_ savedAt: Date?, now: Date) -> String {
     guard let savedAt else { return "You're offline." }
     let formatter = RelativeDateTimeFormatter()

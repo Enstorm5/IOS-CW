@@ -3,6 +3,7 @@ import Observation
 import FirebaseFirestore
 
 @MainActor @Observable
+// Shop state
 final class ShopStore {
     private(set) var ownedItemIDs: Set<String> = []
     private(set) var buyingItemID: ShopItemID?
@@ -35,6 +36,7 @@ final class ShopStore {
         message = nil
     }
 
+    // Retry-safe purchase
     func buy(_ item: ShopItem, stats: UserStats?) async {
         guard buyingItemID == nil else { return }
         guard let stats else {

@@ -1,5 +1,6 @@
 import SwiftUI
 
+// My walls list
 struct MyWallsView: View {
     let publisher: WallPublishService
     let ownerID: String
@@ -151,6 +152,7 @@ private struct MyWallRow: View {
     }
 }
 
+// Rename wall
 private struct RenameWallSheet: View {
     let onSave: (String) async throws -> Void
 

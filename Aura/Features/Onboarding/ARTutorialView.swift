@@ -1,6 +1,7 @@
 import SwiftUI
 import ARKit
 
+// AR tutorial
 struct ARTutorialView: View {
     let isSaving: Bool
     let errorMessage: String?

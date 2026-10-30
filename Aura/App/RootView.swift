@@ -1,5 +1,6 @@
 import SwiftUI
 
+// Screen by session
 struct RootView: View {
     let session: SessionStore
     let services: AppServices
@@ -43,6 +44,7 @@ struct RootView: View {
     }
 }
 
+// Profile load error
 struct SessionErrorView: View {
     let session: SessionStore
     let message: String

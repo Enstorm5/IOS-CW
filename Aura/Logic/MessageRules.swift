@@ -3,6 +3,7 @@ import Foundation
 let maximumMessageLength = 140
 let messagePlacementMargin = 0.1
 
+// Message check
 func messageValidationError(_ text: String) -> String? {
     let cleaned = text.trimmingCharacters(in: .whitespacesAndNewlines)
     if cleaned.isEmpty { return "Write a message first." }
@@ -18,6 +19,7 @@ func isOverMessageLength(_ text: String) -> Bool {
     text.trimmingCharacters(in: .whitespacesAndNewlines).count > maximumMessageLength
 }
 
+// Stable hash
 func stableHash(_ text: String) -> UInt64 {
     var hash: UInt64 = 14_695_981_039_346_656_037
     for byte in text.utf8 {
@@ -27,6 +29,7 @@ func stableHash(_ text: String) -> UInt64 {
     return hash
 }
 
+// Position on wall
 func messagePlacement(forMessageID messageID: String) -> (x: Double, y: Double) {
     let hash = stableHash(messageID)
     let usableRange = 1 - 2 * messagePlacementMargin
@@ -35,6 +38,7 @@ func messagePlacement(forMessageID messageID: String) -> (x: Double, y: Double) 
     return (x, y)
 }
 
+// Retry-safe ID
 func messageIDForPost(text: String, color: MessageColor, previous: PendingPost?, makeID: () -> String) -> String {
     if let previous, previous.text == text, previous.color == color {
         return previous.id
@@ -48,6 +52,7 @@ struct PendingPost: Equatable {
     let color: MessageColor
 }
 
+// Spark rules
 func sparkDocumentID(wallID: String, messageID: String) -> String {
     "\(wallID)_\(messageID)"
 }

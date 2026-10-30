@@ -1,15 +1,18 @@
 import Foundation
 import CoreGraphics
 
+// Drawing limits
 let maximumDrawingStrokes = 60
 let maximumDrawingPoints = 2_000
 let maximumDrawingPayloadCharacters = 40_000
 let minimumDrawingPointSpacing = 0.004
 let drawingAspectRatio = 4.0 / 3.0
 
+// Neon glow
 let neonGlowLayers: [(widthScale: Double, opacity: Double)] = [(3.2, 0.18), (2.2, 0.3), (1.4, 0.5)]
 let neonCoreWidthScale = 0.45
 
+// Point to 0-1
 func normalizedDrawingPoint(_ location: CGPoint, in size: CGSize) -> DrawingPoint {
     guard size.width > 0, size.height > 0 else { return DrawingPoint(x: 0, y: 0) }
     let x = min(1, max(0, Double(location.x / size.width)))
@@ -17,6 +20,7 @@ func normalizedDrawingPoint(_ location: CGPoint, in size: CGSize) -> DrawingPoin
     return DrawingPoint(x: (x * 1000).rounded() / 1000, y: (y * 1000).rounded() / 1000)
 }
 
+// Skip close points
 func addingPoint(_ point: DrawingPoint, to stroke: DrawingStroke) -> DrawingStroke {
     if let last = stroke.points.last {
         let distance = ((point.x - last.x) * (point.x - last.x) + (point.y - last.y) * (point.y - last.y)).squareRoot()
@@ -31,6 +35,7 @@ func drawingPointCount(_ drawing: MessageDrawing) -> Int {
     drawing.strokes.reduce(0) { $0 + $1.points.count }
 }
 
+// Size limits
 func drawingValidationError(_ drawing: MessageDrawing) -> String? {
     if drawing.strokes.isEmpty || drawingPointCount(drawing) == 0 { return "Draw something first." }
     if drawing.strokes.count > maximumDrawingStrokes || drawingPointCount(drawing) > maximumDrawingPoints {
@@ -39,6 +44,7 @@ func drawingValidationError(_ drawing: MessageDrawing) -> String? {
     return nil
 }
 
+// Drawing to JSON
 func encodeDrawing(_ drawing: MessageDrawing) -> String? {
     let encoder = JSONEncoder()
     encoder.outputFormatting = .sortedKeys
@@ -48,6 +54,7 @@ func encodeDrawing(_ drawing: MessageDrawing) -> String? {
     return payload
 }
 
+// Safe decode
 func decodeDrawing(_ payload: String) -> MessageDrawing? {
     guard payload.count <= maximumDrawingPayloadCharacters,
           let drawing = try? JSONDecoder().decode(MessageDrawing.self, from: Data(payload.utf8)),
@@ -64,6 +71,7 @@ func drawingCardColor(for drawing: MessageDrawing) -> MessageColor {
     drawing.strokes.first?.color ?? .ink
 }
 
+// Validate message
 func preparedMessage(from content: MessageContent) throws -> PreparedMessage {
     switch content {
     case .text(let text, let color):

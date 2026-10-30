@@ -6,6 +6,7 @@ enum AuthRoute: Hashable {
     case resetPassword
 }
 
+// Signed-out flow
 struct AuthFlowView: View {
     let session: SessionStore
     @State private var path: [AuthRoute] = []

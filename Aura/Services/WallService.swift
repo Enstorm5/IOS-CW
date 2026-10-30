@@ -5,6 +5,7 @@ final class WallService {
     private let walls = Firestore.firestore().collection("walls")
     private let maximumWallsPerRange = 50
 
+    // Geohash query
     func fetchPublicWalls(near center: Coordinate, radiusMeters: Double) async throws -> [NearbyWall] {
         var found: [Wall] = []
         for range in geohashQueryRanges(center: center, radiusMeters: radiusMeters) {
@@ -22,6 +23,7 @@ final class WallService {
     }
 }
 
+// Map wall fields
 func wall(id: String, fields: [String: Any]) -> Wall? {
     guard let title = fields["title"] as? String,
           let latitude = fields["latitude"] as? Double,
@@ -57,6 +59,7 @@ func wallMapInfo(fields: [String: Any]) -> WallMapInfo? {
     )
 }
 
+// Wall document
 func newWallFields(for draft: NewWallDraft) -> [String: Any] {
     [
         "title": draft.title,

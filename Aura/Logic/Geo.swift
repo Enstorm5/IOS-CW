@@ -3,6 +3,7 @@ import Foundation
 let earthRadiusMeters = 6_371_000.0
 let metersPerDegreeLatitude = 2 * Double.pi * earthRadiusMeters / 360
 
+// Haversine distance
 func distanceInMeters(from start: Coordinate, to end: Coordinate) -> Double {
     let startLatitude = start.latitude * .pi / 180
     let endLatitude = end.latitude * .pi / 180
@@ -16,6 +17,7 @@ func distanceInMeters(from start: Coordinate, to end: Coordinate) -> Double {
 
 private let geohashAlphabet = Array("0123456789bcdefghjkmnpqrstuvwxyz")
 
+// Encode geohash
 func geohash(for coordinate: Coordinate, precision: Int) -> String {
     var minLatitude = -90.0, maxLatitude = 90.0
     var minLongitude = -180.0, maxLongitude = 180.0
@@ -85,6 +87,7 @@ func geohashSearchPrecision(center: Coordinate, radiusMeters: Double) -> Int {
     return 1
 }
 
+// Query ranges
 func geohashQueryRanges(center: Coordinate, radiusMeters: Double) -> [GeohashRange] {
     let precision = geohashSearchPrecision(center: center, radiusMeters: radiusMeters)
     let offsets = searchOffsetsDegrees(center: center, radiusMeters: radiusMeters)
@@ -105,6 +108,7 @@ func geohashQueryRanges(center: Coordinate, radiusMeters: Double) -> [GeohashRan
     return hashes.sorted().map { GeohashRange(start: $0, end: $0 + "~") }
 }
 
+// Filter by distance
 func wallsWithinRadius(from walls: [Wall], center: Coordinate, radiusMeters: Double) -> [NearbyWall] {
     var seenIDs: Set<String> = []
     var result: [NearbyWall] = []
@@ -120,11 +124,13 @@ func wallsWithinRadius(from walls: [Wall], center: Coordinate, radiusMeters: Dou
     }
 }
 
+// Search again check
 func shouldSearchAgain(lastCenter: Coordinate?, newCenter: Coordinate, minimumMoveMeters: Double) -> Bool {
     guard let lastCenter else { return true }
     return distanceInMeters(from: lastCenter, to: newCenter) > minimumMoveMeters
 }
 
+// Distance text
 func formattedDistance(meters: Double) -> String {
     let roundedMeters = max(10, Int((meters / 10).rounded()) * 10)
     if roundedMeters < 1000 {

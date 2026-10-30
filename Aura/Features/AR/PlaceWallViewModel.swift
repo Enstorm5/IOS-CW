@@ -3,6 +3,7 @@ import UIKit
 import Observation
 
 @MainActor @Observable
+// Place wall state
 final class PlaceWallViewModel {
     let arSession = ARSessionService()
 
@@ -45,6 +46,7 @@ final class PlaceWallViewModel {
         arSession.finish()
     }
 
+    // Publish flow
     func publish(title: String) async {
         let cleanedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
         if let titleError = wallTitleValidationError(cleanedTitle) {
@@ -94,6 +96,7 @@ final class PlaceWallViewModel {
         isPublishing = false
     }
 
+    // Cached export
     private func exportedWallForCurrentPlacement() async throws -> ExportedWall {
         if let exportedWall, exportedWall.wallID == arSession.currentWallID {
             return exportedWall

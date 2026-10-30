@@ -14,6 +14,7 @@ enum AppTheme: String, CaseIterable {
     }
 }
 
+// Per-account settings
 struct UserSettings: Equatable {
     var theme: AppTheme = .system
     var appLockEnabled = false

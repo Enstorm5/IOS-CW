@@ -1,5 +1,6 @@
 import SwiftUI
 
+// Name and cost
 struct NameWallSheet: View {
     let isPublishing: Bool
     let costMessage: String

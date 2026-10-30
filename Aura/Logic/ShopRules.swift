@@ -1,5 +1,6 @@
 import Foundation
 
+// Shop settings
 let maximumStreakFreezes = 2
 
 enum ShopItemID: String, CaseIterable, Identifiable {
@@ -23,6 +24,7 @@ struct ShopItem: Identifiable, Equatable {
     let systemImage: String
 }
 
+// Shop items
 let shopCatalog = [
     ShopItem(
         id: .neonBrush,
@@ -49,6 +51,7 @@ enum ShopAvailability: Equatable {
     case limitReached
 }
 
+// Can buy check
 func shopAvailability(for item: ShopItem, stats: UserStats, ownedItemIDs: Set<String>) -> ShopAvailability {
     switch item.kind {
     case .permanent:
@@ -92,6 +95,7 @@ func shopSuccessMessage(for item: ShopItem) -> String {
     }
 }
 
+// Purchase result
 func statsAfterPurchase(_ stats: UserStats, item: ShopItem, purchaseID: String) -> UserStats {
     var updated = stats
     updated.balance -= item.price

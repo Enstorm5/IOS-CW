@@ -3,6 +3,7 @@ import Foundation
 let homeNearbyWallLimit = 3
 let homeWallZoomMeters = 400.0
 
+// Home greeting
 func greetingText(name: String, hour: Int) -> String {
     let firstName = name.split(separator: " ").first.map(String.init) ?? name
     switch hour {
@@ -35,10 +36,12 @@ func ownedWallsSummary(count: Int) -> String {
     }
 }
 
+// Nearest walls
 func closestWalls(_ walls: [NearbyWall], limit: Int) -> [NearbyWall] {
     Array(walls.sorted { $0.distanceMeters < $1.distanceMeters }.prefix(max(0, limit)))
 }
 
+// Map refresh
 func shouldRefreshMapAfterPublish(oldCount: Int?, newCount: Int?) -> Bool {
     guard let oldCount, let newCount else { return false }
     return newCount > oldCount

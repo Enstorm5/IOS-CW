@@ -21,6 +21,7 @@ enum WallKind: String {
     case sponsored
 }
 
+// AR map details
 struct WallMapInfo: Hashable, Codable {
     var chunkCount: Int
     var version: Int
@@ -30,6 +31,7 @@ struct WallMapInfo: Hashable, Codable {
     var size: WallSize
 }
 
+// Wall data
 struct Wall: Identifiable, Hashable {
     var id: String
     var title: String
@@ -38,6 +40,7 @@ struct Wall: Identifiable, Hashable {
     var map: WallMapInfo? = nil
 }
 
+// Wall to publish
 struct NewWallDraft: Equatable {
     let wallID: String
     let ownerID: String

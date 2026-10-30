@@ -9,6 +9,7 @@ enum DiscoveryClaimResult {
 }
 
 @MainActor @Observable
+// Points and quests
 final class StatsStore {
     private(set) var stats: UserStats?
     private(set) var statsLoadFailed = false
@@ -35,6 +36,7 @@ final class StatsStore {
 
     var claimedTodayIDs: Set<String> { claimedQuestIDs(fromClaimIDs: claimIDs, today: today) }
 
+    // Quest state
     func state(of quest: Quest) -> QuestState {
         questState(
             quest,
@@ -47,6 +49,7 @@ final class StatsStore {
 
     var todaysQuestStates: [QuestState] { todaysQuests.map(state(of:)) }
 
+    // Live listeners
     func start() {
         guard listener == nil else { return }
         listener = economy.listenToStats(userID: userID) { [weak self] newStats, failed in
@@ -81,6 +84,7 @@ final class StatsStore {
         start()
     }
 
+    // Discovery claim
     func claimDiscovery(wallID: String) async -> DiscoveryClaimResult {
         guard !wallsClaimedThisSession.contains(wallID) else { return .alreadyDiscovered }
         wallsClaimedThisSession.insert(wallID)
@@ -99,6 +103,7 @@ final class StatsStore {
         }
     }
 
+    // Quest claim
     func claimQuest(_ quest: Quest) async {
         guard claimingQuestID == nil else { return }
         claimingQuestID = quest.id

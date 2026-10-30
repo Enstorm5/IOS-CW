@@ -1,12 +1,14 @@
 import Foundation
 import FirebaseFirestore
 
+// Wall publishing
 final class WallPublishService {
     private let database = Firestore.firestore()
     private let cacheFolder = URL.cachesDirectory.appendingPathComponent("WallMaps", isDirectory: true)
 
     func publish(_ draft: NewWallDraft, mapData: Data) async throws {
         let wallDocument = database.collection("walls").document(draft.wallID)
+        // Split map data
         let chunks = splitIntoChunks(mapData, chunkSize: mapChunkByteLimit)
 
         for (index, chunk) in chunks.enumerated() {
@@ -26,6 +28,7 @@ final class WallPublishService {
         let userDocument = database.collection("users").document(draft.ownerID)
 
         do {
+            // Create and charge
             let result = try await database.runTransaction { transaction, errorPointer -> Any? in
                 do {
                     let current = userStats(fields: try transaction.getDocument(userDocument).data() ?? [:])
@@ -52,6 +55,7 @@ final class WallPublishService {
         }
     }
 
+    // My walls query
     func fetchMyWalls(ownerID: String) async throws -> [Wall] {
         let snapshot = try await database.collection("walls")
             .whereField("ownerID", isEqualTo: ownerID)
@@ -70,6 +74,7 @@ final class WallPublishService {
         ])
     }
 
+    // Delete wall
     func deleteWall(wallID: String) async throws {
         let wallDocument = database.collection("walls").document(wallID)
         let chunks = try await wallDocument.collection("mapChunks").getDocuments()
@@ -79,6 +84,7 @@ final class WallPublishService {
         try await wallDocument.delete()
     }
 
+    // Download map chunks
     func downloadMap(wallID: String, map: WallMapInfo) async throws -> Data {
         let cacheURL = cacheFolder.appendingPathComponent("\(wallID)-v\(map.version).bin")
         if let cached = try? Data(contentsOf: cacheURL), sha256Hex(cached) == map.checksum {
@@ -105,6 +111,7 @@ final class WallPublishService {
         return data
     }
 
+    // Idempotent create
     private func createOwnedDocument(_ document: DocumentReference, fields: [String: Any], ownerID: String) async throws {
         do {
             try await document.setData(fields)

@@ -1,5 +1,6 @@
 import Foundation
 
+// Crew data
 struct Crew: Equatable, Identifiable {
     var id: String
     var name: String
@@ -8,6 +9,7 @@ struct Crew: Equatable, Identifiable {
     var memberCount: Int
 }
 
+// Crew member
 struct CrewMember: Equatable, Identifiable {
     var id: String
     var displayName: String
@@ -19,6 +21,7 @@ struct CrewMember: Equatable, Identifiable {
     var weekDiscoveries = 0
 }
 
+// Ranked member
 struct CrewRanking: Equatable, Identifiable {
     var rank: Int
     var member: CrewMember

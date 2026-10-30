@@ -9,6 +9,7 @@ final class AccountDeletionService {
         self.crews = crews
     }
 
+    // Delete user content
     func deleteContent(userID: String) async throws {
         try await crews.leaveCurrentCrew(userID: userID)
 

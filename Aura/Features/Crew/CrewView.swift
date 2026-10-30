@@ -1,6 +1,7 @@
 import SwiftUI
 import UIKit
 
+// Crew screen
 struct CrewView: View {
     let store: CrewStore
     let profile: UserProfile
@@ -55,6 +56,7 @@ struct CrewView: View {
     }
 }
 
+// Invite sheet
 private struct InviteFriendsSheet: View {
     let crew: Crew
 
@@ -105,6 +107,7 @@ private struct InviteFriendsSheet: View {
     }
 }
 
+// Start or join
 private struct NoCrewContent: View {
     let store: CrewStore
     let profile: UserProfile
@@ -200,6 +203,7 @@ private struct NoCrewContent: View {
     }
 }
 
+// Crew details
 private struct CrewDetailContent: View {
     let store: CrewStore
     let crew: Crew
@@ -268,6 +272,7 @@ private struct CrewDetailContent: View {
 extension CrewDetailContent {
     private var weekStart: Int { currentWeekStart(now: Date()) }
 
+    // Weekly goal
     private var weeklyGoalCard: some View {
         let goal = crewWeeklyGoal(members: store.members)
         let progress = crewWeeklyProgress(members: store.members, weekStart: weekStart)
@@ -287,6 +292,7 @@ extension CrewDetailContent {
         }
     }
 
+    // Rankings list
     private var rankingsSection: some View {
         VStack(alignment: .leading, spacing: AuraSpacing.small) {
             Text("Rankings")

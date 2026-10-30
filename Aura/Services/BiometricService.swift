@@ -24,6 +24,7 @@ final class BiometricService {
         return "App lock isn't available on this device."
     }
 
+    // Face ID check
     func authenticate(reason: String) async -> BiometricOutcome {
         let context = LAContext()
         var error: NSError?

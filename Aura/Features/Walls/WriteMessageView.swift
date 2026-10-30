@@ -12,6 +12,7 @@ enum WriteMode: String, CaseIterable {
     }
 }
 
+// Write sheet
 struct WriteMessageView: View {
     let onPost: (MessageContent) async throws -> Void
     let onSaveDraft: (String, MessageColor) -> Void
@@ -216,6 +217,7 @@ struct WriteMessageView: View {
         .background(Color.auraCard, in: .rect(cornerRadius: AuraRadius.control))
     }
 
+    // Post and close
     private func post() async {
         errorMessage = nil
         let content: MessageContent = mode == .type ? .text(text, color) : .drawing(drawing)
@@ -241,6 +243,7 @@ struct WriteMessageView: View {
     }
 }
 
+// Colour picker
 struct ColorSwatchButton: View {
     let color: MessageColor
     let isSelected: Bool

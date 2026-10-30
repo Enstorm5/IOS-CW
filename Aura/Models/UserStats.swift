@@ -1,5 +1,6 @@
 import Foundation
 
+// Points and streaks
 struct UserStats: Equatable {
     var balance = 0
     var lifetimeXP = 0
@@ -20,6 +21,7 @@ struct UserStats: Equatable {
     var lastPurchaseID = ""
 }
 
+// Badge progress
 struct Badge: Identifiable, Equatable {
     let id: String
     let title: String

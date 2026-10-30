@@ -29,6 +29,7 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
         (try? await center.requestAuthorization(options: [.alert, .sound])) ?? false
     }
 
+    // Schedule reminders
     func replaceQuestReminders(_ planned: [PlannedNotification]) {
         let previous = lastScheduling
         lastScheduling = Task {
@@ -54,6 +55,7 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
         center.removePendingNotificationRequests(withIdentifiers: ids)
     }
 
+    // One reminder
     private func schedule(_ reminder: PlannedNotification) async {
         let interval = reminder.fireDate.timeIntervalSinceNow
         guard interval >= 1 else { return }
@@ -69,6 +71,7 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
         [.banner, .sound]
     }
 
+    // Open Quests tap
     nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse) async {
         await MainActor.run { openQuests() }
     }

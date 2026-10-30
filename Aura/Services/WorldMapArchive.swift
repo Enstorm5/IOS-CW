@@ -13,12 +13,14 @@ enum WorldMapArchiveError: Error, Equatable {
 
 let snapshotJPEGQuality: CGFloat = 0.7
 
+// Archive world map
 func encodeWorldMap(_ map: ARWorldMap) throws -> Data {
     let data = try NSKeyedArchiver.archivedData(withRootObject: map, requiringSecureCoding: true)
     guard data.count <= maximumWorldMapBytes else { throw WorldMapArchiveError.tooLarge }
     return data
 }
 
+// Safe decode
 func decodeWorldMap(_ data: Data, expectedAnchorName: String) throws -> ARWorldMap {
     guard data.count <= maximumWorldMapBytes else { throw WorldMapArchiveError.tooLarge }
     guard let map = try? NSKeyedUnarchiver.unarchivedObject(ofClass: ARWorldMap.self, from: data) else {
@@ -30,6 +32,7 @@ func decodeWorldMap(_ data: Data, expectedAnchorName: String) throws -> ARWorldM
     return map
 }
 
+// Guidance snapshot
 func snapshotJPEG(from pixelBuffer: CVPixelBuffer) throws -> Data {
     let image = CIImage(cvPixelBuffer: pixelBuffer).oriented(.right)
     guard let colorSpace = CGColorSpace(name: CGColorSpace.sRGB),
@@ -44,6 +47,7 @@ func snapshotJPEG(from pixelBuffer: CVPixelBuffer) throws -> Data {
     return data
 }
 
+// Readable errors
 func worldMapErrorMessage(_ error: Error) -> String {
     if let archiveError = error as? WorldMapArchiveError {
         switch archiveError {

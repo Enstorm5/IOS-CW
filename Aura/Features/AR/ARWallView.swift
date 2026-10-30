@@ -1,6 +1,7 @@
 import SwiftUI
 import RealityKit
 
+// AR view bridge
 struct ARWallView: UIViewRepresentable {
     let service: ARSessionService
 

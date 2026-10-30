@@ -1,5 +1,6 @@
 import SwiftUI
 
+// Lock screen
 struct AppLockView: View {
     let lock: AppLockStore
     let onSignOut: () -> Void
@@ -39,6 +40,7 @@ struct AppLockView: View {
     }
 }
 
+// Hide app preview
 struct PrivacyCoverView: View {
     var body: some View {
         ZStack {

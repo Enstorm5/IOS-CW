@@ -2,6 +2,7 @@ import Foundation
 import Observation
 import FirebaseAuth
 
+// Session states
 enum SessionState: Equatable {
     case loading
     case signedOut
@@ -16,6 +17,7 @@ struct UserFacingError: LocalizedError {
 }
 
 @MainActor @Observable
+// Signed-in session
 final class SessionStore {
     private(set) var state: SessionState = .loading
 
@@ -44,6 +46,7 @@ final class SessionStore {
         state = .signedIn(profile)
     }
 
+    // Delete account steps
     func deleteAccount(password: String, userID: String) async throws {
         do {
             try await authService.reauthenticate(password: password)
@@ -64,6 +67,7 @@ final class SessionStore {
         state = .signedOut
     }
 
+    // Auth listener
     func start() {
         guard listenerHandle == nil else { return }
         listenerHandle = authService.observeSignIn { [weak self] userID in
@@ -101,6 +105,7 @@ final class SessionStore {
         }
     }
 
+    // Create profile
     func completeOnboarding(userID: String, displayName: String, interests: [Interest], avatar: AvatarPreset) async throws {
         let profile = UserProfile(id: userID, displayName: displayName, bio: "", avatarPreset: avatar, interests: interests)
         do {
@@ -122,6 +127,7 @@ final class SessionStore {
         state = .signedOut
     }
 
+    // Load profile
     private func loadSession(userID: String?) async {
         latestLoadID += 1
         let loadID = latestLoadID

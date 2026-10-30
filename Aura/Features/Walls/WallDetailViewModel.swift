@@ -3,6 +3,7 @@ import CoreLocation
 import Observation
 
 @MainActor @Observable
+// Wall detail state
 final class WallDetailViewModel {
     private(set) var proximity: WallProximity = .findingLocation
     private(set) var teaser: WallTeaser?
@@ -71,6 +72,7 @@ final class WallDetailViewModel {
         locationService.stopUpdating()
     }
 
+    // 50 m check
     func refreshProximity(now: Date) async {
         if !isUnlocked {
             proximity = wallProximity(wallCoordinate: wall.coordinate, access: locationService.access, fix: currentFix(), policy: wallReadingPolicy, now: now)
@@ -89,6 +91,7 @@ final class WallDetailViewModel {
         }
     }
 
+    // Discovery reward
     private func claimDiscoveryIfEligible(now: Date) async {
         guard !isDiscoveryHandled, !isClaimingDiscovery else { return }
         let rewardCheck = wallProximity(wallCoordinate: wall.coordinate, access: locationService.access, fix: currentFix(), policy: wallPostingPolicy, now: now)
@@ -117,6 +120,7 @@ final class WallDetailViewModel {
         }
     }
 
+    // Post message
     func post(_ content: MessageContent, author: UserProfile) async throws {
         let prepared = try preparedMessage(from: content)
 
@@ -169,6 +173,7 @@ final class WallDetailViewModel {
         }
     }
 
+    // Spark toggle
     func toggleSpark(_ message: WallMessage) async {
         guard canSpark(message, userID: accountID), !sparkingMessageIDs.contains(message.id) else { return }
         let isAddingSpark = !sparkedMessageIDs.contains(message.id)
@@ -232,6 +237,7 @@ final class WallDetailViewModel {
         isLoadingTeaser = false
     }
 
+    // First page
     func loadFirstPage() async {
         latestLoadID += 1
         let loadID = latestLoadID
@@ -264,6 +270,7 @@ final class WallDetailViewModel {
         isLoading = false
     }
 
+    // Load more
     func loadNextPage() async {
         guard let cursor = nextCursor, canLoadMore else { return }
         let loadID = latestLoadID
@@ -289,6 +296,7 @@ func locationFix(from location: CLLocation) -> LocationFix {
     LocationFix(coordinate: Coordinate(location.coordinate), horizontalAccuracyMeters: location.horizontalAccuracy, timestamp: location.timestamp)
 }
 
+// Skip duplicates
 func appendingNewMessages(_ newMessages: [WallMessage], to existing: [WallMessage]) -> [WallMessage] {
     let existingIDs = Set(existing.map(\.id))
     return existing + newMessages.filter { !existingIDs.contains($0.id) }

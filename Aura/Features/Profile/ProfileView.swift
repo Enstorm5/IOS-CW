@@ -1,5 +1,6 @@
 import SwiftUI
 
+// Me screen
 struct ProfileView: View {
     let session: SessionStore
     let profile: UserProfile

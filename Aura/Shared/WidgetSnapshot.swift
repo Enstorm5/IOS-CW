@@ -1,5 +1,6 @@
 import Foundation
 
+// Shared widget data
 nonisolated struct WidgetSnapshot: Codable, Equatable {
     var accountID: String
     var balance: Int
@@ -29,6 +30,7 @@ nonisolated func startOfNextWidgetDay(after date: Date) -> Date {
     return Date(timeIntervalSince1970: Double(nextDay * WidgetConfig.secondsPerDay - WidgetConfig.utcOffsetSeconds))
 }
 
+// Streak display
 nonisolated func widgetStreak(_ snapshot: WidgetSnapshot, today: Int) -> Int {
     let isFrozen = snapshot.lastQualifiedDay == today - 2 && (snapshot.streakFreezes ?? 0) > 0 && snapshot.streakDays > 0
     return snapshot.lastQualifiedDay >= today - 1 || isFrozen ? snapshot.streakDays : 0
