@@ -46,6 +46,8 @@ final class ARSessionService: NSObject, ARSessionDelegate {
     @ObservationIgnored private var placedAnchor: ARAnchor?
     @ObservationIgnored private var wallEntity: AnchorEntity?
     @ObservationIgnored private var wallPlane: ModelEntity?
+    @ObservationIgnored private var wallFrameHolder: Entity?
+    @ObservationIgnored private var wallFrame: Entity?
     @ObservationIgnored private var messageCanvas: Entity?
     @ObservationIgnored private var messagesToShow: [WallMessage] = []
     @ObservationIgnored private var pinchStartSize = defaultWallSize
@@ -283,19 +285,45 @@ final class ARSessionService: NSObject, ARSessionDelegate {
             canvas.orientation = simd_quatf(angle: .pi, axis: SIMD3<Float>(0, 1, 0))
         }
 
+        let frameHolder = Entity()
+        frameHolder.orientation = canvas.orientation
+
         let entity = AnchorEntity(anchor: anchor)
         entity.addChild(plane)
+        entity.addChild(frameHolder)
         entity.addChild(canvas)
         arView.scene.addAnchor(entity)
 
         wallEntity = entity
         wallPlane = plane
+        wallFrameHolder = frameHolder
         messageCanvas = canvas
+        applyWallSize()
+
+        Task { await attachFrame(to: frameHolder) }
+    }
+
+    // Brick frame model
+    private func attachFrame(to holder: Entity) async {
+        guard let frame = await WallModelLibrary.shared.frameEntity() else { return }
+        guard wallFrameHolder === holder, holder.parent != nil else { return }
+        let pivot = Entity()
+        pivot.orientation = wallFrameOrientation
+        pivot.addChild(frame)
+        holder.addChild(pivot)
+        wallFrame = pivot
+        wallPlane?.removeFromParent()
+        wallPlane = nil
         applyWallSize()
     }
 
     private func applyWallSize() {
         wallPlane?.scale = SIMD3<Float>(Float(wallSize.width), 1, Float(wallSize.height))
+        if let wallFrame {
+            let fit = wallFrameFit(for: wallSize)
+            wallFrame.scale = fit.scale
+            wallFrame.position = fit.translation
+        }
     }
 
     // Draw messages
@@ -384,6 +412,8 @@ final class ARSessionService: NSObject, ARSessionDelegate {
         }
         wallEntity = nil
         wallPlane = nil
+        wallFrameHolder = nil
+        wallFrame = nil
         messageCanvas = nil
     }
 
