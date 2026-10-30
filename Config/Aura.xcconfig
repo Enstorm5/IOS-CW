@@ -1,6 +1,4 @@
-// Shared defaults, safe for any Mac
 AURA_BUNDLE_ID = com.example.Aura
 DEVELOPMENT_TEAM =
 
-// Personal overrides, not committed
 #include? "Local.xcconfig"
