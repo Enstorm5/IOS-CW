@@ -1,6 +1,5 @@
 import SwiftUI
 
-// Home summary
 struct HomeView: View {
     let currentUser: UserProfile
     let discovery: DiscoveryViewModel
@@ -96,7 +95,7 @@ struct HomeView: View {
                         .frame(minHeight: AuraSize.minTap)
                         .contentShape(.rect)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(AuraBounceButtonStyle())
                     .accessibilityHint("Shows this wall on the map")
                 }
             }
@@ -117,7 +116,7 @@ struct HomeView: View {
                 }
             }
         }
-        .buttonStyle(.plain)
+        .buttonStyle(AuraBounceButtonStyle())
     }
 
     private func loadOwnedWalls() async {
@@ -155,6 +154,7 @@ private struct HomeCard<Content: View>: View {
         .padding(AuraSpacing.medium)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color.auraCard, in: .rect(cornerRadius: AuraRadius.card))
+        .auraPopIn()
     }
 }
 

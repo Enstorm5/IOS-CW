@@ -64,7 +64,7 @@ struct InterestsView: View {
                                     Circle().strokeBorder(Color.auraText, lineWidth: avatar == preset ? 3 : 0)
                                 }
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(AuraBounceButtonStyle())
                         .accessibilityAddTraits(avatar == preset ? .isSelected : [])
                     }
                 }

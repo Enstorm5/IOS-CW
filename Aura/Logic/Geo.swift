@@ -87,7 +87,6 @@ func geohashSearchPrecision(center: Coordinate, radiusMeters: Double) -> Int {
     return 1
 }
 
-// Query ranges
 func geohashQueryRanges(center: Coordinate, radiusMeters: Double) -> [GeohashRange] {
     let precision = geohashSearchPrecision(center: center, radiusMeters: radiusMeters)
     let offsets = searchOffsetsDegrees(center: center, radiusMeters: radiusMeters)
@@ -124,13 +123,11 @@ func wallsWithinRadius(from walls: [Wall], center: Coordinate, radiusMeters: Dou
     }
 }
 
-// Search again check
 func shouldSearchAgain(lastCenter: Coordinate?, newCenter: Coordinate, minimumMoveMeters: Double) -> Bool {
     guard let lastCenter else { return true }
     return distanceInMeters(from: lastCenter, to: newCenter) > minimumMoveMeters
 }
 
-// Distance text
 func formattedDistance(meters: Double) -> String {
     let roundedMeters = max(10, Int((meters / 10).rounded()) * 10)
     if roundedMeters < 1000 {

@@ -36,7 +36,6 @@ final class StatsStore {
 
     var claimedTodayIDs: Set<String> { claimedQuestIDs(fromClaimIDs: claimIDs, today: today) }
 
-    // Quest state
     func state(of quest: Quest) -> QuestState {
         questState(
             quest,
@@ -84,7 +83,6 @@ final class StatsStore {
         start()
     }
 
-    // Discovery claim
     func claimDiscovery(wallID: String) async -> DiscoveryClaimResult {
         guard !wallsClaimedThisSession.contains(wallID) else { return .alreadyDiscovered }
         wallsClaimedThisSession.insert(wallID)
@@ -103,7 +101,6 @@ final class StatsStore {
         }
     }
 
-    // Quest claim
     func claimQuest(_ quest: Quest) async {
         guard claimingQuestID == nil else { return }
         claimingQuestID = quest.id

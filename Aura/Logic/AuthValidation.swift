@@ -3,7 +3,6 @@ import Foundation
 let minimumPasswordLength = 8
 let displayNameLengthRange = 2...30
 
-// Email check
 func emailValidationError(_ email: String) -> String? {
     let cleaned = email.trimmingCharacters(in: .whitespacesAndNewlines)
     if cleaned.isEmpty { return "Enter your email." }
@@ -19,7 +18,6 @@ func emailValidationError(_ email: String) -> String? {
     return nil
 }
 
-// Password check
 func newPasswordValidationError(_ password: String) -> String? {
     if password.isEmpty { return "Choose a password." }
     if password.count < minimumPasswordLength {
@@ -32,7 +30,6 @@ func logInPasswordValidationError(_ password: String) -> String? {
     password.isEmpty ? "Enter your password." : nil
 }
 
-// Name check
 func displayNameValidationError(_ name: String) -> String? {
     let cleaned = name.trimmingCharacters(in: .whitespacesAndNewlines)
     if cleaned.isEmpty { return "Choose a display name." }
@@ -54,7 +51,6 @@ enum SignInMethod: Equatable {
     case other
 }
 
-// Google cancel check
 func isGoogleSignInCancelled(domain: String, code: Int) -> Bool {
     domain == googleSignInErrorDomain && code == googleSignInCancelledCode
 }

@@ -341,6 +341,7 @@ struct MessageRow: View {
         }
         .padding(AuraSpacing.medium)
         .background(Color.auraCard, in: .rect(cornerRadius: AuraRadius.row))
+        .auraPopIn()
         .padding(.horizontal, AuraSpacing.medium)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(Text(messageAccessibilityLabel(message, isMine: isMine)))
@@ -374,7 +375,7 @@ struct MessageRow: View {
 
         if let onSpark {
             Button(action: onSpark) { label }
-                .buttonStyle(.plain)
+                .buttonStyle(AuraBounceButtonStyle())
                 .disabled(isSparking)
         } else {
             label

@@ -41,7 +41,6 @@ func closestWalls(_ walls: [NearbyWall], limit: Int) -> [NearbyWall] {
     Array(walls.sorted { $0.distanceMeters < $1.distanceMeters }.prefix(max(0, limit)))
 }
 
-// Map refresh
 func shouldRefreshMapAfterPublish(oldCount: Int?, newCount: Int?) -> Bool {
     guard let oldCount, let newCount else { return false }
     return newCount > oldCount

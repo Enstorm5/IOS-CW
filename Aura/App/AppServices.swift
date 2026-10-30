@@ -1,6 +1,5 @@
 import Foundation
 
-// Shared services
 struct AppServices {
     let persistence: PersistenceController
     let localStore: LocalStore

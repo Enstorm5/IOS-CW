@@ -12,7 +12,6 @@ enum WriteMode: String, CaseIterable {
     }
 }
 
-// Write sheet
 struct WriteMessageView: View {
     let onPost: (MessageContent) async throws -> Void
     let onSaveDraft: (String, MessageColor) -> Void
@@ -265,7 +264,7 @@ struct ColorSwatchButton: View {
                     Circle().strokeBorder(Color.auraText, lineWidth: isSelected ? AuraSize.pinBorder : 0)
                 }
         }
-        .buttonStyle(.plain)
+        .buttonStyle(AuraBounceButtonStyle())
         .accessibilityLabel(Text(color.title))
         .accessibilityAddTraits(isSelected ? .isSelected : [])
     }

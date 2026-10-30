@@ -25,7 +25,6 @@ func clampedWallSize(_ size: WallSize) -> WallSize {
     WallSize(width: clampedWallSide(size.width), height: clampedWallSide(size.height))
 }
 
-// Pinch resize
 func resizedWallSize(start: WallSize, pinchScale: Double) -> WallSize {
     guard pinchScale.isFinite, pinchScale > 0 else { return clampedWallSize(start) }
     return clampedWallSize(WallSize(width: start.width * pinchScale, height: start.height * pinchScale))
@@ -61,7 +60,6 @@ func splitIntoChunks(_ data: Data, chunkSize: Int) -> [Data] {
     }
 }
 
-// Join map chunks
 func joinedMapData(chunks: [(index: Int, data: Data)], expectedCount: Int) -> Data? {
     let sorted = chunks.sorted { $0.index < $1.index }
     guard sorted.count == expectedCount,
@@ -74,7 +72,6 @@ func sha256Hex(_ data: Data) -> String {
     SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
 }
 
-// Publish location
 func publishLocationError(access: LocationAccess, fix: LocationFix?, now: Date) -> String? {
     switch access {
     case .notAsked, .denied, .restricted:
@@ -97,14 +94,12 @@ func canvasNeedsFlip(anchorZAxisWorldY: Float) -> Bool {
     anchorZAxisWorldY > 0
 }
 
-// Wall position
 func messageCanvasPosition(normalizedX: Double, normalizedY: Double, size: WallSize) -> (x: Float, z: Float) {
     let x = min(1, max(0, normalizedX))
     let y = min(1, max(0, normalizedY))
     return (Float((x - 0.5) * size.width), Float((y - 0.5) * size.height))
 }
 
-// Wall from draft
 func wallFromDraft(_ draft: NewWallDraft) -> Wall {
     Wall(
         id: draft.wallID,
@@ -123,7 +118,6 @@ func wallFromDraft(_ draft: NewWallDraft) -> Wall {
     )
 }
 
-// Owner check
 func isWallOwner(_ wall: Wall, userID: String) -> Bool {
     wall.ownerID == userID
 }

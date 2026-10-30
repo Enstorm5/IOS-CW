@@ -1,6 +1,5 @@
 import SwiftUI
 
-// Edit profile
 struct EditProfileView: View {
     let session: SessionStore
     let profile: UserProfile
@@ -50,7 +49,7 @@ struct EditProfileView: View {
                                     Circle().strokeBorder(Color.auraText, lineWidth: avatar == preset ? AuraSize.pinBorder : 0)
                                 }
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(AuraBounceButtonStyle())
                         .accessibilityAddTraits(avatar == preset ? .isSelected : [])
                     }
                 }

@@ -1,6 +1,5 @@
 import SwiftUI
 
-// Google sign-in button
 struct GoogleSignInButton: View {
     let session: SessionStore
 

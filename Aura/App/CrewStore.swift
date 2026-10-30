@@ -3,7 +3,6 @@ import Observation
 import FirebaseFirestore
 
 @MainActor @Observable
-// Crew state
 final class CrewStore {
     private(set) var hasLoadedMembership = false
     private(set) var membershipLoadFailed = false
@@ -40,7 +39,6 @@ final class CrewStore {
         return sortedCrewMembers(members, ownerID: crew.ownerID)
     }
 
-    // Start listeners
     func start() {
         guard membershipListener == nil else { return }
         membershipListener = service.listenToMembership(userID: userID) { [weak self] newCrewID, failed in
@@ -113,7 +111,6 @@ final class CrewStore {
         isLeaving = false
     }
 
-    // Ranking opt-in
     func setRankingOptIn(_ isOn: Bool, stats: UserStats?) async {
         guard let crewID else { return }
         guard let stats else {
@@ -162,7 +159,6 @@ final class CrewStore {
         }
     }
 
-    // Membership updates
     private func membershipChanged(to newCrewID: String?, failed: Bool) {
         if failed {
             membershipLoadFailed = !hasLoadedMembership

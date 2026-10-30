@@ -16,7 +16,6 @@ struct ProximityPolicy {
 let wallReadingPolicy = ProximityPolicy(radiusMeters: 50, maximumAccuracyMeters: 25, maximumAgeSeconds: 120)
 let wallPostingPolicy = ProximityPolicy(radiusMeters: 50, maximumAccuracyMeters: 25, maximumAgeSeconds: 15)
 
-// Proximity states
 enum WallProximity: Equatable {
     case unlocked
     case locationOff
@@ -61,7 +60,6 @@ func lockedWallMessage(for proximity: WallProximity, policy: ProximityPolicy) ->
     }
 }
 
-// Posting block text
 func postingBlockedMessage(for proximity: WallProximity, policy: ProximityPolicy) -> String? {
     switch proximity {
     case .unlocked:

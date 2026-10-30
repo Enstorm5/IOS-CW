@@ -1,7 +1,6 @@
 import SwiftUI
 import MapKit
 
-// Map screen
 struct DiscoveryMapView: View {
     @Bindable var viewModel: DiscoveryViewModel
     let currentUser: UserProfile
@@ -178,7 +177,6 @@ struct WallPin: View {
     }
 }
 
-// Wall preview
 struct WallPreviewCard: View {
     let wall: Wall
     let distanceText: String?
@@ -222,6 +220,7 @@ struct WallPreviewCard: View {
         }
         .padding(AuraSpacing.medium)
         .background(Color.auraCard, in: .rect(cornerRadius: AuraRadius.card))
+        .auraPopIn()
         .padding(.horizontal, AuraSpacing.small)
         .padding(.bottom, AuraSpacing.small)
     }

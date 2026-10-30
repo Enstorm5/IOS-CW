@@ -6,7 +6,6 @@ let weeklyWallsPerParticipant = 5
 let inviteCodeLength = 6
 let inviteCodeAlphabet = Array("ABCDEFGHJKLMNPQRSTUVWXYZ23456789")
 
-// Crew name check
 func crewNameValidationError(_ name: String) -> String? {
     let cleaned = name.trimmingCharacters(in: .whitespacesAndNewlines)
     if cleaned.isEmpty { return "Give your crew a name." }
@@ -19,7 +18,6 @@ func normalizedInviteCode(_ code: String) -> String {
     code.uppercased().filter { !$0.isWhitespace && $0 != "-" }
 }
 
-// Invite code check
 func inviteCodeValidationError(_ code: String) -> String? {
     let cleaned = normalizedInviteCode(code)
     if cleaned.isEmpty { return "Enter the invite code from your friend." }
@@ -195,7 +193,6 @@ func rankingScore(from stats: UserStats, showOnRankings: Bool) -> RankingScore {
     )
 }
 
-// Sync check
 func needsScoreSync(member: CrewMember, stats: UserStats) -> Bool {
     guard member.showOnRankings else { return false }
     let wanted = rankingScore(from: stats, showOnRankings: true)

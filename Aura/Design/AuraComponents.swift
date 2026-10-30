@@ -6,7 +6,6 @@ enum AuraButtonKind {
     case outline
 }
 
-// Main button
 struct AuraButtonStyle: ButtonStyle {
     var kind: AuraButtonKind = .primary
     var onNight = false
@@ -14,18 +13,36 @@ struct AuraButtonStyle: ButtonStyle {
     @Environment(\.isEnabled) private var isEnabled
 
     func makeBody(configuration: Configuration) -> some View {
-        configuration.label
+        let pressed = configuration.isPressed
+        let hasEdge = kind != .outline
+        return configuration.label
             .font(.auraButton)
             .frame(maxWidth: .infinity, minHeight: AuraSize.control)
             .foregroundStyle(foreground)
             .background(background, in: .rect(cornerRadius: AuraRadius.control))
             .overlay {
                 if kind == .outline {
-                    RoundedRectangle(cornerRadius: AuraRadius.control).strokeBorder(foreground, lineWidth: 2)
+                    RoundedRectangle(cornerRadius: AuraRadius.control).strokeBorder(foreground, lineWidth: 3)
                 }
             }
+            .offset(y: pressed && hasEdge ? AuraSize.buttonEdge : 0)
+            // Chunky game edge
+            .background(alignment: .top) {
+                if hasEdge {
+                    RoundedRectangle(cornerRadius: AuraRadius.control)
+                        .fill(edge)
+                        .offset(y: AuraSize.buttonEdge)
+                }
+            }
+            .padding(.bottom, hasEdge ? AuraSize.buttonEdge : 0)
             .opacity(isEnabled ? 1 : 0.5)
-            .scaleEffect(configuration.isPressed ? 0.98 : 1)
+            .scaleEffect(pressed ? AuraMotion.pressedScale : 1)
+            .animation(AuraMotion.bounce, value: pressed)
+            .sensoryFeedback(.impact(weight: .medium), trigger: pressed) { _, isDown in isDown }
+    }
+
+    private var edge: Color {
+        kind == .highlight ? .auraYellowEdge : .auraMuted
     }
 
     private var foreground: Color {
@@ -45,7 +62,6 @@ struct AuraButtonStyle: ButtonStyle {
     }
 }
 
-// Text field
 struct AuraTextField: View {
     let title: String
     @Binding var text: String
@@ -106,7 +122,8 @@ struct ChipToggle: View {
             .frame(maxWidth: .infinity, minHeight: AuraSize.minTap)
             .background(isSelected ? Color.auraYellow : Color.auraChipOff, in: .capsule)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(AuraBounceButtonStyle())
+        .animation(AuraMotion.bounce, value: isSelected)
         .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }
@@ -172,11 +189,11 @@ struct AuraPillButtonStyle: ButtonStyle {
             .padding(.horizontal, AuraSpacing.large)
             .frame(minHeight: AuraSize.minTap)
             .background(Color.auraText, in: .capsule)
-            .scaleEffect(configuration.isPressed ? 0.98 : 1)
+            .scaleEffect(configuration.isPressed ? AuraMotion.pressedScale : 1)
+            .animation(AuraMotion.bounce, value: configuration.isPressed)
     }
 }
 
-// Info banner
 struct StatusBanner: View {
     let systemImage: String
     let message: String
@@ -218,5 +235,40 @@ struct AuraPill: View {
             .padding(.horizontal, AuraSpacing.medium)
             .padding(.vertical, AuraSpacing.xSmall)
             .background(Color.auraYellow, in: .capsule)
+            .contentTransition(.numericText())
+            .animation(AuraMotion.bounce, value: text)
+    }
+}
+
+struct AuraBounceButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? AuraMotion.pressedScale : 1)
+            .animation(AuraMotion.bounce, value: configuration.isPressed)
+            .sensoryFeedback(.impact(weight: .light), trigger: configuration.isPressed) { _, isDown in isDown }
+    }
+}
+
+// Cards pop in
+private struct AuraPopIn: ViewModifier {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var hasAppeared = false
+
+    func body(content: Content) -> some View {
+        content
+            .scaleEffect(hasAppeared || reduceMotion ? 1 : AuraMotion.popStartScale)
+            .opacity(hasAppeared ? 1 : 0)
+            .onAppear {
+                withAnimation(AuraMotion.pop) { hasAppeared = true }
+            }
+            .onDisappear {
+                hasAppeared = false
+            }
+    }
+}
+
+extension View {
+    func auraPopIn() -> some View {
+        modifier(AuraPopIn())
     }
 }

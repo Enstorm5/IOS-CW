@@ -6,6 +6,7 @@ let wallFrameOpeningHeight: Float = 1.3577
 let wallFrameOpeningCenterX: Float = -0.00185
 let wallFrameOpeningCenterY: Float = 0.03408
 let wallFrameBackZ: Float = -0.1715
+let wallFramePanelZ: Float = 0.0715
 
 // Frame to wall axes
 let wallFrameOrientation = simd_quatf(angle: -.pi / 2, axis: SIMD3<Float>(1, 0, 0))
@@ -13,6 +14,7 @@ let wallFrameOrientation = simd_quatf(angle: -.pi / 2, axis: SIMD3<Float>(1, 0, 
 struct WallFrameFit: Equatable {
     var scale: SIMD3<Float>
     var translation: SIMD3<Float>
+    var panelHeight: Float
 }
 
 // Frame opening fit
@@ -22,6 +24,7 @@ func wallFrameFit(for size: WallSize) -> WallFrameFit {
     let scaleZ = (scaleX + scaleY) / 2
     return WallFrameFit(
         scale: SIMD3<Float>(scaleX, scaleY, scaleZ),
-        translation: SIMD3<Float>(-scaleX * wallFrameOpeningCenterX, -scaleZ * wallFrameBackZ, scaleY * wallFrameOpeningCenterY)
+        translation: SIMD3<Float>(-scaleX * wallFrameOpeningCenterX, -scaleZ * wallFrameBackZ, scaleY * wallFrameOpeningCenterY),
+        panelHeight: scaleZ * (wallFramePanelZ - wallFrameBackZ)
     )
 }

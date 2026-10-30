@@ -11,12 +11,11 @@ private func bricolage(_ weight: String, size: CGFloat, relativeTo style: Font.T
     .custom("BricolageGrotesque-96ptExtraBold_\(weight)", size: size, relativeTo: style)
 }
 
-// Text styles
 extension Font {
     static let auraScreenTitle = bricolage("ExtraBold", size: 34, relativeTo: .largeTitle)
     static let auraHeading = bricolage("ExtraBold", size: 28, relativeTo: .title)
-    static let auraButton = bricolage("ExtraBold", size: 17, relativeTo: .headline)
-    static let auraCardTitle = bricolage("ExtraBold", size: 17, relativeTo: .headline)
+    static let auraButton = bricolage("ExtraBold", size: 20, relativeTo: .headline)
+    static let auraCardTitle = bricolage("ExtraBold", size: 18, relativeTo: .headline)
     static let auraLink = bricolage("Bold", size: 15, relativeTo: .subheadline)
     static let auraSectionLabel = bricolage("Bold", size: 15, relativeTo: .subheadline)
     static let auraNotice = bricolage("SemiBold", size: 15, relativeTo: .subheadline)
@@ -29,7 +28,6 @@ extension Font {
     static let auraPinIcon = Font.caption2.weight(.heavy)
 }
 
-// Spacing tokens
 enum AuraSpacing {
     static let xxSmall: CGFloat = 4
     static let xSmall: CGFloat = 6
@@ -43,16 +41,23 @@ enum AuraSpacing {
 
 // Corner radii
 enum AuraRadius {
-    static let control: CGFloat = 12
-    static let swatch: CGFloat = 10
-    static let row: CGFloat = 14
-    static let card: CGFloat = 18
+    static let control: CGFloat = 20
+    static let swatch: CGFloat = 12
+    static let row: CGFloat = 20
+    static let card: CGFloat = 24
     static let logo: CGFloat = 24
 }
 
-// Size tokens
+enum AuraMotion {
+    static let bounce = Animation.spring(response: 0.3, dampingFraction: 0.5)
+    static let pop = Animation.spring(response: 0.45, dampingFraction: 0.62)
+    static let pressedScale: CGFloat = 0.95
+    static let popStartScale: CGFloat = 0.88
+}
+
 enum AuraSize {
-    static let control: CGFloat = 50
+    static let control: CGFloat = 62
+    static let buttonEdge: CGFloat = 5
     static let minTap: CGFloat = 44
     static let pin: CGFloat = 30
     static let pinBorder: CGFloat = 3

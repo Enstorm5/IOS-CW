@@ -26,7 +26,6 @@ final class AuthService {
     var currentEmail: String? { auth.currentUser?.email }
     var signInMethod: SignInMethod { signInMethodFrom(providerIDs: auth.currentUser?.providerData.map(\.providerID) ?? []) }
 
-    // Auth listener
     func observeSignIn(_ onChange: @escaping (String?) -> Void) -> AuthStateDidChangeListenerHandle {
         auth.addStateDidChangeListener { _, user in
             onChange(user?.uid)
@@ -133,7 +132,6 @@ func authErrorMessage(for error: Error) -> String {
     }
 }
 
-// Google error text
 func googleSignInErrorMessage(for error: Error) -> String? {
     let nsError = error as NSError
     if isGoogleSignInCancelled(domain: nsError.domain, code: nsError.code) { return nil }

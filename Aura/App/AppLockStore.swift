@@ -3,7 +3,6 @@ import Observation
 import SwiftUI
 
 @MainActor @Observable
-// App lock state
 final class AppLockStore {
     private(set) var isEnabled = false
     private(set) var isLocked = false

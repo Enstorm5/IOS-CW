@@ -1,6 +1,5 @@
 import SwiftUI
 
-// Sign up form
 struct SignUpView: View {
     let session: SessionStore
     let onLogInInstead: () -> Void

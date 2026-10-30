@@ -62,7 +62,7 @@ struct ProfileView: View {
                             ProfileLinkRow(systemImage: "gearshape", title: "Settings", detail: "Theme, app lock, location, account")
                         }
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(AuraBounceButtonStyle())
                 }
                 .padding(AuraSpacing.screen)
             }
@@ -101,5 +101,6 @@ struct ProfileLinkRow: View {
         .padding(AuraSpacing.medium)
         .frame(minHeight: AuraSize.minTap)
         .background(Color.auraCard, in: .rect(cornerRadius: AuraRadius.row))
+        .auraPopIn()
     }
 }

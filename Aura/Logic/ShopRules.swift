@@ -24,7 +24,6 @@ struct ShopItem: Identifiable, Equatable {
     let systemImage: String
 }
 
-// Shop items
 let shopCatalog = [
     ShopItem(
         id: .neonBrush,
@@ -95,7 +94,6 @@ func shopSuccessMessage(for item: ShopItem) -> String {
     }
 }
 
-// Purchase result
 func statsAfterPurchase(_ stats: UserStats, item: ShopItem, purchaseID: String) -> UserStats {
     var updated = stats
     updated.balance -= item.price

@@ -8,11 +8,9 @@ let maximumDrawingPayloadCharacters = 40_000
 let minimumDrawingPointSpacing = 0.004
 let drawingAspectRatio = 4.0 / 3.0
 
-// Neon glow
 let neonGlowLayers: [(widthScale: Double, opacity: Double)] = [(3.2, 0.18), (2.2, 0.3), (1.4, 0.5)]
 let neonCoreWidthScale = 0.45
 
-// Point to 0-1
 func normalizedDrawingPoint(_ location: CGPoint, in size: CGSize) -> DrawingPoint {
     guard size.width > 0, size.height > 0 else { return DrawingPoint(x: 0, y: 0) }
     let x = min(1, max(0, Double(location.x / size.width)))

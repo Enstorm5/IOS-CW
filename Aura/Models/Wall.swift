@@ -31,7 +31,6 @@ struct WallMapInfo: Hashable, Codable {
     var size: WallSize
 }
 
-// Wall data
 struct Wall: Identifiable, Hashable {
     var id: String
     var title: String

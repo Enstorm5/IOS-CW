@@ -11,7 +11,6 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userID;
     }
 
-    // Wall access
     function isReadableWall(wallID) {
       let wall = get(/databases/$(database)/documents/walls/$(wallID)).data;
       return wall.visibility == 'public' && wall.moderationStatus == 'active';
@@ -27,7 +26,6 @@ service cloud.firestore {
           && data.drawing is string && data.drawing.size() >= 10 && data.drawing.size() <= 40000;
     }
 
-    // Message checks
     function isValidNewMessage(data) {
       let fields = ['authorID', 'authorName', 'text', 'contentType', 'color', 'sparkCount',
                     'normalizedX', 'normalizedY', 'moderationStatus', 'createdAt', 'updatedAt'];
@@ -44,7 +42,6 @@ service cloud.firestore {
         && data.updatedAt == request.time;
     }
 
-    // Wall checks
     function isValidNewWall(data, wallID) {
       let fields = ['title', 'latitude', 'longitude', 'geohash', 'kind', 'visibility', 'moderationStatus',
                     'ownerID', 'anchorMode', 'anchorName', 'widthMeters', 'heightMeters', 'activeMapVersion',
@@ -76,7 +73,6 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/walls/$(wallID)/mapChunks/0).data.ownerID == request.auth.uid;
     }
 
-    // Map chunk checks
     function isValidMapChunk(data, chunkID) {
       return data.keys().hasOnly(['index', 'version', 'ownerID', 'data'])
         && data.keys().hasAll(['index', 'version', 'ownerID', 'data'])
@@ -201,7 +197,6 @@ service cloud.firestore {
       return itemID == 'neonBrush' ? 300 : (itemID == 'streakFreeze' ? 150 : 0);
     }
 
-    // Shop purchase
     function isShopPurchase(userID, before, after) {
       let purchaseID = after.lastPurchaseID;
       let purchasePath = /databases/$(database)/documents/users/$(userID)/purchases/$(purchaseID);
@@ -294,7 +289,6 @@ service cloud.firestore {
             : 0);
     }
 
-    // Quest claim
     function isQuestClaimUpdate(userID, before, after) {
       let day = today();
       let claimID = after.lastClaimID;
@@ -321,7 +315,6 @@ service cloud.firestore {
         && shopFieldsUnchanged(before, after);
     }
 
-    // Post counter
     function isPostCounterWrite(userID, dayID, before, after) {
       let fields = ['day', 'posts', 'drawings', 'lastPostWallID', 'lastPostMessageID'];
       let messagePath = /databases/$(database)/documents/walls/$(after.lastPostWallID)/messages/$(after.lastPostMessageID);
@@ -340,7 +333,6 @@ service cloud.firestore {
         && data.createdAt == request.time;
     }
 
-    // Crew helpers
     function crewPath(crewID) {
       return /databases/$(database)/documents/crews/$(crewID);
     }
@@ -516,7 +508,6 @@ service cloud.firestore {
       allow read: if isSignedIn() && resource.data.authorID == request.auth.uid;
     }
 
-    // Profiles
     match /profiles/{userID} {
       allow read: if isSignedIn();
       allow create: if isOwner(userID)
@@ -528,7 +519,6 @@ service cloud.firestore {
       allow delete: if isOwner(userID);
     }
 
-    // Crew invites
     match /crewInvites/{code} {
       allow get: if isSignedIn();
       allow list: if false;
@@ -556,7 +546,6 @@ service cloud.firestore {
         && !existsAfter(crewMemberPath(resource.data.crewID, userID));
     }
 
-    // Crews
     match /crews/{crewID} {
       allow read: if isCrewMember(crewID);
       allow create: if isSignedIn() && isValidNewCrew(request.resource.data, crewID);
@@ -581,7 +570,6 @@ service cloud.firestore {
       }
     }
 
-    // Walls
     match /walls/{wallID} {
       allow read: if isSignedIn()
         && resource.data.visibility == 'public'

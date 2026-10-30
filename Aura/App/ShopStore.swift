@@ -3,7 +3,6 @@ import Observation
 import FirebaseFirestore
 
 @MainActor @Observable
-// Shop state
 final class ShopStore {
     private(set) var ownedItemIDs: Set<String> = []
     private(set) var buyingItemID: ShopItemID?

@@ -28,7 +28,6 @@ enum QuestState: Equatable {
     case claimed
 }
 
-// Quest pools
 let readingQuestPool = [
     Quest(id: "readThree", title: "Read 3 walls", detail: "Open 3 different walls within 50 m today.", kind: .discoveries, target: 3, reward: 25, systemImage: "book"),
     Quest(id: "readFive", title: "Read 5 walls", detail: "Open 5 different walls within 50 m today.", kind: .discoveries, target: 5, reward: 40, systemImage: "books.vertical"),
@@ -55,7 +54,6 @@ func questClaimID(day: Int, questID: String) -> String {
     "\(day)_\(questID)"
 }
 
-// Claimed today
 func claimedQuestIDs(fromClaimIDs claimIDs: Set<String>, today: Int) -> Set<String> {
     let prefix = "\(today)_"
     return Set(claimIDs.compactMap { claimID in
@@ -67,7 +65,6 @@ func countersForToday(_ all: [DailyCounters], today: Int) -> DailyCounters {
     all.first { $0.day == today } ?? DailyCounters(day: today)
 }
 
-// Quest progress
 func questProgress(_ quest: Quest, stats: UserStats, counters: DailyCounters, today: Int) -> Int {
     let raw: Int
     switch quest.kind {
@@ -78,7 +75,6 @@ func questProgress(_ quest: Quest, stats: UserStats, counters: DailyCounters, to
     return min(raw, quest.target)
 }
 
-// Quest state
 func questState(_ quest: Quest, stats: UserStats, counters: DailyCounters, claimedQuestIDs: Set<String>, today: Int) -> QuestState {
     if claimedQuestIDs.contains(quest.id) { return .claimed }
     let progress = questProgress(quest, stats: stats, counters: counters, today: today)
@@ -119,7 +115,6 @@ func dailyCounters(fields: [String: Any]) -> DailyCounters {
     )
 }
 
-// Daily counter
 func counterFields(after counters: DailyCounters, day: Int, wallID: String, messageID: String, isDrawing: Bool) -> [String: Any] {
     let base = counters.day == day ? counters : DailyCounters(day: day)
     return [

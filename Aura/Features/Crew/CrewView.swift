@@ -1,7 +1,6 @@
 import SwiftUI
 import UIKit
 
-// Crew screen
 struct CrewView: View {
     let store: CrewStore
     let profile: UserProfile
@@ -56,7 +55,6 @@ struct CrewView: View {
     }
 }
 
-// Invite sheet
 private struct InviteFriendsSheet: View {
     let crew: Crew
 
@@ -203,7 +201,6 @@ private struct NoCrewContent: View {
     }
 }
 
-// Crew details
 private struct CrewDetailContent: View {
     let store: CrewStore
     let crew: Crew
@@ -272,7 +269,6 @@ private struct CrewDetailContent: View {
 extension CrewDetailContent {
     private var weekStart: Int { currentWeekStart(now: Date()) }
 
-    // Weekly goal
     private var weeklyGoalCard: some View {
         let goal = crewWeeklyGoal(members: store.members)
         let progress = crewWeeklyProgress(members: store.members, weekStart: weekStart)
@@ -292,7 +288,6 @@ extension CrewDetailContent {
         }
     }
 
-    // Rankings list
     private var rankingsSection: some View {
         VStack(alignment: .leading, spacing: AuraSpacing.small) {
             Text("Rankings")
@@ -347,6 +342,7 @@ private struct RankingRow: View {
         }
         .padding(AuraSpacing.medium)
         .background(Color.auraCard, in: .rect(cornerRadius: AuraRadius.row))
+        .auraPopIn()
         .accessibilityElement(children: .combine)
         .accessibilityLabel(Text("Rank \(ranking.rank), \(isYou ? "you" : ranking.member.displayName), \(scoreText)"))
     }
@@ -383,6 +379,7 @@ private struct CrewMemberRow: View {
         }
         .padding(AuraSpacing.medium)
         .background(Color.auraCard, in: .rect(cornerRadius: AuraRadius.row))
+        .auraPopIn()
         .accessibilityElement(children: .contain)
     }
 }
@@ -401,5 +398,6 @@ private struct CrewCard<Content: View>: View {
         .padding(AuraSpacing.medium)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color.auraCard, in: .rect(cornerRadius: AuraRadius.card))
+        .auraPopIn()
     }
 }

@@ -36,7 +36,6 @@ final class CrewService {
         return snapshot.data().flatMap { crewInvite(code: code, fields: $0) }
     }
 
-    // Create crew
     func createCrew(name: String, profile: UserProfile) async throws {
         let crewReference = database.collection("crews").document()
         var code = randomInviteCode()
@@ -73,7 +72,6 @@ final class CrewService {
         try await batch.commit()
     }
 
-    // Leave crew
     func leaveCurrentCrew(userID: String) async throws {
         let membership = try await membershipDocument(userID).getDocument()
         guard let crewID = membership.data()?["crewID"] as? String else { return }
@@ -115,7 +113,6 @@ final class CrewService {
         try await batch.commit()
     }
 
-    // Ranking score
     func saveRankingScore(_ score: RankingScore, crewID: String, userID: String) async throws {
         try await crewDocument(crewID).collection("members").document(userID).updateData([
             "showOnRankings": score.showOnRankings,

@@ -314,6 +314,7 @@ final class ARSessionService: NSObject, ARSessionDelegate {
             let fit = wallFrameFit(for: wallSize)
             wallFrame.scale = fit.scale
             wallFrame.position = fit.translation
+            messageCanvas?.position.y = fit.panelHeight
         }
     }
 

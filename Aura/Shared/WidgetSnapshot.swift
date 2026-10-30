@@ -1,6 +1,5 @@
 import Foundation
 
-// Shared widget data
 nonisolated struct WidgetSnapshot: Codable, Equatable {
     var accountID: String
     var balance: Int

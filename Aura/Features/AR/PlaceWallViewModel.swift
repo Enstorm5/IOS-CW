@@ -3,7 +3,6 @@ import UIKit
 import Observation
 
 @MainActor @Observable
-// Place wall state
 final class PlaceWallViewModel {
     let arSession = ARSessionService()
 
@@ -47,7 +46,6 @@ final class PlaceWallViewModel {
         arSession.finish()
     }
 
-    // Capture wall
     func captureWall() async -> Bool {
         let balance = statsStore.stats?.balance ?? 0
         guard canAfford(balance: balance, cost: publicWallCost) else {
@@ -86,7 +84,6 @@ final class PlaceWallViewModel {
         capturedFix = nil
     }
 
-    // Publish flow
     func publish(title: String) async {
         let cleanedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
         if let titleError = wallTitleValidationError(cleanedTitle) {

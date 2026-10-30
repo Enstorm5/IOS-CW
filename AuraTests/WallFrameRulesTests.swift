@@ -34,6 +34,13 @@ struct WallFrameRulesTests {
         #expect(fit.translation.y > 0)
     }
 
+    @Test func messagesSitOnThePanelNotBehindIt() {
+        let fit = wallFrameFit(for: WallSize(width: 0.6, height: 0.5))
+        let panelInAnchorY = fit.scale.z * wallFramePanelZ + fit.translation.y
+        #expect(abs(fit.panelHeight - panelInAnchorY) < 0.0001)
+        #expect(fit.panelHeight > 0.05)
+    }
+
     @Test func theOpeningCentreLandsOnTheAnchorOrigin() {
         let fit = wallFrameFit(for: WallSize(width: 1.2, height: 0.8))
         let rotated = wallFrameOrientation.act(SIMD3<Float>(fit.scale.x * wallFrameOpeningCenterX, fit.scale.y * wallFrameOpeningCenterY, 0))

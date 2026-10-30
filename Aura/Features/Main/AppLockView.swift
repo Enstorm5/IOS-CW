@@ -1,6 +1,5 @@
 import SwiftUI
 
-// Lock screen
 struct AppLockView: View {
     let lock: AppLockStore
     let onSignOut: () -> Void

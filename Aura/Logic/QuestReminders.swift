@@ -49,7 +49,6 @@ func isStreakAtRisk(_ stats: UserStats, today: Int) -> Bool {
     displayedStreak(stats, today: today) > 0 && stats.lastQualifiedDay < today
 }
 
-// Evening reminder
 func todaysEveningReminder(day: Int, states: [QuestState], stats: UserStats) -> PlannedNotification? {
     let ready = states.filter { $0 == .readyToClaim }.count
     let toDo = states.filter { if case .inProgress = $0 { true } else { false } }.count
@@ -69,7 +68,6 @@ func todaysEveningReminder(day: Int, states: [QuestState], stats: UserStats) -> 
     )
 }
 
-// Reminder plan
 func plannedQuestReminders(now: Date, stats: UserStats, todayStates: [QuestState]) -> [PlannedNotification] {
     let today = dayNumber(for: now)
     var planned: [PlannedNotification] = []

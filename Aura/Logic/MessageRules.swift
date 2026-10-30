@@ -4,7 +4,6 @@ let maximumMessageLength = 140
 let messagePlacementMargin = 0.1
 let messageMoveMargin = 0.05
 
-// Message check
 func messageValidationError(_ text: String) -> String? {
     let cleaned = text.trimmingCharacters(in: .whitespacesAndNewlines)
     if cleaned.isEmpty { return "Write a message first." }
@@ -20,7 +19,6 @@ func isOverMessageLength(_ text: String) -> Bool {
     text.trimmingCharacters(in: .whitespacesAndNewlines).count > maximumMessageLength
 }
 
-// Stable hash
 func stableHash(_ text: String) -> UInt64 {
     var hash: UInt64 = 14_695_981_039_346_656_037
     for byte in text.utf8 {
@@ -53,7 +51,6 @@ struct PendingPost: Equatable {
     let color: MessageColor
 }
 
-// Spark rules
 func sparkDocumentID(wallID: String, messageID: String) -> String {
     "\(wallID)_\(messageID)"
 }

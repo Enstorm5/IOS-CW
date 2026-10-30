@@ -1,6 +1,5 @@
 import Foundation
 
-// App tabs
 enum AppTab: Hashable {
     case map
     case quests
@@ -9,7 +8,6 @@ enum AppTab: Hashable {
     case me
 }
 
-// Widget data
 func widgetSnapshot(from stats: UserStats, questStates: [QuestState], accountID: String, now: Date) -> WidgetSnapshot {
     WidgetSnapshot(
         accountID: accountID,
@@ -24,7 +22,6 @@ func widgetSnapshot(from stats: UserStats, questStates: [QuestState], accountID:
     )
 }
 
-// Deep links
 func appTab(forDeepLink url: URL) -> AppTab? {
     guard url.scheme == "aura" else { return nil }
     switch url.host() {

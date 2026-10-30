@@ -1,6 +1,5 @@
 import Foundation
 
-// Points settings
 let discoveryRewardPoints = 10
 let colomboUTCOffsetSeconds = 19_800
 let secondsPerDay = 86_400
@@ -8,19 +7,16 @@ let publicWallCost = 50
 let welcomeBonusPoints = 1_000
 let levelThresholds = [0, 100, 250, 450, 700, 1_000, 1_400, 1_900, 2_500, 3_200, 4_000]
 
-// Colombo day number
 func dayNumber(for date: Date, utcOffsetSeconds: Int = colomboUTCOffsetSeconds) -> Int {
     Int(((date.timeIntervalSince1970 + Double(utcOffsetSeconds)) / Double(secondsPerDay)).rounded(.down))
 }
 
-// Streak rule
 func streakAfterQualifying(streakDays: Int, lastQualifiedDay: Int, today: Int) -> Int {
     if lastQualifiedDay == today { return streakDays }
     if lastQualifiedDay == today - 1 { return streakDays + 1 }
     return 1
 }
 
-// Streak freeze
 func streakQualifyingOutcome(streakDays: Int, lastQualifiedDay: Int, today: Int, freezes: Int) -> (streak: Int, usedFreeze: Bool) {
     if lastQualifiedDay == today - 2 && freezes > 0 && streakDays > 0 {
         return (streakDays + 1, true)
@@ -87,7 +83,6 @@ func publishCostMessage(balance: Int) -> String {
     return "Publishing costs \(formattedPoints(publicWallCost)). You have \(formattedPoints(balance)). Discover walls and claim quests to earn more."
 }
 
-// Level from XP
 func level(forXP xp: Int) -> Int {
     (levelThresholds.lastIndex { xp >= $0 } ?? 0) + 1
 }
@@ -109,7 +104,6 @@ func formattedPoints(_ points: Int) -> String {
     return "\(formatter.string(from: NSNumber(value: points)) ?? String(points)) pts"
 }
 
-// Badge list
 func badges(for stats: UserStats) -> [Badge] {
     [
         Badge(id: "first-find", title: "First find", detail: "Discover your first wall", progress: min(stats.discoveryCount, 1), target: 1),

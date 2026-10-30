@@ -2,7 +2,6 @@ import Foundation
 import CoreLocation
 import Observation
 
-// Access states
 nonisolated enum LocationAccess: Equatable {
     case notAsked
     case denied
@@ -31,7 +30,6 @@ nonisolated func locationAccess(status: CLAuthorizationStatus, isPrecise: Bool) 
 }
 
 @MainActor @Observable
-// Location manager
 final class LocationService: NSObject, CLLocationManagerDelegate {
     private(set) var access: LocationAccess = .notAsked
     private(set) var latestLocation: CLLocation?
@@ -53,7 +51,6 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
         }
     }
 
-    // Start updates
     func startUpdating() {
         activeUpdateRequests += 1
         if activeUpdateRequests == 1 {

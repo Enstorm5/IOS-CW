@@ -1,14 +1,12 @@
 import Foundation
 import FirebaseFirestore
 
-// Wall publishing
 final class WallPublishService {
     private let database = Firestore.firestore()
     private let cacheFolder = URL.cachesDirectory.appendingPathComponent("WallMaps", isDirectory: true)
 
     func publish(_ draft: NewWallDraft, mapData: Data) async throws {
         let wallDocument = database.collection("walls").document(draft.wallID)
-        // Split map data
         let chunks = splitIntoChunks(mapData, chunkSize: mapChunkByteLimit)
 
         for (index, chunk) in chunks.enumerated() {
@@ -74,7 +72,6 @@ final class WallPublishService {
         ])
     }
 
-    // Delete wall
     func deleteWall(wallID: String) async throws {
         let wallDocument = database.collection("walls").document(wallID)
         let chunks = try await wallDocument.collection("mapChunks").getDocuments()

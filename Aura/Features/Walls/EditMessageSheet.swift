@@ -1,6 +1,5 @@
 import SwiftUI
 
-// Edit message
 struct EditMessageSheet: View {
     let onSave: (String) async throws -> Void
 

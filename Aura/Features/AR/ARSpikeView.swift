@@ -155,7 +155,6 @@ struct ARSpikeView: View {
     }
 }
 
-// Size controls
 struct WallSizeControls: View {
     let size: WallSize
     let onStep: (Int, Int) -> Void

@@ -7,7 +7,6 @@ let practiceWallWidthMeters: Float = 0.6
 let practiceWallHeightMeters: Float = 0.4
 let practiceWallOpacity: CGFloat = 0.6
 
-// Practice AR
 struct PracticeARView: UIViewRepresentable {
     let onPlaced: () -> Void
     let onFailed: () -> Void
@@ -21,12 +20,10 @@ struct PracticeARView: UIViewRepresentable {
         arView.automaticallyConfigureSession = false
         arView.session.delegate = context.coordinator
 
-        // AR setup
         let configuration = ARWorldTrackingConfiguration()
         configuration.planeDetection = [.vertical]
         arView.session.run(configuration)
 
-        // Coaching overlay
         let coachingOverlay = ARCoachingOverlayView()
         coachingOverlay.session = arView.session
         coachingOverlay.goal = .verticalPlane

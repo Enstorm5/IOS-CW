@@ -5,7 +5,6 @@ import ARKit
 let maximumWorldMapBytes = 20 * 1024 * 1024
 let relocalizationTimeoutSeconds: TimeInterval = 30
 
-// Mapping states
 enum MappingStatus: Equatable {
     case notAvailable
     case limited

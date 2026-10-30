@@ -1,6 +1,5 @@
 import SwiftUI
 
-// Password reset
 struct ResetPasswordView: View {
     let session: SessionStore
 

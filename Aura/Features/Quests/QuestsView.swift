@@ -1,6 +1,5 @@
 import SwiftUI
 
-// Quests screen
 struct QuestsView: View {
     let statsStore: StatsStore
     let shop: ShopStore
@@ -42,7 +41,7 @@ struct QuestsView: View {
                             detail: "Spend points on the Neon brush and streak freezes."
                         )
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(AuraBounceButtonStyle())
 
                     NavigationLink {
                         BadgesView(stats: stats)
@@ -53,7 +52,7 @@ struct QuestsView: View {
                             detail: "\(badges(for: stats).filter(\.isEarned).count) of \(badges(for: stats).count) earned"
                         )
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(AuraBounceButtonStyle())
                 }
                 .padding(AuraSpacing.screen)
             }
@@ -62,7 +61,6 @@ struct QuestsView: View {
         }
     }
 
-    // Today's quests
     private var todaysQuestsSection: some View {
         VStack(alignment: .leading, spacing: AuraSpacing.small) {
             Text("Today's quests")
@@ -92,7 +90,6 @@ struct QuestsView: View {
     }
 }
 
-// Quest card
 private struct QuestCard: View {
     let quest: Quest
     let state: QuestState
@@ -107,6 +104,7 @@ private struct QuestCard: View {
                     .foregroundStyle(Color.auraInk)
                     .frame(width: AuraSize.messageSwatch, height: AuraSize.messageSwatch)
                     .background(state == .claimed ? Color.auraMint : Color.auraYellow, in: .rect(cornerRadius: AuraRadius.swatch))
+                    .symbolEffect(.bounce, value: state == .claimed)
                     .accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: AuraSpacing.xxSmall) {
                     Text(quest.title)
@@ -144,6 +142,8 @@ private struct QuestCard: View {
         .padding(AuraSpacing.medium)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color.auraCard, in: .rect(cornerRadius: AuraRadius.card))
+        .sensoryFeedback(.success, trigger: state == .claimed) { _, isClaimed in isClaimed }
+        .auraPopIn()
     }
 
     private var progress: Int {
@@ -154,7 +154,6 @@ private struct QuestCard: View {
     }
 }
 
-// Points summary
 struct PointsSummaryCard: View {
     let stats: UserStats
 
@@ -177,6 +176,7 @@ struct PointsSummaryCard: View {
         }
         .padding(AuraSpacing.medium)
         .background(Color.auraCard, in: .rect(cornerRadius: AuraRadius.card))
+        .auraPopIn()
     }
 }
 
@@ -221,10 +221,10 @@ private struct QuestRow: View {
         }
         .padding(AuraSpacing.medium)
         .background(Color.auraCard, in: .rect(cornerRadius: AuraRadius.row))
+        .auraPopIn()
     }
 }
 
-// Badge grid
 struct BadgesView: View {
     let stats: UserStats
 

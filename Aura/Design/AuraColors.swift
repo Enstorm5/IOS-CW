@@ -12,6 +12,7 @@ extension Color {
 
     static let auraInk = Color(uiColor: uiColor(hex: 0x1E1A3C))
     static let auraLilac = Color(uiColor: uiColor(hex: 0xEEEAFB))
+    static let auraYellowEdge = Color(uiColor: uiColor(hex: 0xC99A12))
     static let auraYellow = Color(uiColor: uiColor(hex: 0xFFD84D))
     static let auraMint = Color(uiColor: uiColor(hex: 0x2FC9B8))
     static let auraMagenta = Color(uiColor: uiColor(hex: 0xFF4F8B))

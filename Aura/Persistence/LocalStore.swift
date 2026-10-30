@@ -39,7 +39,6 @@ final class LocalStore {
         return (try? context.count(for: request)) ?? 0
     }
 
-    // Wall cache
     func cacheWalls(_ walls: [Wall], accountID: String, fetchedAt: Date) throws {
         for wall in walls {
             let key = localKey(accountID: accountID, itemID: wall.id)
@@ -70,7 +69,6 @@ final class LocalStore {
         )
     }
 
-    // Message cache
     func replaceCachedMessages(_ messages: [WallMessage], wallID: String, accountID: String, fetchedAt: Date) throws {
         let oldRequest = CachedMessageEntity.fetchRequest()
         oldRequest.predicate = NSPredicate(format: "accountID == %@ AND wallID == %@", accountID, wallID)

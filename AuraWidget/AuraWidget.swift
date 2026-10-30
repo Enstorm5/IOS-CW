@@ -121,7 +121,6 @@ struct AuraWidgetView: View {
     }
 }
 
-// Widget setup
 struct AuraWidget: Widget {
     let kind = "AuraWidget"
 

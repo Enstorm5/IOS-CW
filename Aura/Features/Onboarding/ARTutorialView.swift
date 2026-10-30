@@ -1,7 +1,6 @@
 import SwiftUI
 import ARKit
 
-// AR tutorial
 struct ARTutorialView: View {
     let isSaving: Bool
     let errorMessage: String?
@@ -71,6 +70,7 @@ struct ARTutorialView: View {
         .padding(AuraSpacing.large)
         .frame(maxWidth: .infinity)
         .background(Color.auraCard, in: .rect(cornerRadius: AuraRadius.card))
+        .auraPopIn()
         .accessibilityElement(children: .combine)
     }
 

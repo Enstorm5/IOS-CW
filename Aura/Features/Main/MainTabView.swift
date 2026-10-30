@@ -140,7 +140,6 @@ struct MainTabView: View {
         notifications.replaceQuestReminders(planned)
     }
 
-    // Update widget
     private func saveWidgetSnapshot(_ stats: UserStats) {
         widgetSnapshots.save(widgetSnapshot(from: stats, questStates: statsStore.todaysQuestStates, accountID: profile.id, now: Date()))
     }

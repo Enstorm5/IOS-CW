@@ -2,7 +2,6 @@ import Foundation
 import Observation
 import FirebaseAuth
 
-// Session states
 enum SessionState: Equatable {
     case loading
     case signedOut
@@ -49,7 +48,6 @@ final class SessionStore {
         state = .signedIn(profile)
     }
 
-    // Delete account steps
     func deleteAccount(password: String?, userID: String) async throws {
         do {
             if authService.signInMethod == .google {
@@ -105,7 +103,6 @@ final class SessionStore {
         await reload()
     }
 
-    // Google log in
     func logInWithGoogle() async throws {
         do {
             try await authService.logInWithGoogle()

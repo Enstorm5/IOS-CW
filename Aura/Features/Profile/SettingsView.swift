@@ -1,6 +1,5 @@
 import SwiftUI
 
-// Settings screen
 struct SettingsView: View {
     let session: SessionStore
     let profile: UserProfile
@@ -50,7 +49,7 @@ struct SettingsView: View {
                 Button(action: openSystemSettings) {
                     ProfileLinkRow(systemImage: "location", title: "Location and camera", detail: "Change permissions in iOS Settings")
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(AuraBounceButtonStyle())
 
                 Text("Account")
                     .font(.auraSectionLabel)
@@ -117,7 +116,6 @@ struct SettingsView: View {
         .background(Color.auraCard, in: .rect(cornerRadius: AuraRadius.row))
     }
 
-    // Quest reminders
     private var questRemindersRow: some View {
         VStack(alignment: .leading, spacing: AuraSpacing.xxSmall) {
             Toggle(isOn: Binding(
@@ -219,7 +217,6 @@ struct SettingsView: View {
     }
 }
 
-// Delete account
 struct DeleteAccountView: View {
     let session: SessionStore
     let profile: UserProfile

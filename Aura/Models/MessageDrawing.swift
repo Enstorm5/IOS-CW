@@ -5,7 +5,6 @@ enum MessageContentType: String, Codable {
     case drawing
 }
 
-// Stroke widths
 enum StrokeWidth: String, Codable, CaseIterable {
     case thin
     case medium

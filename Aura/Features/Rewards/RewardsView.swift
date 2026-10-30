@@ -68,7 +68,6 @@ struct RewardsView: View {
     }
 }
 
-// Shop item
 private struct ShopItemCard: View {
     let item: ShopItem
     let availability: ShopAvailability
@@ -119,5 +118,6 @@ private struct ShopItemCard: View {
         .padding(AuraSpacing.medium)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color.auraCard, in: .rect(cornerRadius: AuraRadius.card))
+        .auraPopIn()
     }
 }

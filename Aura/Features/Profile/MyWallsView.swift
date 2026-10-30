@@ -1,6 +1,5 @@
 import SwiftUI
 
-// My walls list
 struct MyWallsView: View {
     let publisher: WallPublishService
     let ownerID: String
@@ -148,11 +147,11 @@ private struct MyWallRow: View {
         }
         .padding(AuraSpacing.medium)
         .background(Color.auraCard, in: .rect(cornerRadius: AuraRadius.row))
+        .auraPopIn()
         .padding(.horizontal, AuraSpacing.medium)
     }
 }
 
-// Rename wall
 private struct RenameWallSheet: View {
     let onSave: (String) async throws -> Void
 
