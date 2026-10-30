@@ -38,6 +38,7 @@ struct Wall: Identifiable, Hashable {
     var coordinate: Coordinate
     var kind: WallKind
     var map: WallMapInfo? = nil
+    var ownerID: String? = nil
 }
 
 // Wall to publish

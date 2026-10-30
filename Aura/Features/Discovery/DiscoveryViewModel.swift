@@ -94,6 +94,14 @@ final class DiscoveryViewModel {
         isLoading = false
     }
 
+    func removeWall(id: String) {
+        nearbyWalls.removeAll { $0.id == id }
+        if selectedWallID == id {
+            selectedWallID = nil
+        }
+        try? localStore.removeCachedWall(wallID: id, accountID: accountID)
+    }
+
     func retry() async {
         await search(around: lastRequestedCenter ?? discoveryFallbackCenter)
     }

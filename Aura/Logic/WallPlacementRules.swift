@@ -104,6 +104,11 @@ func messageCanvasPosition(normalizedX: Double, normalizedY: Double, size: WallS
     return (Float((x - 0.5) * size.width), Float((y - 0.5) * size.height))
 }
 
+// Owner check
+func isWallOwner(_ wall: Wall, userID: String) -> Bool {
+    wall.ownerID == userID
+}
+
 func renamedWalls(_ walls: [Wall], wallID: String, title: String) -> [Wall] {
     walls.map { wall in
         guard wall.id == wallID else { return wall }

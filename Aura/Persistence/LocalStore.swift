@@ -136,6 +136,13 @@ final class LocalStore {
         return try? context.fetch(request).first
     }
 
+    // Forget deleted wall
+    func removeCachedWall(wallID: String, accountID: String) throws {
+        try deleteObjects(CachedWallEntity.fetchRequest(), matching: NSPredicate(format: "key == %@", localKey(accountID: accountID, itemID: wallID)))
+        try deleteObjects(CachedMessageEntity.fetchRequest(), matching: NSPredicate(format: "accountID == %@ AND wallID == %@", accountID, wallID))
+        try context.save()
+    }
+
     // Clear account
     func deleteAccountData(accountID: String) throws {
         let predicate = NSPredicate(format: "accountID == %@", accountID)

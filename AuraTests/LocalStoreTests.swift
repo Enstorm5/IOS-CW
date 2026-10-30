@@ -32,6 +32,19 @@ struct LocalStoreTests {
         #expect(store.draftCount(accountID: "B") == 0)
     }
 
+    @Test func removingACachedWallAlsoDropsItsMessagesForThatAccountOnly() throws {
+        let wall = Wall(id: "w1", title: "Steps", coordinate: Coordinate(latitude: 6.9, longitude: 79.8), kind: .community)
+        for account in ["A", "B"] {
+            try store.cacheWalls([wall], accountID: account, fetchedAt: savedAt)
+            try store.replaceCachedMessages([message("m1", minutesAgo: 1)], wallID: "w1", accountID: account, fetchedAt: savedAt)
+        }
+        try store.removeCachedWall(wallID: "w1", accountID: "A")
+        #expect(store.cachedWalls(accountID: "A").walls.isEmpty)
+        #expect(store.cachedMessages(wallID: "w1", accountID: "A").messages.isEmpty)
+        #expect(store.cachedWalls(accountID: "B").walls.count == 1)
+        #expect(store.cachedMessages(wallID: "w1", accountID: "B").messages.count == 1)
+    }
+
     @Test func wallCacheUpsertsWithoutDuplicates() throws {
         let map = WallMapInfo(chunkCount: 2, version: 1, checksum: String(repeating: "a", count: 64), byteCount: 1_500_000, anchorName: "w1", size: WallSize(width: 1.2, height: 0.8))
         let first = Wall(id: "w1", title: "Old title", coordinate: Coordinate(latitude: 6.9, longitude: 79.8), kind: .community, map: map)

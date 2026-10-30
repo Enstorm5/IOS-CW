@@ -6,8 +6,13 @@ struct WallDetailView: View {
     let wall: Wall
     let currentUser: UserProfile
     let publisher: WallPublishService
+    let onDeleted: (String) -> Void
 
     @Environment(\.openURL) private var openURL
+    @Environment(\.dismiss) private var dismiss
+    @State private var isConfirmingDelete = false
+    @State private var isDeleting = false
+    @State private var deleteError: String?
     @State private var viewModel: WallDetailViewModel
     @State private var isWriting = false
     @State private var isViewingAR = false
@@ -18,7 +23,8 @@ struct WallDetailView: View {
         wall.map != nil && ARWorldTrackingConfiguration.isSupported
     }
 
-    init(wall: Wall, currentUser: UserProfile, messageService: WallMessageService, locationService: LocationService, publisher: WallPublishService, localStore: LocalStore, statsStore: StatsStore) {
+    init(wall: Wall, currentUser: UserProfile, messageService: WallMessageService, locationService: LocationService, publisher: WallPublishService, localStore: LocalStore, statsStore: StatsStore, onDeleted: @escaping (String) -> Void = { _ in }) {
+        self.onDeleted = onDeleted
         self.wall = wall
         self.currentUser = currentUser
         self.publisher = publisher
@@ -29,6 +35,10 @@ struct WallDetailView: View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: AuraSpacing.small) {
                 header
+                if let deleteError {
+                    ErrorMessage(text: deleteError)
+                        .padding(.horizontal, AuraSpacing.screen)
+                }
                 if viewModel.isUnlocked {
                     unlockedContent
                 } else {
@@ -100,6 +110,13 @@ struct WallDetailView: View {
         .refreshable {
             await viewModel.refresh()
         }
+        .confirmationDialog("Delete this wall?", isPresented: $isConfirmingDelete, titleVisibility: .visible) {
+            Button("Delete wall", role: .destructive) {
+                Task { await deleteWall() }
+            }
+        } message: {
+            Text("The wall and its AR map are removed for everyone, and its messages disappear with it. Points aren't refunded.")
+        }
     }
 
     private var header: some View {
@@ -111,9 +128,46 @@ struct WallDetailView: View {
                 AuraPill(text: "Sponsored")
             }
             Spacer(minLength: 0)
+            if isWallOwner(wall, userID: currentUser.id) {
+                ownerMenu
+            }
         }
         .padding(.horizontal, AuraSpacing.screen)
         .padding(.bottom, AuraSpacing.small)
+    }
+
+    // Owner delete
+    private var ownerMenu: some View {
+        Group {
+            if isDeleting {
+                ProgressView()
+            } else {
+                Menu {
+                    Button("Delete wall", systemImage: "trash", role: .destructive) {
+                        isConfirmingDelete = true
+                    }
+                } label: {
+                    Image(systemName: "ellipsis")
+                        .font(.auraCardTitle)
+                        .foregroundStyle(Color.auraText)
+                        .frame(width: AuraSize.minTap, height: AuraSize.minTap)
+                }
+                .accessibilityLabel("Wall options")
+            }
+        }
+    }
+
+    private func deleteWall() async {
+        isDeleting = true
+        deleteError = nil
+        do {
+            try await publisher.deleteWall(wallID: wall.id)
+            onDeleted(wall.id)
+            dismiss()
+        } catch {
+            deleteError = "Couldn't delete the wall. Check your connection and try again."
+        }
+        isDeleting = false
     }
 
     @ViewBuilder

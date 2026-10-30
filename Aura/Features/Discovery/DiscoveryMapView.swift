@@ -54,7 +54,7 @@ struct DiscoveryMapView: View {
         }
         .toolbar(.hidden, for: .navigationBar)
         .navigationDestination(item: $openedWall) { wall in
-            WallDetailView(wall: wall, currentUser: currentUser, messageService: messageService, locationService: viewModel.locationService, publisher: publisher, localStore: localStore, statsStore: statsStore)
+            WallDetailView(wall: wall, currentUser: currentUser, messageService: messageService, locationService: viewModel.locationService, publisher: publisher, localStore: localStore, statsStore: statsStore, onDeleted: { viewModel.removeWall(id: $0) })
         }
         .sheet(isPresented: $isShowingHome) {
             HomeView(currentUser: currentUser, discovery: viewModel, statsStore: statsStore, publisher: publisher, onSelectWall: showOnMap)

@@ -34,7 +34,8 @@ func wall(id: String, fields: [String: Any]) -> Wall? {
         title: title,
         coordinate: Coordinate(latitude: latitude, longitude: longitude),
         kind: WallKind(rawValue: fields["kind"] as? String ?? "") ?? .community,
-        map: wallMapInfo(fields: fields)
+        map: wallMapInfo(fields: fields),
+        ownerID: fields["ownerID"] as? String
     )
 }
 

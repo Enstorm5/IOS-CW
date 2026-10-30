@@ -10,6 +10,16 @@ struct ModelMappingTests {
         "widthMeters": 9.0, "heightMeters": 0.1,
     ]
 
+    @Test func wallOwnerIsReadFromTheDocumentAndChecked() {
+        let owned = wall(id: "w", fields: ["title": "T", "latitude": 6.9, "longitude": 79.8, "ownerID": "u1"])
+        #expect(owned?.ownerID == "u1")
+        #expect(isWallOwner(owned!, userID: "u1"))
+        #expect(!isWallOwner(owned!, userID: "u2"))
+        let unknown = wall(id: "w", fields: ["title": "T", "latitude": 6.9, "longitude": 79.8])
+        #expect(unknown?.ownerID == nil)
+        #expect(!isWallOwner(unknown!, userID: "u1"))
+    }
+
     @Test func mapSizesAreClampedWhenRead() {
         let info = wallMapInfo(fields: mapFields)
         #expect(info?.size == WallSize(width: 3, height: 0.5))
