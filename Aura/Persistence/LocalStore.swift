@@ -108,7 +108,11 @@ final class LocalStore {
 
     func settings(accountID: String) -> UserSettings {
         guard let entity = fetchSettingsEntity(accountID: accountID) else { return UserSettings() }
-        return UserSettings(theme: AppTheme(rawValue: entity.themeRaw ?? "") ?? .system, appLockEnabled: entity.appLockEnabled)
+        return UserSettings(
+            theme: AppTheme(rawValue: entity.themeRaw ?? "") ?? .system,
+            appLockEnabled: entity.appLockEnabled,
+            questRemindersEnabled: entity.questRemindersEnabled
+        )
     }
 
     func saveSettings(_ settings: UserSettings, accountID: String) throws {
@@ -116,6 +120,7 @@ final class LocalStore {
         entity.accountID = accountID
         entity.themeRaw = settings.theme.rawValue
         entity.appLockEnabled = settings.appLockEnabled
+        entity.questRemindersEnabled = settings.questRemindersEnabled
         try context.save()
     }
 

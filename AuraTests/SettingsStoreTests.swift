@@ -30,6 +30,15 @@ struct SettingsStoreTests {
         #expect(store.settings(accountID: "A").appLockEnabled == false)
     }
 
+    @Test func questRemindersAreOffByDefaultAndSavedPerAccount() throws {
+        #expect(store.settings(accountID: "A").questRemindersEnabled == false)
+        try store.saveSettings(UserSettings(questRemindersEnabled: true), accountID: "A")
+        #expect(store.settings(accountID: "A").questRemindersEnabled)
+        #expect(store.settings(accountID: "B").questRemindersEnabled == false)
+        try store.deleteAccountData(accountID: "A")
+        #expect(store.settings(accountID: "A").questRemindersEnabled == false)
+    }
+
     @Test func signOutAndResetClearSettings() throws {
         try store.saveSettings(UserSettings(theme: .dark), accountID: "A")
         try store.saveSettings(UserSettings(theme: .dark), accountID: "B")

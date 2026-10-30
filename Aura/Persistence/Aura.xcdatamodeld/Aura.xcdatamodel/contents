@@ -41,6 +41,7 @@
     <entity name="UserSettingsEntity" representedClassName="UserSettingsEntity" syncable="YES" codeGenerationType="class">
         <attribute name="accountID" attributeType="String"/>
         <attribute name="appLockEnabled" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="questRemindersEnabled" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
         <attribute name="themeRaw" attributeType="String" defaultValueString="system"/>
         <uniquenessConstraints>
             <uniquenessConstraint>
