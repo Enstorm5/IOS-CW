@@ -1,7 +1,6 @@
 import SwiftUI
 import ARKit
 
-// Wall screen
 struct WallDetailView: View {
     let wall: Wall
     let currentUser: UserProfile
@@ -78,7 +77,7 @@ struct WallDetailView: View {
                 isWriting = true
             }
         }
-        .sheet(isPresented: $isWriting) {
+        .sheet(isPresented: $isWriting, onDismiss: { movingMessage = viewModel.takeJustPosted() }) {
             WriteMessageView(
                 initialDraft: viewModel.savedDraft(),
                 onPost: { content in
@@ -288,7 +287,6 @@ struct WallDetailView: View {
     }
 }
 
-// Message row
 struct MessageRow: View {
     let message: WallMessage
     let isMine: Bool

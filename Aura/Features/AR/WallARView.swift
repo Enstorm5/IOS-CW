@@ -2,7 +2,6 @@ import SwiftUI
 import Observation
 
 @MainActor @Observable
-// AR wall state
 final class WallARViewModel {
     let arSession = ARSessionService()
     let wall: Wall
@@ -42,7 +41,6 @@ final class WallARViewModel {
     }
 }
 
-// AR wall screen
 struct WallARView: View {
     let currentUser: UserProfile
     let detailViewModel: WallDetailViewModel
@@ -50,8 +48,11 @@ struct WallARView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var viewModel: WallARViewModel
     @State private var isWriting = false
+    @State private var movingMessage: WallMessage?
+    private let wall: Wall
 
     init(wall: Wall, currentUser: UserProfile, detailViewModel: WallDetailViewModel, publisher: WallPublishService) {
+        self.wall = wall
         self.currentUser = currentUser
         self.detailViewModel = detailViewModel
         _viewModel = State(initialValue: WallARViewModel(wall: wall, publisher: publisher))
@@ -99,7 +100,12 @@ struct WallARView: View {
             arSession.showMessages(detailViewModel.messages)
         }
         .onDisappear { arSession.stopCamera() }
-        .sheet(isPresented: $isWriting) {
+        .sheet(item: $movingMessage) { message in
+            MoveMessageSheet(wallSize: wall.map?.size ?? defaultWallSize, messages: detailViewModel.messages, moving: message) { placement in
+                try await detailViewModel.move(message, to: placement)
+            }
+        }
+        .sheet(isPresented: $isWriting, onDismiss: { movingMessage = detailViewModel.takeJustPosted() }) {
             WriteMessageView(
                 initialDraft: detailViewModel.savedDraft(),
                 onPost: { content in
@@ -121,6 +127,7 @@ struct WallARView: View {
             AuraPill(text: "Stand 1–2 m from the wall and move slowly")
         case .restored:
             AuraPill(text: "Wall found")
+            AuraPill(text: messageCountText(detailViewModel.messages.count))
         default:
             EmptyView()
         }

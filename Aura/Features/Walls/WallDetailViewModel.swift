@@ -3,12 +3,12 @@ import CoreLocation
 import Observation
 
 @MainActor @Observable
-// Wall detail state
 final class WallDetailViewModel {
     private(set) var proximity: WallProximity = .findingLocation
     private(set) var teaser: WallTeaser?
     private(set) var isLoadingTeaser = false
     private(set) var messages: [WallMessage] = []
+    private(set) var justPostedMessage: WallMessage?
     private(set) var isLoading = false
     private(set) var isLoadingMore = false
     private(set) var errorMessage: String?
@@ -121,6 +121,12 @@ final class WallDetailViewModel {
     }
 
     // Post message
+    // Message to place
+    func takeJustPosted() -> WallMessage? {
+        defer { justPostedMessage = nil }
+        return justPostedMessage
+    }
+
     func post(_ content: MessageContent, author: UserProfile) async throws {
         let prepared = try preparedMessage(from: content)
 
@@ -154,6 +160,7 @@ final class WallDetailViewModel {
             }
             messages = [saved] + messages.filter { $0.id != saved.id }
             hasLoaded = true
+            justPostedMessage = saved
         } catch {
             throw UserFacingError(message: "Your message wasn't posted. Check your connection and try again.")
         }
@@ -173,7 +180,6 @@ final class WallDetailViewModel {
         }
     }
 
-    // Spark toggle
     func toggleSpark(_ message: WallMessage) async {
         guard canSpark(message, userID: accountID), !sparkingMessageIDs.contains(message.id) else { return }
         let isAddingSpark = !sparkedMessageIDs.contains(message.id)
@@ -208,7 +214,6 @@ final class WallDetailViewModel {
         updateMessage(id: message.id) { $0.text = cleaned }
     }
 
-    // Move message
     func move(_ message: WallMessage, to placement: (x: Double, y: Double)) async throws {
         guard canMove(message, userID: accountID) else { return }
         do {
@@ -251,7 +256,6 @@ final class WallDetailViewModel {
         isLoadingTeaser = false
     }
 
-    // First page
     func loadFirstPage() async {
         latestLoadID += 1
         let loadID = latestLoadID
