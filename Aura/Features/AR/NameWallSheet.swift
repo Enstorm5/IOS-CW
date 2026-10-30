@@ -17,7 +17,7 @@ struct NameWallSheet: View {
                 VStack(alignment: .leading, spacing: AuraSpacing.medium) {
                     AuraTextField(title: "Wall name", text: $title, error: showFieldErrors ? wallTitleValidationError(title) : nil)
 
-                    Text("The wall appears on the map at your current location. Anyone signed in can find it, and people within 50 m can read and write on it.")
+                    Text("The wall and its location were captured when you tapped Publish wall. Anyone signed in can find it, and people within 50 m can read and write on it.")
                         .font(.auraNotice)
                         .foregroundStyle(Color.auraMuted)
 

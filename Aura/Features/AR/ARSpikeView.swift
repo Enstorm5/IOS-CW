@@ -45,11 +45,15 @@ struct ARSpikeView: View {
                     }
                 }
 
+                if let publishError = viewModel.publishError, !isNaming {
+                    StatusBanner(systemImage: "exclamationmark.triangle", message: publishError)
+                }
+
                 bottomControls
             }
             .padding(AuraSpacing.screen)
         }
-        .sheet(isPresented: $isNaming) {
+        .sheet(isPresented: $isNaming, onDismiss: { viewModel.discardCapture() }) {
             NameWallSheet(isPublishing: viewModel.isPublishing, costMessage: viewModel.costMessage, errorMessage: viewModel.publishError) { title in
                 Task { await viewModel.publish(title: title) }
             }
@@ -99,12 +103,21 @@ struct ARSpikeView: View {
                 Button("Cancel") { viewModel.finish() }
                     .buttonStyle(AuraButtonStyle(kind: .outline, onNight: true))
             case .mapping:
-                Button("Publish wall") {
-                    viewModel.clearPublishError()
-                    isNaming = true
+                Button {
+                    Task {
+                        if await viewModel.captureWall() {
+                            isNaming = true
+                        }
+                    }
+                } label: {
+                    if viewModel.isCapturing {
+                        ProgressView().tint(Color.auraInk)
+                    } else {
+                        Text("Publish wall")
+                    }
                 }
                 .buttonStyle(AuraButtonStyle(kind: .highlight))
-                .disabled(!arSession.canExport || viewModel.isPublishing)
+                .disabled(!arSession.canExport || viewModel.isPublishing || viewModel.isCapturing)
                 Button("Cancel") { viewModel.finish() }
                     .buttonStyle(AuraButtonStyle(kind: .outline, onNight: true))
             case .restoring:
